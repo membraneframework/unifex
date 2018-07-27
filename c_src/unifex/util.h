@@ -1,3 +1,5 @@
+#pragma once
+
 #include <erl_nif.h>
 
 #define UNIFEX_UTIL_UNUSED(x) (void)(x)
@@ -36,3 +38,6 @@
 
 // common result functions
 ERL_NIF_TERM unifex_util_args_error_result(ErlNifEnv* env, const char* field, const char *description);
+
+// term manipulation helpers
+ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resource);

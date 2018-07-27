@@ -2,11 +2,32 @@ defmodule Unifex.CodeGenerator do
   def generate_code(name, specs) do
     module = specs |> Keyword.fetch!(:module)
     functions = specs |> Keyword.get(:functions, [])
+    results = specs |> Keyword.get(:results, [])
 
-    {generate_header(name), generate_source(name, module, functions)}
+    result_functions = create_result_functions(results)
+
+    header = generate_header(name, result_functions)
+    source = generate_source(name, module, functions, result_functions)
+
+    {header, source}
   end
 
-  defp generate_header(name) do
+  def create_result_functions(results, names \\ []) do
+    results
+    |> Enum.flat_map(fn {name, keyword} when is_atom(name) and is_list(keyword) ->
+      values = keyword |> Keyword.values()
+
+      cond do
+        values |> Enum.all?(&is_atom/1) ->
+          [{[name | names] |> Enum.reverse(), keyword}]
+
+        values |> Enum.all?(&is_list/1) ->
+          create_result_functions(keyword, [name | names])
+      end
+    end)
+  end
+
+  defp generate_header(name, result_functions) do
     ~g"""
     #pragma once
 
@@ -16,17 +37,103 @@ defmodule Unifex.CodeGenerator do
     #include "#{name}.h"
 
     ErlNifResourceType *STATE_RESOURCE_TYPE;
+
+    #{
+      result_functions
+      |> Enum.map(&generate_result_function_header/1)
+      |> Enum.map(&(&1 <> ";"))
+      |> Enum.join("\n")
+    }
     """
   end
 
-  defp generate_source(name, module, functions) do
+  defp generate_source(name, module, functions, result_functions) do
     ~g"""
     #include "#{name}_interface.h"
 
+    #{result_functions |> Enum.map(&generate_result_function/1) |> Enum.join("\n")}
     #{generate_lib_loaders()}
     #{functions |> Enum.map(&generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """
+  end
+
+  defp generate_result_function({names, args}) do
+    result_payload =
+      case args do
+        [] ->
+          []
+
+        [arg] ->
+          [generate_term_maker(arg)]
+
+        args ->
+          [
+            ~g"""
+            enif_make_tuple_from_array(
+              env,
+              (ERL_NIF_TERM []) {
+                #{args |> Enum.map(&generate_term_maker/1) |> Enum.join(",\n\t\t")}
+              },
+              #{length(args)}
+            )
+            """it
+          ]
+      end
+
+    return_value =
+      names
+      |> tl()
+      |> Enum.map(fn name -> ~g<enif_make_atom(env, "#{name}")> end)
+      |> Kernel.++(result_payload)
+      |> Enum.reverse()
+      |> Enum.reduce(fn atom_term, inner_term ->
+        ~g"""
+        enif_make_tuple2(
+          env,
+          #{atom_term},
+          #{inner_term}
+        )
+        """it
+      end)
+
+    ~g"""
+    #{generate_result_function_header({names, args})} {
+      return #{return_value};
+    }
+    """
+  end
+
+  defp generate_result_function_header({names, args}) do
+    args_declarations =
+      [~g<ErlNifEnv* env> | args |> Enum.map(&generate_declaration/1)]
+      |> Enum.join(", ")
+
+    ~g<ERL_NIF_TERM #{names |> Enum.join("_")}_result(#{args_declarations})>
+  end
+
+  defp generate_term_maker({name, :state}) do
+    ~g<unifex_util_make_and_release_resource(env, #{name})>
+  end
+
+  defp generate_term_maker({name, :buffer}) do
+    ~g<#{name}>
+  end
+
+  defp generate_term_maker({name, type}) do
+    ~g<enif_make_#{type}(env, #{name})>
+  end
+
+  defp generate_declaration({name, :state}) do
+    ~g<State* #{name}>
+  end
+
+  defp generate_declaration({name, :buffer}) do
+    ~g<ERL_NIF_TERM #{name}>
+  end
+
+  defp generate_declaration({name, type}) do
+    ~g<#{type} #{name}>
   end
 
   defp generate_lib_loaders() do
@@ -82,7 +189,35 @@ defmodule Unifex.CodeGenerator do
     """
   end
 
-  defp sigil_g(content, _) do
+  defp sigil_g(content, 't' ++ flags) do
+    content = content |> String.trim()
+    sigil_g(content, flags)
+  end
+
+  defp sigil_g(content, 'i' ++ flags) do
+    [first | rest] = content |> String.split("\n")
+    content = [first | rest |> Enum.map(&"  #{&1}")] |> Enum.join("\n")
+    sigil_g(content, flags)
+  end
+
+  defp sigil_g(content, []) do
     content
   end
+
+  # defp tabs_to_spaces(string) do
+  #   {a, _} = string
+  #   |> String.split("\n")
+  #   |> Enum.map_reduce("", fn current, prev ->
+  #     current =
+  #       case current |> String.trim_leading(" ") do
+  #         "\t" <> trimmed ->
+  #           indent = String.length(prev) - String.length(prev |> String.trim_leading(" "))
+  #           trimmed |> String.pad_leading(indent, [" "])
+  #         _ ->
+  #           current
+  #       end
+  #     {current, current}
+  #   end)
+  #   a |> Enum.join("\n")
+  # end
 end
