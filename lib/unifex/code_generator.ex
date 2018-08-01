@@ -1,115 +1,123 @@
 defmodule Unifex.CodeGenerator do
+  alias Unifex.InterfaceIO
+
   def generate_code(name, specs) do
     module = specs |> Keyword.fetch!(:module)
-    functions = specs |> Keyword.get(:functions, [])
-    results = specs |> Keyword.get(:results, [])
+    fun_specs = specs |> Keyword.get_values(:fun_specs)
 
-    result_functions = create_result_functions(results)
+    {functions, results} =
+      fun_specs
+      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
+      |> Enum.unzip()
 
-    header = generate_header(name, result_functions)
-    source = generate_source(name, module, functions, result_functions)
+    results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
+    header = generate_header(name, results)
+    source = generate_source(name, module, functions, results)
 
     {header, source}
   end
 
-  def create_result_functions(results, names \\ []) do
-    results
-    |> Enum.flat_map(fn {name, keyword} when is_atom(name) and is_list(keyword) ->
-      values = keyword |> Keyword.values()
-
-      cond do
-        values |> Enum.all?(&is_atom/1) ->
-          [{[name | names] |> Enum.reverse(), keyword}]
-
-        values |> Enum.all?(&is_list/1) ->
-          create_result_functions(keyword, [name | names])
-      end
-    end)
-  end
-
-  defp generate_header(name, result_functions) do
+  defp generate_header(name, results) do
     ~g"""
     #pragma once
 
     #include <stdio.h>
     #include <erl_nif.h>
     #include <unifex/util.h>
-    #include "#{name}.h"
+    #include "#{InterfaceIO.user_header_path(name)}"
 
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
-    #{
-      result_functions
-      |> Enum.map(&generate_result_function_header/1)
-      |> Enum.map(&(&1 <> ";"))
-      |> Enum.join("\n")
-    }
+    #{generate_result_functions_headers(results)}
     """
   end
 
-  defp generate_source(name, module, functions, result_functions) do
+  defp generate_source(name, module, functions, results) do
     ~g"""
-    #include "#{name}_interface.h"
+    #include "#{name}.h"
 
-    #{result_functions |> Enum.map(&generate_result_function/1) |> Enum.join("\n")}
+    #{generate_result_functions(results)}
     #{generate_lib_loaders()}
     #{functions |> Enum.map(&generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """
   end
 
-  defp generate_result_function({names, args}) do
-    result_payload =
-      case args do
-        [] ->
-          []
+  defp generate_result_functions(results) do
+    results
+    |> Enum.map(&generate_result_function/1)
+    |> Enum.join("\n")
+  end
 
-        [arg] ->
-          [generate_term_maker(arg)]
+  defp generate_result_functions_headers(results) do
+    results
+    |> Enum.map(&generate_result_function_header/1)
+    |> Enum.map(&(&1 <> ";"))
+    |> Enum.join("\n")
+  end
 
-        args ->
-          [
-            ~g"""
-            enif_make_tuple_from_array(
-              env,
-              (ERL_NIF_TERM []) {
-                #{args |> Enum.map(&generate_term_maker/1) |> Enum.join(",\n\t\t")}
-              },
-              #{length(args)}
-            )
-            """it
-          ]
-      end
-
-    return_value =
-      names
-      |> tl()
-      |> Enum.map(fn name -> ~g<enif_make_atom(env, "#{name}")> end)
-      |> Kernel.++(result_payload)
-      |> Enum.reverse()
-      |> Enum.reduce(fn atom_term, inner_term ->
-        ~g"""
-        enif_make_tuple2(
-          env,
-          #{atom_term},
-          #{inner_term}
-        )
-        """it
-      end)
-
+  defp generate_result_function({name, specs}) do
     ~g"""
-    #{generate_result_function_header({names, args})} {
-      return #{return_value};
+    #{generate_result_function_header({name, specs})} {
+      return #{generate_result_spec_traverse_helper(specs).return |> ~g<>it};
     }
     """
   end
 
-  defp generate_result_function_header({names, args}) do
+  defp generate_result_function_header({name, specs}) do
+    %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
+
     args_declarations =
       [~g<ErlNifEnv* env> | args |> Enum.map(&generate_declaration/1)]
       |> Enum.join(", ")
 
-    ~g<ERL_NIF_TERM #{names |> Enum.join("_")}_result(#{args_declarations})>
+    ~g<ERL_NIF_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+  end
+
+  defp generate_result_spec_traverse_helper(node) do
+    case node do
+      atom when is_atom(atom) ->
+        %{return: generate_const_atom_maker(atom), args: [], labels: []}
+
+      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
+        %{return: generate_const_atom_maker(name), args: [], labels: [name]}
+
+      {:::, _, [{name, _, _}, {type, _, _}]} ->
+        %{return: generate_term_maker({name, type}), args: [{name, type}], labels: []}
+
+      {a, b} ->
+        generate_result_spec_traverse_helper({:{}, [], [a, b]})
+
+      {:{}, _, content} ->
+        results =
+          content
+          |> Enum.map(&generate_result_spec_traverse_helper/1)
+
+        %{
+          return: generate_tuple_maker(results |> Enum.map(& &1.return)),
+          args: results |> Enum.flat_map(& &1.args),
+          labels: results |> Enum.flat_map(& &1.labels)
+        }
+
+      {name, _, _} ->
+        generate_result_spec_traverse_helper({:::, [], [{name, [], nil}, {name, [], nil}]})
+    end
+  end
+
+  defp generate_tuple_maker(content) do
+    ~g"""
+    enif_make_tuple_from_array(
+      env,
+      (ERL_NIF_TERM []) {
+        #{content |> Enum.join(",\n") |> ~g<>iit}
+      },
+      #{length(content)}
+    )
+    """
+  end
+
+  defp generate_const_atom_maker(name) do
+    ~g<enif_make_atom(env, "#{name}")>
   end
 
   defp generate_term_maker({name, :state}) do
@@ -167,11 +175,11 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_arg_parse({{name, :buffer}, i}) do
-    ~g<UNIFEX_UTIL_PARSE_BINARY_ARG(#{i}, #{name})>
+    ~g<UNIFEX_UTIL_PARSE_BINARY_ARG(#{i}, #{name});>
   end
 
   defp generate_arg_parse({{name, :state}, i}) do
-    ~g<UNIFEX_UTIL_PARSE_RESOURCE_ARG(#{i}, #{name}, State, STATE_RESOURCE_TYPE)>
+    ~g<UNIFEX_UTIL_PARSE_RESOURCE_ARG(#{i}, #{name}, State, STATE_RESOURCE_TYPE);>
   end
 
   defp generate_erlang_boilerplate(module, functions) do
@@ -189,6 +197,10 @@ defmodule Unifex.CodeGenerator do
     """
   end
 
+  defp sigil_g(content, "", flags) do
+    sigil_g(content, flags)
+  end
+
   defp sigil_g(content, 't' ++ flags) do
     content = content |> String.trim()
     sigil_g(content, flags)
@@ -203,21 +215,4 @@ defmodule Unifex.CodeGenerator do
   defp sigil_g(content, []) do
     content
   end
-
-  # defp tabs_to_spaces(string) do
-  #   {a, _} = string
-  #   |> String.split("\n")
-  #   |> Enum.map_reduce("", fn current, prev ->
-  #     current =
-  #       case current |> String.trim_leading(" ") do
-  #         "\t" <> trimmed ->
-  #           indent = String.length(prev) - String.length(prev |> String.trim_leading(" "))
-  #           trimmed |> String.pad_leading(indent, [" "])
-  #         _ ->
-  #           current
-  #       end
-  #     {current, current}
-  #   end)
-  #   a |> Enum.join("\n")
-  # end
 end
