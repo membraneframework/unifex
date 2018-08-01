@@ -20,9 +20,16 @@ defmodule Unifex.InterfaceIO do
     {header, source} = code
     out_dir_name = Path.join(dir, @generated_dir_name)
     File.mkdir_p!(out_dir_name)
-    out_name = Path.join(out_dir_name, name)
-    File.write!("#{out_name}.h", header)
-    File.write!("#{out_name}.c", source)
+    out_base_path = Path.join(out_dir_name, name)
+    File.write!("#{out_base_path}.h", header)
+    File.write!("#{out_base_path}.c", source)
+
+    Path.join(out_dir_name, ".gitignore")
+    |> File.write!("""
+    #{name}.c
+    #{name}.h
+    """)
+
     :ok
   end
 end
