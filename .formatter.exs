@@ -3,5 +3,11 @@
     "{lib,test,config}/**/*.{ex,exs}",
     "*.exs"
   ],
-  import_deps: [:bundlex]
+  import_deps: [:bundlex],
+  export: [
+    locals_without_parens: [
+      module: 1,
+      spec: 1
+    ]
+  ]
 ]
