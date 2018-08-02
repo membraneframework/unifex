@@ -26,8 +26,7 @@ defmodule Unifex.CodeGenerator do
     #include <unifex/util.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
-    ErlNifResourceType *STATE_RESOURCE_TYPE;
-
+    #{generate_lib_lifecycle_and_state_related_headers()}
     #{generate_result_functions_headers(results)}
     """
   end
@@ -37,7 +36,7 @@ defmodule Unifex.CodeGenerator do
     #include "#{name}.h"
 
     #{generate_result_functions(results)}
-    #{generate_lib_loaders()}
+    #{generate_lib_lifecycle_and_state_related_stuff()}
     #{functions |> Enum.map(&generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """
@@ -68,7 +67,7 @@ defmodule Unifex.CodeGenerator do
     %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
 
     args_declarations =
-      [~g<ErlNifEnv* env> | args |> Enum.map(&generate_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.map(&generate_declaration/1)]
       |> Enum.join(", ")
 
     ~g<ERL_NIF_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -107,7 +106,7 @@ defmodule Unifex.CodeGenerator do
   defp generate_tuple_maker(content) do
     ~g"""
     enif_make_tuple_from_array(
-      env,
+      env->nif_env,
       (ERL_NIF_TERM []) {
         #{content |> Enum.join(",\n") |> ~g<>iit}
       },
@@ -117,41 +116,55 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_const_atom_maker(name) do
-    ~g<enif_make_atom(env, "#{name}")>
+    ~g<enif_make_atom(env-\>nif_env, "#{name}")>
   end
 
   defp generate_term_maker({name, :state}) do
-    ~g<unifex_util_make_and_release_resource(env, #{name})>
+    ~g<unifex_util_make_and_release_resource(env-\>nif_env, #{name})>
   end
 
-  defp generate_term_maker({name, :buffer}) do
-    ~g<#{name}>
+  defp generate_term_maker({name, :payload}) do
+    ~g<#{name}.term>
   end
 
   defp generate_term_maker({name, type}) do
-    ~g<enif_make_#{type}(env, #{name})>
+    ~g<enif_make_#{type}(env-\>nif_env, #{name})>
   end
 
   defp generate_declaration({name, :state}) do
     ~g<State* #{name}>
   end
 
-  defp generate_declaration({name, :buffer}) do
-    ~g<ERL_NIF_TERM #{name}>
+  defp generate_declaration({name, :payload}) do
+    ~g<UnifexPayload #{name}>
   end
 
   defp generate_declaration({name, type}) do
     ~g<#{type} #{name}>
   end
 
-  defp generate_lib_loaders() do
+  defp generate_lib_lifecycle_and_state_related_headers() do
     ~g"""
-    static void destroy_state(ErlNifEnv* env, void* value) {
-      State *state = (State*) value;
-      handle_destroy_state(env, state);
+    State* unifex_alloc_state(UnifexEnv* env);
+    """
+  end
+
+  defp generate_lib_lifecycle_and_state_related_stuff() do
+    ~g"""
+    ErlNifResourceType *STATE_RESOURCE_TYPE;
+
+    State* unifex_alloc_state(UnifexEnv* env) {
+      UNIFEX_UTIL_UNUSED(env);
+      return enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(State));
     }
 
-    int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
+    static void destroy_state(ErlNifEnv* env, void* value) {
+      State *state = (State*) value;
+      #{generate_unifex_env()}
+      handle_destroy_state(&unifex_env, state);
+    }
+
+    static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
       UNIFEX_UTIL_UNUSED(load_info);
       UNIFEX_UTIL_UNUSED(priv_data);
 
@@ -168,14 +181,15 @@ defmodule Unifex.CodeGenerator do
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
       UNIFEX_UTIL_UNUSED(argc);
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
+      #{generate_unifex_env()}
       #{args |> Enum.with_index() |> Enum.map(&generate_arg_parse/1) |> Enum.join("\n\t")}
-      return #{name}(#{[:env | args |> Keyword.keys()] |> Enum.join(", ")});
+      return #{name}(#{[:"&unifex_env" | args |> Keyword.keys()] |> Enum.join(", ")});
     }
     """
   end
 
-  defp generate_arg_parse({{name, :buffer}, i}) do
-    ~g<UNIFEX_UTIL_PARSE_BINARY_ARG(#{i}, #{name});>
+  defp generate_arg_parse({{name, :payload}, i}) do
+    ~g<UNIFEX_UTIL_PARSE_PAYLOAD_ARG(#{i}, #{name});>
   end
 
   defp generate_arg_parse({{name, :state}, i}) do
@@ -195,6 +209,10 @@ defmodule Unifex.CodeGenerator do
 
     ERL_NIF_INIT(#{module}.Nif, nif_funcs, load, NULL, NULL, NULL)
     """
+  end
+
+  defp generate_unifex_env() do
+    ~g<UnifexEnv unifex_env = {.nif_env = env};>
   end
 
   defp sigil_g(content, "", flags) do

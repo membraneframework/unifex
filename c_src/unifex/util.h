@@ -1,6 +1,7 @@
 #pragma once
 
 #include <erl_nif.h>
+#include "unifex.h"
 
 #define UNIFEX_UTIL_UNUSED(x) (void)(x)
 
@@ -26,6 +27,9 @@
 #define UNIFEX_UTIL_PARSE_BINARY_ARG(position, var_name) \
   UNIFEX_UTIL_PARSE_ARG(position, var_name, ErlNifBinary var_name, enif_inspect_binary, &var_name)
 
+#define UNIFEX_UTIL_PARSE_PAYLOAD_ARG(position, var_name) \
+  UNIFEX_UTIL_PARSE_ARG(position, var_name, UnifexPayload var_name, unifex_util_inspect_binary, &var_name)
+
 #define UNIFEX_UTIL_PARSE_RESOURCE_ARG(position, var_name, var_type, res_type) \
   var_type * var_name; \
   if(!enif_get_resource(env, argv[position], res_type, (void **) & var_name)) { \
@@ -41,3 +45,4 @@ ERL_NIF_TERM unifex_util_args_error_result(ErlNifEnv* env, const char* field, co
 
 // term manipulation helpers
 ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resource);
+int unifex_util_inspect_binary(ErlNifEnv* env, ERL_NIF_TERM binary_term, UnifexPayload* payload);

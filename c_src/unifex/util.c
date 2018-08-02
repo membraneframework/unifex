@@ -14,3 +14,14 @@ ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resourc
   enif_release_resource(resource);
   return resource_term;
 }
+
+int unifex_util_inspect_binary(ErlNifEnv* env, ERL_NIF_TERM binary_term, UnifexPayload* payload) {
+  ErlNifBinary erl_binary;
+  int res = enif_inspect_binary(env, binary_term, &erl_binary);
+  if(res) {
+    payload->data = erl_binary.data;
+    payload->size = erl_binary.size;
+    payload->term = binary_term;
+  }
+  return res;
+}
