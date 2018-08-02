@@ -11,13 +11,13 @@ defmodule Unifex.CodeGenerator do
       |> Enum.unzip()
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = generate_header(name, results)
+    header = generate_header(name, functions, results)
     source = generate_source(name, module, functions, results)
 
     {header, source}
   end
 
-  defp generate_header(name, results) do
+  defp generate_header(name, functions, results) do
     ~g"""
     #pragma once
 
@@ -26,6 +26,7 @@ defmodule Unifex.CodeGenerator do
     #include <unifex/util.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
+    #{functions |> Enum.map(&generate_implemented_function_header/1)}
     #{generate_lib_lifecycle_and_state_related_headers()}
     #{generate_result_functions_headers(results)}
     """
@@ -40,6 +41,13 @@ defmodule Unifex.CodeGenerator do
     #{functions |> Enum.map(&generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """
+  end
+
+  defp generate_implemented_function_header({name, args}) do
+    args_declarations =
+      [~g<UnifexEnv* env> | args |> Enum.map(&generate_declaration/1)]
+      |> Enum.join(", ")
+    ~g<UNIFEX_TERM #{name}(#{args_declarations});>
   end
 
   defp generate_result_functions(results) do
@@ -146,6 +154,7 @@ defmodule Unifex.CodeGenerator do
   defp generate_lib_lifecycle_and_state_related_headers() do
     ~g"""
     State* unifex_alloc_state(UnifexEnv* env);
+    void handle_destroy_state(UnifexEnv* env, State* state);
     """
   end
 
