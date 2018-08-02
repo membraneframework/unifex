@@ -2,13 +2,7 @@ defmodule Unifex.SpecsParser do
   @config_store_name :unifex_config__
 
   def parse_specs(specs) do
-    {_res, binds} =
-      Code.eval_string(
-        specs,
-        [{@config_store_name, []}],
-        macros: [{__MODULE__, module: 1, spec: 1}] ++ Unifex.SpecsParser.Env.env().macros
-      )
-
+    {_res, binds} = Code.eval_string(specs, [{@config_store_name, []}], make_env())
     binds |> Keyword.fetch!(@config_store_name) |> Enum.reverse()
   end
 
@@ -26,10 +20,6 @@ defmodule Unifex.SpecsParser do
     quote generated: true do
       unquote(config_store) = [{unquote(key), unquote(value)} | unquote(config_store)]
     end
-  end
-
-  defp enquote(value) do
-    {:quote, [], [[do: value]]}
   end
 
   defp parse_fun_spec({:::, _, [{fun_name, _, args}, results]}) do
@@ -54,9 +44,20 @@ defmodule Unifex.SpecsParser do
   defp parse_fun_spec_results_traverse_helper(value) do
     [value]
   end
-end
 
-defmodule Unifex.SpecsParser.Env do
-  @moduledoc false
-  def env, do: __ENV__
+  defp make_env() do
+    {env, _binds} =
+      Code.eval_quoted(
+        quote do
+          import unquote(__MODULE__), only: [module: 1, spec: 1]
+          __ENV__
+        end
+      )
+
+    env
+  end
+
+  defp enquote(value) do
+    {:quote, [], [[do: value]]}
+  end
 end

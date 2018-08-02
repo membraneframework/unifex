@@ -9,7 +9,7 @@ defmodule Unifex.InterfaceIO do
   def get_interfaces_specs!(dir) do
     Path.wildcard(dir |> Path.join("**/?*#{@spec_name_sufix}"))
     |> Enum.map(fn file ->
-      name = file |> Path.basename() |> String.replace_suffix("#{@spec_name_sufix}", "")
+      name = file |> Path.basename() |> String.replace_suffix(@spec_name_sufix, "")
       dir = file |> Path.dirname()
       specs = File.read!(file)
       {name, dir, specs}
@@ -26,8 +26,8 @@ defmodule Unifex.InterfaceIO do
 
     Path.join(out_dir_name, ".gitignore")
     |> File.write!("""
-    #{name}.c
-    #{name}.h
+    *.c
+    *.h
     """)
 
     :ok
