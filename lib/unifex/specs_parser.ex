@@ -45,6 +45,9 @@ defmodule Unifex.SpecsParser do
     [value]
   end
 
+  # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
+  # user code without possibly misleading macros and aliases from the current scope,
+  # while providing needed functions/macros.
   defp make_env() do
     {env, _binds} =
       Code.eval_quoted(
@@ -57,6 +60,8 @@ defmodule Unifex.SpecsParser do
     env
   end
 
+  # Embeds code in a `quote` block. Useful when willing to store the code and parse
+  # it in runtime instead of compile time.
   defp enquote(value) do
     {:quote, [], [[do: value]]}
   end
