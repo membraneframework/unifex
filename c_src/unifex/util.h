@@ -9,7 +9,7 @@
 #define UNIFEX_UTIL_PARSE_ARG(position, var_name, var_def, getter_func, ...) \
   var_def; \
   if(!getter_func(env, argv[position], __VA_ARGS__)) { \
-    return unifex_util_args_error_result(env, #var_name, #getter_func); \
+    return unifex_util_raise_args_error(env, #var_name, #getter_func); \
   }
 
 #define UNIFEX_UTIL_PARSE_UINT_ARG(position, var_name) \
@@ -33,15 +33,15 @@
 #define UNIFEX_UTIL_PARSE_RESOURCE_ARG(position, var_name, var_type, res_type) \
   var_type * var_name; \
   if(!enif_get_resource(env, argv[position], res_type, (void **) & var_name)) { \
-    return unifex_util_args_error_result(env, #var_name, "enif_get_resource"); \
+    return unifex_util_raise_args_error(env, #var_name, "enif_get_resource"); \
   }
 
 #define UNIFEX_UTIL_PARSE_PID_ARG(position, var_name) \
   UNIFEX_UTIL_PARSE_ARG(position, var_name, ErlNifPid var_name, enif_get_local_pid, &var_name)
 
 
-// common result functions
-ERL_NIF_TERM unifex_util_args_error_result(ErlNifEnv* env, const char* field, const char *description);
+// args parse helpers
+ERL_NIF_TERM unifex_util_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 
 // term manipulation helpers
 ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resource);
