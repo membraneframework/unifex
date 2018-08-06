@@ -1,5 +1,12 @@
 defmodule Unifex.CodeGenerator do
   alias Unifex.InterfaceIO
+  alias __MODULE__.BaseType
+
+  defmacro __using__(_args) do
+    quote do
+      import unquote(__MODULE__), only: [sigil_g: 2, sigil_g: 3]
+    end
+  end
 
   def generate_code(name, specs) do
     module = specs |> Keyword.fetch!(:module)
@@ -45,8 +52,9 @@ defmodule Unifex.CodeGenerator do
 
   defp generate_implemented_function_header({name, args}) do
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&generate_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
+
     ~g<UNIFEX_TERM #{name}(#{args_declarations});>
   end
 
@@ -75,7 +83,7 @@ defmodule Unifex.CodeGenerator do
     %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
 
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&generate_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
     ~g<ERL_NIF_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -90,7 +98,7 @@ defmodule Unifex.CodeGenerator do
         %{return: generate_const_atom_maker(name), args: [], labels: [name]}
 
       {:::, _, [{name, _, _}, {type, _, _}]} ->
-        %{return: generate_term_maker({name, type}), args: [{name, type}], labels: []}
+        %{return: BaseType.generate_term_maker({name, type}), args: [{name, type}], labels: []}
 
       {a, b} ->
         generate_result_spec_traverse_helper({:{}, [], [a, b]})
@@ -125,30 +133,6 @@ defmodule Unifex.CodeGenerator do
 
   defp generate_const_atom_maker(name) do
     ~g<enif_make_atom(env-\>nif_env, "#{name}")>
-  end
-
-  defp generate_term_maker({name, :state}) do
-    ~g<unifex_util_make_and_release_resource(env-\>nif_env, #{name})>
-  end
-
-  defp generate_term_maker({name, :payload}) do
-    ~g<#{name}.term>
-  end
-
-  defp generate_term_maker({name, type}) do
-    ~g<enif_make_#{type}(env-\>nif_env, #{name})>
-  end
-
-  defp generate_declaration({name, :state}) do
-    ~g<State* #{name}>
-  end
-
-  defp generate_declaration({name, :payload}) do
-    ~g<UnifexPayload #{name}>
-  end
-
-  defp generate_declaration({name, type}) do
-    ~g<#{type} #{name}>
   end
 
   defp generate_lib_lifecycle_and_state_related_headers() do
@@ -191,18 +175,12 @@ defmodule Unifex.CodeGenerator do
       UNIFEX_UTIL_UNUSED(argc);
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
-      #{args |> Enum.with_index() |> Enum.map(&generate_arg_parse/1) |> Enum.join("\n\t")}
+      #{
+      args |> Enum.with_index() |> Enum.map(&BaseType.generate_arg_parse/1) |> Enum.join("\n\t")
+    }
       return #{name}(#{[:"&unifex_env" | args |> Keyword.keys()] |> Enum.join(", ")});
     }
     """
-  end
-
-  defp generate_arg_parse({{name, :payload}, i}) do
-    ~g<UNIFEX_UTIL_PARSE_PAYLOAD_ARG(#{i}, #{name});>
-  end
-
-  defp generate_arg_parse({{name, :state}, i}) do
-    ~g<UNIFEX_UTIL_PARSE_RESOURCE_ARG(#{i}, #{name}, State, STATE_RESOURCE_TYPE);>
   end
 
   defp generate_erlang_boilerplate(module, functions) do
@@ -224,22 +202,22 @@ defmodule Unifex.CodeGenerator do
     ~g<UnifexEnv unifex_env = {.nif_env = env};>
   end
 
-  defp sigil_g(content, "", flags) do
+  def sigil_g(content, "", flags) do
     sigil_g(content, flags)
   end
 
-  defp sigil_g(content, 't' ++ flags) do
+  def sigil_g(content, 't' ++ flags) do
     content = content |> String.trim()
     sigil_g(content, flags)
   end
 
-  defp sigil_g(content, 'i' ++ flags) do
+  def sigil_g(content, 'i' ++ flags) do
     [first | rest] = content |> String.split("\n")
     content = [first | rest |> Enum.map(&"  #{&1}")] |> Enum.join("\n")
     sigil_g(content, flags)
   end
 
-  defp sigil_g(content, []) do
+  def sigil_g(content, []) do
     content
   end
 end
