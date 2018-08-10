@@ -31,10 +31,7 @@
   UNIFEX_UTIL_PARSE_ARG(position, var_name, UnifexPayload var_name, unifex_util_inspect_binary, &var_name)
 
 #define UNIFEX_UTIL_PARSE_RESOURCE_ARG(position, var_name, var_type, res_type) \
-  var_type * var_name; \
-  if(!enif_get_resource(env, argv[position], res_type, (void **) & var_name)) { \
-    return unifex_util_raise_args_error(env, #var_name, "enif_get_resource"); \
-  }
+  UNIFEX_UTIL_PARSE_ARG(position, var_name, var_type* var_name, enif_get_resource, res_type, (void **) & var_name)
 
 #define UNIFEX_UTIL_PARSE_PID_ARG(position, var_name) \
   UNIFEX_UTIL_PARSE_ARG(position, var_name, ErlNifPid var_name, enif_get_local_pid, &var_name)
