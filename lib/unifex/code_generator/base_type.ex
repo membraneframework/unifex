@@ -4,11 +4,12 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   @type t :: atom
 
-  @callback generate_term_maker(name :: atom) :: CodeGenerator.code_t()
-  @callback generate_declaration(name :: atom) :: CodeGenerator.code_t()
-  @callback generate_arg_parse(name :: atom, arg_no :: integer) :: CodeGenerator.code_t()
+  @callback generate_arg_serialize(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_native_type() :: CodeGenerator.code_t()
+  @callback generate_arg_parse(argument :: String.t(), variable :: String.t()) ::
+              CodeGenerator.code_t()
 
-  @optional_callbacks generate_term_maker: 1, generate_declaration: 1, generate_arg_parse: 2
+  @optional_callbacks generate_arg_serialize: 1, generate_native_type: 0, generate_arg_parse: 2
 
   defmacro __using__(_args) do
     quote do
@@ -17,20 +18,31 @@ defmodule Unifex.CodeGenerator.BaseType do
     end
   end
 
-  def generate_term_maker({name, type}) do
-    call(type, :generate_term_maker, [name], fn type, name ->
+  def generate_arg_serialize({name, type}) do
+    call(type, :generate_arg_serialize, [name], fn ->
       ~g<enif_make_#{type}(env-\>nif_env, #{name})>
     end)
   end
 
   def generate_declaration({name, type}) do
-    call(type, :generate_declaration, [name], fn type, name -> ~g<#{type} #{name}> end)
+    native_type = call(type, :generate_native_type, [], fn -> ~g<#{type}> end)
+    ~g<#{native_type} #{name}>
   end
 
   def generate_arg_parse({{name, type}, i}) do
-    call(type, :generate_arg_parse, [name, i], fn type, name, i ->
-      ~g<UNIFEX_UTIL_PARSE_#{"#{type}" |> String.upcase()}_ARG(#{i}, #{name});>
-    end)
+    argument = ~g<argv[#{i}]>
+
+    arg_getter =
+      call(type, :generate_arg_parse, [argument, name], fn ->
+        ~g<enif_get_#{type}(env, #{argument}, &#{name})>
+      end)
+
+    ~g"""
+    #{generate_declaration({name, type})};
+    if(!#{arg_getter}) {
+      return unifex_util_raise_args_error(env, "#{name}", "#{arg_getter}");
+    }
+    """
   end
 
   defp call(type, callback, args, default_f) do
@@ -40,7 +52,7 @@ defmodule Unifex.CodeGenerator.BaseType do
          (module |> Code.ensure_loaded?() and function_exported?(module, callback, length(args))) do
       apply(module, callback, args)
     else
-      apply(default_f, [type | args])
+      apply(default_f, [])
     end
   end
 end

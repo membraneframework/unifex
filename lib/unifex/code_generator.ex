@@ -98,7 +98,7 @@ defmodule Unifex.CodeGenerator do
         %{return: generate_const_atom_maker(name), args: [], labels: [name]}
 
       {:::, _, [{name, _, _}, {type, _, _}]} ->
-        %{return: BaseType.generate_term_maker({name, type}), args: [{name, type}], labels: []}
+        %{return: BaseType.generate_arg_serialize({name, type}), args: [{name, type}], labels: []}
 
       {a, b} ->
         generate_result_spec_traverse_helper({:{}, [], [a, b]})
@@ -176,7 +176,11 @@ defmodule Unifex.CodeGenerator do
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
       #{
-      args |> Enum.with_index() |> Enum.map(&BaseType.generate_arg_parse/1) |> Enum.join("\n\t")
+      args
+      |> Enum.with_index()
+      |> Enum.map(&BaseType.generate_arg_parse/1)
+      |> Enum.map(&~g<#{&1}>i)
+      |> Enum.join("\n\t")
     }
       return #{name}(#{[:"&unifex_env" | args |> Keyword.keys()] |> Enum.join(", ")});
     }
