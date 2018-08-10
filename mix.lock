@@ -1,4 +1,4 @@
 %{
-  "bundlex": {:hex, :bundlex, "0.1.2", "3ff76e4d69aab81a9a279c6c2dfdad77063ae118af9d7418f3b3c411be537610", [:mix], [{:porcelain, "~> 2.0", [hex: :porcelain, repo: "hexpm", optional: false]}], "hexpm"},
+  "bundlex": {:hex, :bundlex, "0.1.3", "f55cce979fe656e48ae7fc4d36a90c65fce907632d65b54828388735a71b840b", [:mix], [{:porcelain, "~> 2.0", [hex: :porcelain, repo: "hexpm", optional: false]}], "hexpm"},
   "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
 }
