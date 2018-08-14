@@ -4,7 +4,7 @@ defmodule Unifex.CodeGenerator do
 
   defmacro __using__(_args) do
     quote do
-      import unquote(__MODULE__), only: [sigil_g: 2, sigil_g: 3]
+      import unquote(__MODULE__), only: [sigil_g: 2]
     end
   end
 
@@ -24,6 +24,40 @@ defmodule Unifex.CodeGenerator do
     {header, source}
   end
 
+  @doc """
+  Sigil used for indentation of generated code.
+
+  By itself it does nothing, but has very useful flags:
+  * `t` trims the string
+  * `i` indents all but the first line. Helpful when used
+    inside string interpolation that already has been indented
+  * `I` indents every line of string
+  """
+  def sigil_g(content, 't' ++ flags) do
+    content = content |> String.trim()
+    sigil_g(content, flags)
+  end
+
+  def sigil_g(content, 'i' ++ flags) do
+    [first | rest] = content |> String.split("\n")
+    content = [first | rest |> Enum.map(&indent/1)] |> Enum.join("\n")
+    sigil_g(content, flags)
+  end
+
+  def sigil_g(content, 'I' ++ flags) do
+    lines = content |> String.split("\n")
+    content = lines |> Enum.map(&indent/1) |> Enum.join("\n")
+    sigil_g(content, flags)
+  end
+
+  def sigil_g(content, []) do
+    content
+  end
+
+  defp indent(line) do
+    "  #{line}"
+  end
+
   defp generate_header(name, functions, results) do
     ~g"""
     #pragma once
@@ -33,9 +67,9 @@ defmodule Unifex.CodeGenerator do
     #include <unifex/util.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
-    #{functions |> Enum.map(&generate_implemented_function_header/1)}
-    #{generate_lib_lifecycle_and_state_related_headers()}
-    #{generate_result_functions_headers(results)}
+    #{functions |> Enum.map(&generate_implemented_function_declaration/1)}
+    #{generate_lib_lifecycle_and_state_related_declarations()}
+    #{generate_result_functions_declarations(results)}
     """
   end
 
@@ -50,7 +84,7 @@ defmodule Unifex.CodeGenerator do
     """
   end
 
-  defp generate_implemented_function_header({name, args}) do
+  defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
       [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
@@ -64,22 +98,22 @@ defmodule Unifex.CodeGenerator do
     |> Enum.join("\n")
   end
 
-  defp generate_result_functions_headers(results) do
+  defp generate_result_functions_declarations(results) do
     results
-    |> Enum.map(&generate_result_function_header/1)
+    |> Enum.map(&generate_result_function_declaration/1)
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
 
   defp generate_result_function({name, specs}) do
     ~g"""
-    #{generate_result_function_header({name, specs})} {
-      return #{generate_result_spec_traverse_helper(specs).return |> ~g<>it};
+    #{generate_result_function_declaration({name, specs})} {
+      return #{generate_result_spec_traverse_helper(specs).return |> sigil_g('it')};
     }
     """
   end
 
-  defp generate_result_function_header({name, specs}) do
+  defp generate_result_function_declaration({name, specs}) do
     %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
 
     args_declarations =
@@ -124,7 +158,7 @@ defmodule Unifex.CodeGenerator do
     enif_make_tuple_from_array(
       env->nif_env,
       (ERL_NIF_TERM []) {
-        #{content |> Enum.join(",\n") |> ~g<>iit}
+        #{content |> Enum.join(",\n") |> sigil_g('iit')}
       },
       #{length(content)}
     )
@@ -135,7 +169,7 @@ defmodule Unifex.CodeGenerator do
     ~g<enif_make_atom(env-\>nif_env, "#{name}")>
   end
 
-  defp generate_lib_lifecycle_and_state_related_headers() do
+  defp generate_lib_lifecycle_and_state_related_declarations() do
     ~g"""
     State* unifex_alloc_state(UnifexEnv* env);
     void handle_destroy_state(UnifexEnv* env, State* state);
@@ -170,32 +204,36 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_export_function({name, args}) do
+    args_parsing =
+      args
+      |> Enum.with_index()
+      |> Enum.map(&BaseType.generate_arg_parse/1)
+      |> Enum.map(&sigil_g(&1, 'I'))
+      |> Enum.join("\n")
+      |> sigil_g('t')
+
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
       UNIFEX_UTIL_UNUSED(argc);
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
-      #{
-      args
-      |> Enum.with_index()
-      |> Enum.map(&BaseType.generate_arg_parse/1)
-      |> Enum.map(&~g<#{&1}>i)
-      |> Enum.join("\n\t")
-    }
+      #{args_parsing}
       return #{name}(#{[:"&unifex_env" | args |> Keyword.keys()] |> Enum.join(", ")});
     }
     """
   end
 
   defp generate_erlang_boilerplate(module, functions) do
+    printed_funcs =
+      functions
+      |> Enum.map(fn {name, args} -> ~g<{"#{name}", #{length(args)}, export_#{name}, 0}>ii end)
+      |> Enum.join(",\n")
+      |> sigil_g('i')
+
     ~g"""
     static ErlNifFunc nif_funcs[] =
     {
-      #{
-      functions
-      |> Enum.map(fn {name, args} -> ~g<{"#{name}", #{length(args)}, export_#{name}, 0}> end)
-      |> Enum.join(",\n\t")
-    }
+      #{printed_funcs}
     };
 
     ERL_NIF_INIT(#{module}.Nif, nif_funcs, load, NULL, NULL, NULL)
@@ -204,24 +242,5 @@ defmodule Unifex.CodeGenerator do
 
   defp generate_unifex_env() do
     ~g<UnifexEnv unifex_env = {.nif_env = env};>
-  end
-
-  def sigil_g(content, "", flags) do
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 't' ++ flags) do
-    content = content |> String.trim()
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'i' ++ flags) do
-    [first | rest] = content |> String.split("\n")
-    content = [first | rest |> Enum.map(&"  #{&1}")] |> Enum.join("\n")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, []) do
-    content
   end
 end
