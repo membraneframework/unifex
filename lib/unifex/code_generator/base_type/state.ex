@@ -4,7 +4,7 @@ defmodule Unifex.CodeGenerator.BaseType.State do
 
   @impl BaseType
   def generate_arg_serialize(name) do
-    ~g<unifex_util_make_and_release_resource(env-\>nif_env, #{name})>
+    ~g<unifex_util_make_and_release_resource(env, #{name})>
   end
 
   @impl BaseType

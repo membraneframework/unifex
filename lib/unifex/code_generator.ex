@@ -106,9 +106,12 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_result_function({name, specs}) do
+    parsed_specs = generate_result_spec_traverse_helper(specs)
+
     ~g"""
     #{generate_result_function_declaration({name, specs})} {
-      return #{generate_result_spec_traverse_helper(specs).return |> sigil_g('it')};
+      UNIFEX_TERM result = #{parsed_specs.return |> sigil_g('it')};
+      return result;
     }
     """
   end
@@ -156,7 +159,7 @@ defmodule Unifex.CodeGenerator do
   defp generate_tuple_maker(content) do
     ~g"""
     enif_make_tuple_from_array(
-      env->nif_env,
+      env,
       (ERL_NIF_TERM []) {
         #{content |> Enum.join(",\n") |> sigil_g('iit')}
       },
@@ -166,7 +169,7 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_const_atom_maker(name) do
-    ~g<enif_make_atom(env-\>nif_env, "#{name}")>
+    ~g<enif_make_atom(env, "#{name}")>
   end
 
   defp generate_lib_lifecycle_and_state_related_declarations() do
@@ -188,7 +191,7 @@ defmodule Unifex.CodeGenerator do
     static void destroy_state(ErlNifEnv* env, void* value) {
       State *state = (State*) value;
       #{generate_unifex_env()}
-      handle_destroy_state(&unifex_env, state);
+      handle_destroy_state(unifex_env, state);
     }
 
     static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
@@ -212,13 +215,28 @@ defmodule Unifex.CodeGenerator do
       |> Enum.join("\n")
       |> sigil_g('t')
 
+    args_destruction =
+      args
+      |> Enum.map(&BaseType.generate_destruction/1)
+      |> Enum.reject(fn s ->
+        IO.inspect(s)
+        s == ""
+      end)
+      |> Enum.map(&sigil_g(&1, 'I'))
+      |> Enum.join(";\n")
+      |> sigil_g('t')
+
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
       UNIFEX_UTIL_UNUSED(argc);
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
       #{args_parsing}
-      return #{name}(#{[:"&unifex_env" | args |> Keyword.keys()] |> Enum.join(", ")});
+
+      ERL_NIF_TERM result = #{name}(#{[:unifex_env | args |> Keyword.keys()] |> Enum.join(", ")});
+
+      #{args_destruction};
+      return result;
     }
     """
   end
@@ -241,6 +259,6 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_unifex_env() do
-    ~g<UnifexEnv unifex_env = {.nif_env = env};>
+    ~g<UnifexEnv *unifex_env = env;>
   end
 end
