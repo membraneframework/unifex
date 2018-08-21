@@ -218,10 +218,7 @@ defmodule Unifex.CodeGenerator do
     args_destruction =
       args
       |> Enum.map(&BaseType.generate_destruction/1)
-      |> Enum.reject(fn s ->
-        IO.inspect(s)
-        s == ""
-      end)
+      |> Enum.reject(&("" == &1))
       |> Enum.map(&sigil_g(&1, 'I'))
       |> Enum.join(";\n")
       |> sigil_g('t')
@@ -244,7 +241,9 @@ defmodule Unifex.CodeGenerator do
   defp generate_erlang_boilerplate(module, functions) do
     printed_funcs =
       functions
-      |> Enum.map(fn {name, args} -> ~g<{"#{name}", #{length(args)}, export_#{name}, 0}>ii end)
+      |> Enum.map(fn {name, args} ->
+        ~g<{"unifex_#{name}", #{length(args)}, export_#{name}, 0}>ii
+      end)
       |> Enum.join(",\n")
       |> sigil_g('i')
 

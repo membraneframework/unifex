@@ -10,12 +10,14 @@ defmodule Unifex.CodeGenerator.BaseType do
   @callback generate_native_type() :: CodeGenerator.code_t()
   @callback generate_arg_parse(argument :: String.t(), variable :: String.t()) ::
               CodeGenerator.code_t()
+  @callback generate_elixir_postprocessing(name :: atom) :: Macro.t()
 
   @optional_callbacks generate_arg_serialize: 1,
                       generate_initialization: 1,
                       generate_destruction: 1,
                       generate_native_type: 0,
-                      generate_arg_parse: 2
+                      generate_arg_parse: 2,
+                      generate_elixir_postprocessing: 1
 
   defmacro __using__(_args) do
     quote do
@@ -64,6 +66,12 @@ defmodule Unifex.CodeGenerator.BaseType do
       return unifex_util_raise_args_error(env, "#{name}", "#{arg_getter}");
     }
     """
+  end
+
+  def generate_elixir_postprocessing({name, type}) do
+    call(type, :generate_elixir_postprocessing, [name], fn ->
+      Macro.var(name, nil)
+    end)
   end
 
   defp call(type, callback, args, default_f) do
