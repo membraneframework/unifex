@@ -5,7 +5,8 @@ defmodule Unifex.CodeGenerator.BaseType do
   @type t :: atom
 
   @callback generate_arg_serialize(name :: atom) :: CodeGenerator.code_t()
-  @callback generate_initialization(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_parsed_arg_declaration(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_allocation(name :: atom) :: CodeGenerator.code_t()
   @callback generate_destruction(name :: atom) :: CodeGenerator.code_t()
   @callback generate_native_type() :: CodeGenerator.code_t()
   @callback generate_arg_parse(argument :: String.t(), variable :: String.t()) ::
@@ -13,7 +14,8 @@ defmodule Unifex.CodeGenerator.BaseType do
   @callback generate_elixir_postprocessing(name :: atom) :: Macro.t()
 
   @optional_callbacks generate_arg_serialize: 1,
-                      generate_initialization: 1,
+                      generate_parsed_arg_declaration: 1,
+                      generate_allocation: 1,
                       generate_destruction: 1,
                       generate_native_type: 0,
                       generate_arg_parse: 2,
@@ -32,20 +34,26 @@ defmodule Unifex.CodeGenerator.BaseType do
     end)
   end
 
-  def generate_declaration({name, type}) do
+  def generate_parameter_declaration({name, type}) do
     native_type = call(type, :generate_native_type, [], fn -> ~g<#{type}> end)
     ~g<#{native_type} #{name}>
   end
 
-  def generate_initialization({name, type}) do
-    call(type, :generate_initialization, [name], fn -> "" end)
+  def generate_parsed_arg_declaration({name, type}) do
+    call(type, :generate_parsed_arg_declaration, [name], fn ->
+      generate_parameter_declaration({name, type}) <> ";"
+    end)
+  end
+
+  def generate_allocation({name, type}) do
+    call(type, :generate_allocation, [name], fn -> "" end)
   end
 
   def generate_destruction({name, type}) do
     call(type, :generate_destruction, [name], fn -> "" end)
   end
 
-  def generate_arg_parse({{name, type}, i}) do
+  def generate_arg_parse({{name, type}, i}, ctx) do
     argument = ~g<argv[#{i}]>
 
     arg_getter =
@@ -53,17 +61,11 @@ defmodule Unifex.CodeGenerator.BaseType do
         ~g<enif_get_#{type}(env, #{argument}, &#{name})>
       end)
 
-    initialization =
-      case generate_initialization({name, type}) do
-        "" -> ""
-        non_empty -> non_empty <> ";"
-      end
-
     ~g"""
-    #{generate_declaration({name, type})};
-    #{initialization}
+    #{generate_allocation({name, type})}
     if(!#{arg_getter}) {
-      return unifex_util_raise_args_error(env, "#{name}", "#{arg_getter}");
+      #{ctx.result_var} = unifex_util_raise_args_error(env, "#{name}", "#{arg_getter}");
+      goto #{ctx.exit_label};
     }
     """
   end

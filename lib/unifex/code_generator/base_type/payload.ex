@@ -13,13 +13,18 @@ defmodule Unifex.CodeGenerator.BaseType.Payload do
   end
 
   @impl BaseType
-  def generate_initialization(name) do
-    ~g<#{name} = enif_alloc(sizeof (UnifexPayload))>
+  def generate_parsed_arg_declaration(name) do
+    ~g<#{generate_native_type()} #{name} = NULL;>
+  end
+
+  @impl BaseType
+  def generate_allocation(name) do
+    ~g<#{name} = enif_alloc(sizeof (UnifexPayload));>
   end
 
   @impl BaseType
   def generate_destruction(name) do
-    ~g<unifex_payload_free_ptr(&#{name})>
+    ~g<unifex_payload_free_ptr(&#{name});>
   end
 
   @impl BaseType

@@ -86,7 +86,7 @@ defmodule Unifex.CodeGenerator do
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations});>
@@ -120,7 +120,7 @@ defmodule Unifex.CodeGenerator do
     %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
 
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
       |> Enum.join(", ")
 
     ~g<ERL_NIF_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -207,11 +207,20 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_export_function({name, args}) do
+    ctx = %{:result_var => "result", :exit_label => "exit_export_#{name}"}
+
+    args_declarations =
+      args
+      |> Enum.map(&BaseType.generate_parsed_arg_declaration/1)
+      |> Enum.map(&sigil_g(&1, 'I'))
+      |> Enum.join("\n")
+      |> sigil_g('t')
+
     args_parsing =
       args
       |> Enum.with_index()
-      |> Enum.map(&BaseType.generate_arg_parse/1)
-      |> Enum.map(&sigil_g(&1, 'I'))
+      |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
+      |> Enum.map(&sigil_g(&1, 'tI'))
       |> Enum.join("\n")
       |> sigil_g('t')
 
@@ -220,19 +229,23 @@ defmodule Unifex.CodeGenerator do
       |> Enum.map(&BaseType.generate_destruction/1)
       |> Enum.reject(&("" == &1))
       |> Enum.map(&sigil_g(&1, 'I'))
-      |> Enum.join(";\n")
+      |> Enum.join("\n")
       |> sigil_g('t')
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
       UNIFEX_UTIL_UNUSED(argc);
+      ERL_NIF_TERM #{ctx.result_var};
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
+      #{args_declarations}
+
       #{args_parsing}
 
-      ERL_NIF_TERM result = #{name}(#{[:unifex_env | args |> Keyword.keys()] |> Enum.join(", ")});
-
-      #{args_destruction};
+      #{ctx.result_var} = #{name}(#{[:unifex_env | args |> Keyword.keys()] |> Enum.join(", ")});
+      goto #{ctx.exit_label};
+    #{ctx.exit_label}:
+      #{args_destruction}
       return result;
     }
     """
