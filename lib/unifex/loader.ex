@@ -15,7 +15,6 @@ defmodule Unifex.Loader do
 
     fun_specs = specs |> Keyword.get_values(:fun_specs)
 
-    # Code.ensure_loaded?(ResultsParser)
     funs =
       fun_specs
       |> Enum.map(fn {name, args, results} ->

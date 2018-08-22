@@ -106,12 +106,9 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp generate_result_function({name, specs}) do
-    parsed_specs = generate_result_spec_traverse_helper(specs)
-
     ~g"""
     #{generate_result_function_declaration({name, specs})} {
-      UNIFEX_TERM result = #{parsed_specs.return |> sigil_g('it')};
-      return result;
+      return #{generate_result_spec_traverse_helper(specs).return |> sigil_g('it')};
     }
     """
   end
