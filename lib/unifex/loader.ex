@@ -1,4 +1,13 @@
 defmodule Unifex.Loader do
+  @moduledoc """
+  This module allows to generate definitions for native functions described in Unifex specs.
+
+  To acheive that simply use this module:
+
+      use Unifex.Loader
+
+  """
+
   alias Unifex.{Helper, InterfaceIO, SpecsParser, ResultsParser}
 
   defmacro __using__(_args) do
@@ -30,7 +39,8 @@ defmodule Unifex.Loader do
           |> Enum.map(&ResultsParser.generate_postprocessing_ast/1)
 
         cases =
-          Enum.zip(patterns, handlers)
+          patterns
+          |> Enum.zip(handlers)
           |> Enum.reject(fn {pattern, handler} ->
             pattern == handler
           end)

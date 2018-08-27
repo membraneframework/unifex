@@ -1,4 +1,5 @@
 defmodule Unifex.Helper do
+  @moduledoc false
   @src_dir "c_src"
 
   def get_source_dir() do

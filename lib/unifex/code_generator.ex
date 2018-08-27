@@ -1,4 +1,7 @@
 defmodule Unifex.CodeGenerator do
+  @moduledoc """
+  Module responsible for C code genearation based on Unifex specs
+  """
   alias Unifex.InterfaceIO
   alias __MODULE__.BaseType
 
@@ -8,6 +11,17 @@ defmodule Unifex.CodeGenerator do
     end
   end
 
+  @type code_t() :: String.t()
+
+  @doc """
+  Generates C boilerplate for a native code based on a spec
+
+  Takes the name for the `.c` and `.h` files and the specs
+  parsed by `Unifex.SpecsParser.parse_specs()/1` and generates code of header
+  and source code, returning them in a tuple of 2 strings.
+  """
+  @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
+          {code_t(), code_t()}
   def generate_code(name, specs) do
     module = specs |> Keyword.fetch!(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
@@ -33,6 +47,7 @@ defmodule Unifex.CodeGenerator do
     inside string interpolation that already has been indented
   * `I` indents every line of string
   """
+  @spec sigil_g(String.t(), charlist()) :: String.t()
   def sigil_g(content, 't' ++ flags) do
     content = content |> String.trim()
     sigil_g(content, flags)
@@ -67,7 +82,7 @@ defmodule Unifex.CodeGenerator do
     #include <unifex/util.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
-    #{functions |> Enum.map(&generate_implemented_function_declaration/1)}
+    #{functions |> Enum.map(&generate_implemented_function_declaration/1) |> Enum.join("\n")}
     #{generate_lib_lifecycle_and_state_related_declarations()}
     #{generate_result_functions_declarations(results)}
     """

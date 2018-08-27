@@ -1,4 +1,6 @@
 defmodule Unifex.InterfaceIO do
+  @moduledoc false
+
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
 
@@ -7,7 +9,9 @@ defmodule Unifex.InterfaceIO do
   end
 
   def get_interfaces_specs!(dir) do
-    Path.wildcard(dir |> Path.join("**/?*#{@spec_name_sufix}"))
+    dir
+    |> Path.join("**/?*#{@spec_name_sufix}")
+    |> Path.wildcard()
     |> Enum.map(fn file ->
       name = file |> Path.basename() |> String.replace_suffix(@spec_name_sufix, "")
       dir = file |> Path.dirname()
@@ -24,7 +28,8 @@ defmodule Unifex.InterfaceIO do
     File.write!("#{out_base_path}.h", header)
     File.write!("#{out_base_path}.c", source)
 
-    Path.join(out_dir_name, ".gitignore")
+    out_dir_name
+    |> Path.join(".gitignore")
     |> File.write!("""
     *.c
     *.h

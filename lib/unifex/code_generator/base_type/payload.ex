@@ -1,4 +1,7 @@
 defmodule Unifex.CodeGenerator.BaseType.Payload do
+  @moduledoc """
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for `Membrane.Payload`
+  """
   alias Unifex.CodeGenerator.BaseType
   use BaseType
 

@@ -1,4 +1,5 @@
 defmodule Unifex.ResultsParser do
+  @moduledoc false
   alias Unifex.CodeGenerator.BaseType
 
   def parse_return_specs(rt) do

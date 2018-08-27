@@ -1,4 +1,7 @@
 defmodule Mix.Tasks.Compile.Unifex do
+  @moduledoc """
+  Generates native boilerplate code for all the `.spec.exs` files found in `c_src` dir
+  """
   alias Unifex.{CodeGenerator, Helper, InterfaceIO, SpecsParser}
   use Mix.Task
 

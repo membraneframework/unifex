@@ -1,4 +1,7 @@
 defmodule Unifex.CodeGenerator.BaseType.State do
+  @moduledoc """
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for Unifex state.
+  """
   alias Unifex.CodeGenerator.BaseType
   use BaseType
 
