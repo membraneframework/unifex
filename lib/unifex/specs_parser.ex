@@ -33,7 +33,7 @@ defmodule Unifex.SpecsParser do
 
   Each generated function gets additional `UnifexEnv* env` as the first parameter implicitly.
 
-  In the example above, the generated boilerplate woluld require implementation of the following functions:
+  In the example above, the generated boilerplate would require implementation of the following functions:
 
       UNIFEX_TERM create(UnifexEnv* env);
       UNIFEX_TERM decode_frame(UnifexEnv* env, UnifexPayload * payload, int offset, State* state);

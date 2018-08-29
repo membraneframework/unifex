@@ -17,7 +17,7 @@ defmodule Unifex.BundlexProject do
             _ -> []
           end,
         export_only?: Mix.env() != :test,
-        sources: ["unifex.c", "util.c"]
+        sources: ["unifex.c"]
       ]
     ]
   end

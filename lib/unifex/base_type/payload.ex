@@ -27,7 +27,7 @@ defmodule Unifex.BaseType.Payload do
 
   @impl BaseType
   def generate_destruction(name) do
-    ~g<unifex_payload_free_ptr(&#{name});>
+    ~g<unifex_payload_release_ptr(&#{name});>
   end
 
   @impl BaseType

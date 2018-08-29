@@ -1,6 +1,6 @@
 defmodule Unifex.BaseType do
   @moduledoc """
-  This mocule provides different generators allowing to map the types from Unifex specs into proper native types
+  This module provides different generators allowing to map the types from Unifex specs into proper native types
 
   The generators from this module are trying to delegate the calls to the callbacks in modules adequate for the type
   but provide fallback values (all the callbacks are optional)
@@ -153,7 +153,7 @@ defmodule Unifex.BaseType do
 
   Fallbacks to simply passing the value (as variable reference)
   """
-  @spec generate_elixir_postprocessing(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  @spec generate_elixir_postprocessing(spec_tuple_t()) :: Macro.t()
   def generate_elixir_postprocessing({name, type}) do
     call(type, :generate_elixir_postprocessing, [name], fn ->
       Macro.var(name, nil)

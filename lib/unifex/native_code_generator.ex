@@ -78,7 +78,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     #include <stdio.h>
     #include <erl_nif.h>
-    #include <unifex/util.h>
+    #include <unifex/unifex.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
     #{functions |> Enum.map(&generate_implemented_function_declaration/1) |> Enum.join("\n")}
