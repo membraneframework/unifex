@@ -1,51 +1,51 @@
-defmodule Unifex.CodeGenerator.BaseType do
+defmodule Unifex.BaseType do
   @moduledoc """
   This mocule provides different generators allowing to map the types from Unifex specs into proper native types
 
   The generators from this module are trying to delegate the calls to the callbacks in modules adequate for the type
   but provide fallback values (all the callbacks are optional)
   """
-  alias Unifex.CodeGenerator
-  use CodeGenerator
+  alias Unifex.NativeCodeGenerator
+  use NativeCodeGenerator
 
   @type t :: atom
   @type spec_tuple_t :: {name :: atom(), type :: atom()}
   @type arg_parse_ctx_t :: %{
-          result_var: CodeGenerator.code_t(),
-          exit_label: CodeGenerator.code_t()
+          result_var: NativeCodeGenerator.code_t(),
+          exit_label: NativeCodeGenerator.code_t()
         }
 
   @doc """
   Provides a way to convert native variable `name` into `UNIFEX_TERM`
   """
-  @callback generate_arg_serialize(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_arg_serialize(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
   Generates a declaration of variable holding parsed value of UNIFEX_TERM. May include initialization.
   """
-  @callback generate_parsed_arg_declaration(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_parsed_arg_declaration(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
   Generates an allocation of variable content. Should be paired with `c:generate_destruction/1`
   """
-  @callback generate_allocation(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_allocation(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
   Generates a destrucition of variable content. Should be paired with `c:generate_allocation/1`
   """
-  @callback generate_destruction(name :: atom) :: CodeGenerator.code_t()
+  @callback generate_destruction(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates a native type. 
+  Generates a native type.
   """
-  @callback generate_native_type() :: CodeGenerator.code_t()
+  @callback generate_native_type() :: NativeCodeGenerator.code_t()
 
   @doc """
   Generates function call parsing UNIFEX_TERM `argument` into the native variable with name `variable`. Function should
   return boolean value.
   """
   @callback generate_arg_parse(argument :: String.t(), variable :: String.t()) ::
-              CodeGenerator.code_t()
+              NativeCodeGenerator.code_t()
 
   @doc """
   Generates Elixir post-processing of the value returned from native function.
@@ -66,7 +66,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   defmacro __using__(_args) do
     quote do
       @behaviour unquote(__MODULE__)
-      use Unifex.CodeGenerator
+      use Unifex.NativeCodeGenerator
     end
   end
 
@@ -75,7 +75,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
-  @spec generate_arg_serialize(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_arg_serialize(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_arg_serialize({name, type}) do
     call(type, :generate_arg_serialize, [name], fn ->
       ~g<enif_make_#{type}(env, #{name})>
@@ -83,12 +83,12 @@ defmodule Unifex.CodeGenerator.BaseType do
   end
 
   @doc """
-  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/1` and 
+  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/1` and
   provided `name`.
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_parameter_declaration(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_parameter_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_parameter_declaration({name, type}) do
     native_type = call(type, :generate_native_type, [], fn -> ~g<#{type}> end)
     ~g<#{native_type} #{name}>
@@ -99,7 +99,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Tries to get value from type-specific module, uses parameter declaration with `;` as fallback value.
   """
-  @spec generate_parsed_arg_declaration(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_parsed_arg_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_parsed_arg_declaration({name, type}) do
     call(type, :generate_parsed_arg_declaration, [name], fn ->
       generate_parameter_declaration({name, type}) <> ";"
@@ -111,7 +111,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide allocation
   """
-  @spec generate_allocation(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_allocation(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_allocation({name, type}) do
     call(type, :generate_allocation, [name], fn -> "" end)
   end
@@ -121,7 +121,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide destructor
   """
-  @spec generate_destruction(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_destruction(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_destruction({name, type}) do
     call(type, :generate_destruction, [name], fn -> "" end)
   end
@@ -130,7 +130,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
   @spec generate_arg_parse({spec_tuple_t(), i :: non_neg_integer()}, ctx :: arg_parse_ctx_t()) ::
-          CodeGenerator.code_t()
+          NativeCodeGenerator.code_t()
   def generate_arg_parse({{name, type}, i}, ctx) do
     argument = ~g<argv[#{i}]>
 
@@ -153,7 +153,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Fallbacks to simply passing the value (as variable reference)
   """
-  @spec generate_elixir_postprocessing(spec_tuple_t()) :: CodeGenerator.code_t()
+  @spec generate_elixir_postprocessing(spec_tuple_t()) :: NativeCodeGenerator.code_t()
   def generate_elixir_postprocessing({name, type}) do
     call(type, :generate_elixir_postprocessing, [name], fn ->
       Macro.var(name, nil)

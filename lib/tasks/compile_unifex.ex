@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Compile.Unifex do
   @moduledoc """
   Generates native boilerplate code for all the `.spec.exs` files found in `c_src` dir
   """
-  alias Unifex.{CodeGenerator, Helper, InterfaceIO, SpecsParser}
+  alias Unifex.{NativeCodeGenerator, Helper, InterfaceIO, SpecsParser}
   use Mix.Task
 
   @impl Mix.Task
@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Compile.Unifex do
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs} ->
       specs = specs |> SpecsParser.parse_specs()
-      code = CodeGenerator.generate_code(name, specs)
+      code = NativeCodeGenerator.generate_code(name, specs)
       InterfaceIO.store_interface!(name, dir, code)
     end)
 
