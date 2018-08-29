@@ -1,8 +1,8 @@
-defmodule Unifex.CodeGenerator.BaseType.Payload do
+defmodule Unifex.BaseType.Payload do
   @moduledoc """
-  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for `Membrane.Payload`
+  Module implementing `Unifex.BaseType` behaviour for `Membrane.Payload`
   """
-  alias Unifex.CodeGenerator.BaseType
+  alias Unifex.BaseType
   use BaseType
 
   @impl BaseType

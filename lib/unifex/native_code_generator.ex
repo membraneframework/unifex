@@ -1,9 +1,8 @@
-defmodule Unifex.CodeGenerator do
+defmodule Unifex.NativeCodeGenerator do
   @moduledoc """
   Module responsible for C code genearation based on Unifex specs
   """
-  alias Unifex.InterfaceIO
-  alias __MODULE__.BaseType
+  alias Unifex.{BaseType, InterfaceIO}
 
   defmacro __using__(_args) do
     quote do
