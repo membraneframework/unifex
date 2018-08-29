@@ -8,7 +8,7 @@ defmodule Unifex.Loader do
 
   """
 
-  alias Unifex.{Helper, InterfaceIO, SpecsParser, ResultsParser}
+  alias Unifex.{Helper, InterfaceIO, PostprocessingAstGenerator, SpecsParser}
 
   defmacro __using__(_args) do
     {name, specs} =
@@ -30,33 +30,7 @@ defmodule Unifex.Loader do
         wrapped_name = name |> to_string() |> (&"unifex_#{&1}").() |> String.to_atom()
         arg_names = args |> Keyword.keys() |> Enum.map(&Macro.var(&1, nil))
 
-        parsed_results = ResultsParser.parse_return_specs(results)
-
-        patterns = parsed_results |> Enum.map(&ResultsParser.generate_pattern_ast/1)
-
-        handlers =
-          parsed_results
-          |> Enum.map(&ResultsParser.generate_postprocessing_ast/1)
-
-        cases =
-          patterns
-          |> Enum.zip(handlers)
-          |> Enum.reject(fn {pattern, handler} ->
-            pattern == handler
-          end)
-          |> Enum.map(fn {pattern, handler} ->
-            quote generated: true do
-              unquote(pattern) -> unquote(handler)
-            end
-          end)
-          |> List.flatten()
-
-        # Catch'em all
-        cases =
-          cases ++
-            quote do
-              _ -> result
-            end
+        clauses = PostprocessingAstGenerator.generate_postprocessing_clauses(results)
 
         quote do
           defnifp unquote(wrapped_name)(unquote_splicing(arg_names))
@@ -66,7 +40,7 @@ defmodule Unifex.Loader do
             result = unquote({wrapped_name, [], arg_names})
 
             case result do
-              unquote(cases)
+              unquote(clauses)
             end
           end
         end
