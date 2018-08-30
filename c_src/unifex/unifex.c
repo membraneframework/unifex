@@ -62,14 +62,7 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
     break;
   case UNIFEX_PAYLOAD_SHM:
     p_struct = &payload->payload_struct.shm;
-    static const int membrane_prefix_len = 10;
-    static const int uuid_length = 37;
-    char shm_name[membrane_prefix_len + uuid_length];
-    strcpy(shm_name, "/membrane-");
-    uuid_t uuid;
-    uuid_generate(uuid);
-    uuid_unparse(uuid, shm_name + membrane_prefix_len);
-    shm_payload_init(env, p_struct, shm_name, size);
+    shm_payload_init(env, p_struct, size);
     shm_payload_allocate(p_struct);
     shm_payload_open_and_mmap(p_struct);
     p_struct->size = payload->size;

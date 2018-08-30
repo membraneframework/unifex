@@ -7,15 +7,10 @@ defmodule Unifex.BundlexProject do
     ]
   end
 
-  defp nifs(platform) do
+  defp nifs(_platform) do
     [
       unifex: [
         deps: [membrane_common_c: :membrane_shm_payload_lib],
-        libs:
-          case platform do
-            :linux -> ["uuid"]
-            _ -> []
-          end,
         export_only?: Mix.env() != :test,
         sources: ["unifex.c"]
       ]

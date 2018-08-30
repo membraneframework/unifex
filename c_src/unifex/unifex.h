@@ -1,7 +1,7 @@
 #pragma once
 
 #include <erl_nif.h>
-#include <uuid/uuid.h>
+#include <time.h>
 #include "membrane_shm_payload/lib.h"
 
 #define UNIFEX_TERM ERL_NIF_TERM
