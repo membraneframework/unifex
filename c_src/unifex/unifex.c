@@ -1,6 +1,6 @@
 #include "unifex.h"
 
-ERL_NIF_TERM unifex_util_raise_args_error(ErlNifEnv* env, const char* field, const char *description) {
+ERL_NIF_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description) {
   ERL_NIF_TERM exception_content = enif_make_tuple2(
     env,
     enif_make_atom(env, "unifex_parse_arg"),
@@ -9,13 +9,13 @@ ERL_NIF_TERM unifex_util_raise_args_error(ErlNifEnv* env, const char* field, con
   return enif_raise_exception(env, exception_content);
 }
 
-ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resource) {
+ERL_NIF_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource) {
   ERL_NIF_TERM resource_term = enif_make_resource(env, resource);
   enif_release_resource(resource);
   return resource_term;
 }
 
-int unifex_util_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* payload) {
+int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* payload) {
   int res = enif_inspect_binary(env, term, &payload->payload_struct.binary);
   if (res) {
     payload->data = payload->payload_struct.binary.data;

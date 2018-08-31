@@ -29,11 +29,11 @@ typedef struct _UnifexPayload UnifexPayload;
 
 
 // args parse helpers
-ERL_NIF_TERM unifex_util_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
+ERL_NIF_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 
 // term manipulation helpers
-ERL_NIF_TERM unifex_util_make_and_release_resource(ErlNifEnv* env, void* resource);
-int unifex_util_payload_from_term(ErlNifEnv* env, ERL_NIF_TERM binary_term, UnifexPayload* payload);
+ERL_NIF_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource);
+int unifex_payload_from_term(ErlNifEnv* env, ERL_NIF_TERM binary_term, UnifexPayload* payload);
 UNIFEX_TERM unifex_payload_to_term(UnifexEnv* env, UnifexPayload * payload);
 
 // UnifexPayload
