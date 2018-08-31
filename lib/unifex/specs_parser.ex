@@ -55,8 +55,6 @@ defmodule Unifex.SpecsParser do
 
   """
 
-  @config_store_name :unifex_config__
-
   @type parsed_specs_t :: [{:module, module()} | {:fun_specs, tuple()}]
 
   @doc """
@@ -64,53 +62,8 @@ defmodule Unifex.SpecsParser do
   """
   @spec parse_specs(specs :: Macro.t()) :: parsed_specs_t()
   def parse_specs(specs) do
-    {_res, binds} = Code.eval_string(specs, [{@config_store_name, []}], make_env())
-    binds |> Keyword.fetch!(@config_store_name) |> Enum.reverse()
-  end
-
-  @doc """
-  Macro used for defining module in Unifex specs
-  """
-  defmacro module(module) do
-    store_config(:module, module)
-  end
-
-  @doc """
-  Macro used for defining function spec in Unifex specs
-  """
-  defmacro spec(spec) do
-    store_config(:fun_specs, spec |> parse_fun_spec() |> enquote())
-  end
-
-  defp store_config(key, value) when is_atom(key) do
-    config_store = Macro.var(@config_store_name, nil)
-
-    quote generated: true do
-      unquote(config_store) = [{unquote(key), unquote(value)} | unquote(config_store)]
-    end
-  end
-
-  defp parse_fun_spec({:::, _, [{fun_name, _, args}, results]}) do
-    args =
-      args
-      |> Enum.map(fn
-        {:::, _, [{name, _, _}, {type, _, _}]} -> {name, type}
-        {name, _, _} -> {name, name}
-      end)
-
-    results =
-      results
-      |> parse_fun_spec_results_traverse_helper()
-
-    {fun_name, args, results}
-  end
-
-  defp parse_fun_spec_results_traverse_helper({:|, _, [left, right]}) do
-    parse_fun_spec_results_traverse_helper(left) ++ parse_fun_spec_results_traverse_helper(right)
-  end
-
-  defp parse_fun_spec_results_traverse_helper(value) do
-    [value]
+    {_res, binds} = Code.eval_string(specs, [{:unifex_config__, []}], make_env())
+    binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
   end
 
   # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
@@ -120,7 +73,7 @@ defmodule Unifex.SpecsParser do
     {env, _binds} =
       Code.eval_quoted(
         quote do
-          import unquote(__MODULE__), only: [module: 1, spec: 1]
+          import unquote(__MODULE__.Exports)
           __ENV__
         end
       )
@@ -128,9 +81,68 @@ defmodule Unifex.SpecsParser do
     env
   end
 
-  # Embeds code in a `quote` block. Useful when willing to store the code and parse
-  # it in runtime instead of compile time.
-  defp enquote(value) do
-    {:quote, [], [[do: value]]}
+  defmodule Exports do
+
+    @doc """
+    Macro used for defining module in Unifex specs
+    """
+    defmacro module(module) do
+      store_config(:module, module)
+    end
+
+    @doc """
+    Macro used for defining function spec in Unifex specs
+    """
+    defmacro spec(spec) do
+      store_config(:fun_specs, spec |> parse_fun_spec() |> enquote())
+    end
+
+    @doc """
+    Macro used for defining what can be sent from the native code to elixir processes.
+
+    Creates native function that can be invoked to send specified data. Name of the
+    function starts with `send_` and is constructed from `label`s.
+    """
+    defmacro sends(spec) do
+      store_config(:sends, spec |> enquote())
+    end
+
+    defp store_config(key, value) when is_atom(key) do
+      config_store = Macro.var(:unifex_config__, nil)
+
+      quote generated: true do
+        unquote(config_store) = [{unquote(key), unquote(value)} | unquote(config_store)]
+      end
+    end
+
+    defp parse_fun_spec({:::, _, [{fun_name, _, args}, results]}) do
+      args =
+        args
+        |> Enum.map(fn
+          {:::, _, [{name, _, _}, {type, _, _}]} -> {name, type}
+          {name, _, _} -> {name, name}
+        end)
+
+      results =
+        results
+        |> parse_fun_spec_results_traverse_helper()
+
+      {fun_name, args, results}
+    end
+
+    defp parse_fun_spec_results_traverse_helper({:|, _, [left, right]}) do
+      parse_fun_spec_results_traverse_helper(left) ++
+        parse_fun_spec_results_traverse_helper(right)
+    end
+
+    defp parse_fun_spec_results_traverse_helper(value) do
+      [value]
+    end
+
+    # Embeds code in a `quote` block. Useful when willing to store the code and parse
+    # it in runtime instead of compile time.
+    defp enquote(value) do
+      {:quote, [], [[do: value]]}
+    end
   end
 end

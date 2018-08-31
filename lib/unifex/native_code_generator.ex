@@ -24,6 +24,7 @@ defmodule Unifex.NativeCodeGenerator do
   def generate_code(name, specs) do
     module = specs |> Keyword.fetch!(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
+    sends = specs |> Keyword.get_values(:sends)
 
     {functions, results} =
       fun_specs
@@ -31,8 +32,8 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.unzip()
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = generate_header(name, functions, results)
-    source = generate_source(name, module, functions, results)
+    header = generate_header(name, functions, results, sends)
+    source = generate_source(name, module, functions, results, sends)
 
     {header, source}
   end
@@ -72,7 +73,7 @@ defmodule Unifex.NativeCodeGenerator do
     "  #{line}"
   end
 
-  defp generate_header(name, functions, results) do
+  defp generate_header(name, functions, results, sends) do
     ~g"""
     #pragma once
 
@@ -81,19 +82,21 @@ defmodule Unifex.NativeCodeGenerator do
     #include <unifex/unifex.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
-    #{functions |> Enum.map(&generate_implemented_function_declaration/1) |> Enum.join("\n")}
+    #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
     #{generate_lib_lifecycle_and_state_related_declarations()}
-    #{generate_result_functions_declarations(results)}
+    #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
+    #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
     """
   end
 
-  defp generate_source(name, module, functions, results) do
+  defp generate_source(name, module, functions, results, sends) do
     ~g"""
     #include "#{name}.h"
 
-    #{generate_result_functions(results)}
+    #{generate_functions(results, &generate_result_function/1)}
+    #{generate_functions(sends, &generate_send_function/1)}
     #{generate_lib_lifecycle_and_state_related_stuff()}
-    #{functions |> Enum.map(&generate_export_function/1)}
+    #{generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """
   end
@@ -103,18 +106,18 @@ defmodule Unifex.NativeCodeGenerator do
       [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
       |> Enum.join(", ")
 
-    ~g<UNIFEX_TERM #{name}(#{args_declarations});>
+    ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
 
-  defp generate_result_functions(results) do
+  defp generate_functions(results, generator) do
     results
-    |> Enum.map(&generate_result_function/1)
+    |> Enum.map(generator)
     |> Enum.join("\n")
   end
 
-  defp generate_result_functions_declarations(results) do
+  defp generate_functions_declarations(results, generator) do
     results
-    |> Enum.map(&generate_result_function_declaration/1)
+    |> Enum.map(generator)
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
@@ -122,22 +125,44 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_result_function({name, specs}) do
     ~g"""
     #{generate_result_function_declaration({name, specs})} {
-      return #{generate_result_spec_traverse_helper(specs).return |> sigil_g('it')};
+      return #{generate_function_spec_traverse_helper(specs).return |> sigil_g('it')};
     }
     """
   end
 
   defp generate_result_function_declaration({name, specs}) do
-    %{labels: labels, args: args} = generate_result_spec_traverse_helper(specs)
+    %{labels: labels, args: args} = generate_function_spec_traverse_helper(specs)
 
     args_declarations =
       [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
       |> Enum.join(", ")
 
-    ~g<ERL_NIF_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+    ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
-  defp generate_result_spec_traverse_helper(node) do
+  defp generate_send_function(specs) do
+    ~g"""
+    #{generate_send_function_declaration(specs)} {
+      ERL_NIF_TERM term = #{generate_function_spec_traverse_helper(specs).return |> sigil_g('it')};
+      return enif_send(env, &pid, NULL, term);
+    }
+    """
+  end
+
+  defp generate_send_function_declaration(specs) do
+    %{labels: labels, args: args} = generate_function_spec_traverse_helper(specs)
+
+    args_declarations =
+      [
+        ~g<UnifexEnv* env>,
+        ~g<UnifexPid pid> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)
+      ]
+      |> Enum.join(", ")
+
+    ~g<int #{[:send | labels] |> Enum.join("_")}(#{args_declarations})>
+  end
+
+  defp generate_function_spec_traverse_helper(node) do
     case node do
       atom when is_atom(atom) ->
         %{return: generate_const_atom_maker(atom), args: [], labels: []}
@@ -149,12 +174,12 @@ defmodule Unifex.NativeCodeGenerator do
         %{return: BaseType.generate_arg_serialize({name, type}), args: [{name, type}], labels: []}
 
       {a, b} ->
-        generate_result_spec_traverse_helper({:{}, [], [a, b]})
+        generate_function_spec_traverse_helper({:{}, [], [a, b]})
 
       {:{}, _, content} ->
         results =
           content
-          |> Enum.map(&generate_result_spec_traverse_helper/1)
+          |> Enum.map(&generate_function_spec_traverse_helper/1)
 
         %{
           return: generate_tuple_maker(results |> Enum.map(& &1.return)),
@@ -163,7 +188,7 @@ defmodule Unifex.NativeCodeGenerator do
         }
 
       {name, _, _} ->
-        generate_result_spec_traverse_helper({:::, [], [{name, [], nil}, {name, [], nil}]})
+        generate_function_spec_traverse_helper({:::, [], [{name, [], nil}, {name, [], nil}]})
     end
   end
 

@@ -7,7 +7,10 @@
 #define UNIFEX_TERM ERL_NIF_TERM
 
 #define UNIFEX_UNUSED(x) (void)(x)
+
 typedef ErlNifEnv UnifexEnv;
+
+typedef ErlNifPid UnifexPid;
 
 typedef enum {
   UNIFEX_PAYLOAD_BINARY,
