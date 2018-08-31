@@ -195,7 +195,7 @@ defmodule Unifex.NativeCodeGenerator do
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
     State* unifex_alloc_state(UnifexEnv* env) {
-      UNIFEX_UTIL_UNUSED(env);
+      UNIFEX_UNUSED(env);
       return enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(State));
     }
 
@@ -206,8 +206,8 @@ defmodule Unifex.NativeCodeGenerator do
     }
 
     static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
-      UNIFEX_UTIL_UNUSED(load_info);
-      UNIFEX_UTIL_UNUSED(priv_data);
+      UNIFEX_UNUSED(load_info);
+      UNIFEX_UNUSED(priv_data);
 
       int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
       STATE_RESOURCE_TYPE =
@@ -245,9 +245,9 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
-      UNIFEX_UTIL_UNUSED(argc);
+      UNIFEX_UNUSED(argc);
       ERL_NIF_TERM #{ctx.result_var};
-      #{if args |> Enum.empty?(), do: ~g<UNIFEX_UTIL_UNUSED(argv);>, else: ""}
+      #{if args |> Enum.empty?(), do: ~g<UNIFEX_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
       #{args_declarations}
 

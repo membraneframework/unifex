@@ -142,7 +142,7 @@ defmodule Unifex.BaseType do
     ~g"""
     #{generate_allocation({name, type})}
     if(!#{arg_getter}) {
-      #{ctx.result_var} = unifex_util_raise_args_error(env, "#{name}", "#{arg_getter}");
+      #{ctx.result_var} = unifex_raise_args_error(env, "#{name}", "#{arg_getter}");
       goto #{ctx.exit_label};
     }
     """

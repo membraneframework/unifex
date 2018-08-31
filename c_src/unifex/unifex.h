@@ -6,7 +6,7 @@
 
 #define UNIFEX_TERM ERL_NIF_TERM
 
-#define UNIFEX_UTIL_UNUSED(x) (void)(x)
+#define UNIFEX_UNUSED(x) (void)(x)
 typedef ErlNifEnv UnifexEnv;
 
 typedef enum {

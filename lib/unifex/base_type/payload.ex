@@ -48,6 +48,6 @@ defmodule Unifex.BaseType.Payload do
 
   @impl BaseType
   def generate_arg_parse(arg, var_name) do
-    ~g<unifex_util_payload_from_term(env, #{arg}, #{var_name})>
+    ~g<unifex_payload_from_term(env, #{arg}, #{var_name})>
   end
 end
