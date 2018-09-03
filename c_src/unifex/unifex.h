@@ -2,7 +2,7 @@
 
 #include <erl_nif.h>
 #include <time.h>
-#include "membrane_shm_payload/lib.h"
+#include "shmex/lib.h"
 
 #define UNIFEX_TERM ERL_NIF_TERM
 
@@ -21,7 +21,7 @@ struct _UnifexPayload {
   unsigned char* data;
   unsigned int size;
   union {
-    ShmPayload shm;
+    Shmex shm;
     ErlNifBinary binary;
   } payload_struct;
   UnifexPayloadType type;

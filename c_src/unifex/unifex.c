@@ -25,9 +25,9 @@ int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* 
     return res;
   }
 
-  res = shm_payload_get_from_term(env, term, &payload->payload_struct.shm);
+  res = shmex_get_from_term(env, term, &payload->payload_struct.shm);
   if (res) {
-    shm_payload_open_and_mmap(&payload->payload_struct.shm);
+    shmex_open_and_mmap(&payload->payload_struct.shm);
     payload->data = payload->payload_struct.shm.mapped_memory;
     payload->size = payload->payload_struct.shm.capacity;
     payload->type = UNIFEX_PAYLOAD_SHM;
@@ -42,7 +42,7 @@ ERL_NIF_TERM unifex_payload_to_term(ErlNifEnv * env, UnifexPayload * payload) {
     payload->owned = 0;
     return enif_make_binary(env, &payload->payload_struct.binary);
   case UNIFEX_PAYLOAD_SHM:
-    return shm_payload_make_term(env, &payload->payload_struct.shm);
+    return shmex_make_term(env, &payload->payload_struct.shm);
   }
   // Switch should be exhaustive, this is added just to silence the warning
   return enif_raise_exception(env, enif_make_atom(env, "unifex_payload_to_term"));
@@ -53,7 +53,7 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
   payload->size = size;
   payload->type = type;
   payload->owned = 1;
-  ShmPayload * p_struct;
+  Shmex * p_struct;
 
   switch (type) {
   case UNIFEX_PAYLOAD_BINARY:
@@ -62,9 +62,9 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
     break;
   case UNIFEX_PAYLOAD_SHM:
     p_struct = &payload->payload_struct.shm;
-    shm_payload_init(env, p_struct, size);
-    shm_payload_allocate(p_struct);
-    shm_payload_open_and_mmap(p_struct);
+    shmex_init(env, p_struct, size);
+    shmex_allocate(p_struct);
+    shmex_open_and_mmap(p_struct);
     p_struct->size = payload->size;
     payload->data = p_struct->mapped_memory;
     break;
@@ -82,7 +82,7 @@ void unifex_payload_realloc(UnifexPayload * payload, unsigned int size) {
     enif_realloc_binary(&payload->payload_struct.binary, size);
     break;
   case UNIFEX_PAYLOAD_SHM:
-    shm_payload_set_capacity(&payload->payload_struct.shm, size);
+    shmex_set_capacity(&payload->payload_struct.shm, size);
     payload->payload_struct.shm.size = payload->size;
     break;
   }
@@ -96,7 +96,7 @@ void unifex_payload_release(UnifexPayload * payload) {
     }
     break;
   case UNIFEX_PAYLOAD_SHM:
-    shm_payload_release(&payload->payload_struct.shm);
+    shmex_release(&payload->payload_struct.shm);
     break;
   }
 }
