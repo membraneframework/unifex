@@ -82,7 +82,6 @@ defmodule Unifex.SpecsParser do
   end
 
   defmodule Exports do
-
     @doc """
     Macro used for defining module in Unifex specs
     """

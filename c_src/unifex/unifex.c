@@ -1,6 +1,6 @@
 #include "unifex.h"
 
-ERL_NIF_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description) {
+UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description) {
   ERL_NIF_TERM exception_content = enif_make_tuple2(
     env,
     enif_make_atom(env, "unifex_parse_arg"),
@@ -9,10 +9,29 @@ ERL_NIF_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const ch
   return enif_raise_exception(env, exception_content);
 }
 
-ERL_NIF_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource) {
+UNIFEX_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource) {
   ERL_NIF_TERM resource_term = enif_make_resource(env, resource);
   enif_release_resource(resource);
   return resource_term;
+}
+
+int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** string) {
+  ErlNifBinary binary;
+  int res = enif_inspect_binary(env, input_term, &binary);
+  if(res) {
+    *string = enif_alloc(binary.size+1);
+    memcpy(*string, binary.data, binary.size);
+    (*string)[binary.size] = 0;
+  }
+  return res;
+}
+
+UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string) {
+  ERL_NIF_TERM output_term;
+  int string_length = strlen(string);
+  unsigned char* ptr = enif_make_new_binary(env, string_length, &output_term);
+  memcpy(ptr, string, string_length);
+  return output_term;
 }
 
 int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* payload) {
@@ -36,7 +55,7 @@ int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* 
   return res;
 }
 
-ERL_NIF_TERM unifex_payload_to_term(ErlNifEnv * env, UnifexPayload * payload) {
+UNIFEX_TERM unifex_payload_to_term(ErlNifEnv * env, UnifexPayload * payload) {
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
     payload->owned = 0;

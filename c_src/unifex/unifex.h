@@ -32,10 +32,12 @@ typedef struct _UnifexPayload UnifexPayload;
 
 
 // args parse helpers
-ERL_NIF_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
+UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 
 // term manipulation helpers
-ERL_NIF_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource);
+UNIFEX_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource);
+int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** string);
+UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string);
 int unifex_payload_from_term(ErlNifEnv* env, ERL_NIF_TERM binary_term, UnifexPayload* payload);
 UNIFEX_TERM unifex_payload_to_term(UnifexEnv* env, UnifexPayload * payload);
 
