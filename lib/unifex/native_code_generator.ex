@@ -23,7 +23,7 @@ defmodule Unifex.NativeCodeGenerator do
   @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
           {code_t(), code_t()}
   def generate_code(name, specs) do
-    module = specs |> Keyword.fetch!(:module)
+    module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
     sends = specs |> Keyword.get_values(:sends)
 
@@ -33,7 +33,7 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.unzip()
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = generate_header(name, functions, results, sends)
+    header = generate_header(name, module, functions, results, sends)
     source = generate_source(name, module, functions, results, sends)
 
     {header, source}
@@ -103,7 +103,7 @@ defmodule Unifex.NativeCodeGenerator do
     "  #{line}"
   end
 
-  defp generate_header(name, functions, results, sends) do
+  defp generate_header(name, module, functions, results, sends) do
     ~g"""
     #pragma once
 
@@ -113,7 +113,7 @@ defmodule Unifex.NativeCodeGenerator do
     #include "#{InterfaceIO.user_header_path(name)}"
 
     #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
-    #{generate_lib_lifecycle_and_state_related_declarations()}
+    #{generate_lib_lifecycle_and_state_related_declarations(module)}
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
     #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
     """r
@@ -125,7 +125,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(sends, &generate_send_function/1)}
-    #{generate_lib_lifecycle_and_state_related_stuff()}
+    #{generate_lib_lifecycle_and_state_related_stuff(module)}
     #{generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
     """r
@@ -255,14 +255,22 @@ defmodule Unifex.NativeCodeGenerator do
     ~g<enif_make_atom(env, "#{name}")>
   end
 
-  defp generate_lib_lifecycle_and_state_related_declarations() do
+  defp generate_lib_lifecycle_and_state_related_declarations(nil) do
+    ~g<>
+  end
+
+  defp generate_lib_lifecycle_and_state_related_declarations(_module) do
     ~g"""
     State* unifex_alloc_state(UnifexEnv* env);
     void handle_destroy_state(UnifexEnv* env, State* state);
     """
   end
 
-  defp generate_lib_lifecycle_and_state_related_stuff() do
+  defp generate_lib_lifecycle_and_state_related_stuff(nil) do
+    ~g<>
+  end
+
+  defp generate_lib_lifecycle_and_state_related_stuff(_module) do
     ~g"""
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
@@ -336,6 +344,10 @@ defmodule Unifex.NativeCodeGenerator do
       return result;
     }
     """
+  end
+
+  defp generate_erlang_boilerplate(nil, _functions) do
+    ~g<>
   end
 
   defp generate_erlang_boilerplate(module, functions) do
