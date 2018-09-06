@@ -118,6 +118,8 @@ defmodule Unifex.SpecsParser do
       args =
         args
         |> Enum.map(fn
+          {:::, _, [{name, _, _}, [{type, _, _}]]} -> {name, {:list, type}}
+          [{name, _, _}] -> {name, {:list, name}}
           {:::, _, [{name, _, _}, {type, _, _}]} -> {name, type}
           {name, _, _} -> {name, name}
         end)

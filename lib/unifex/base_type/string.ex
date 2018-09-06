@@ -21,7 +21,7 @@ defmodule Unifex.BaseType.String do
   end
 
   @impl BaseType
-  def generate_allocation(name) do
+  def generate_initialization(name) do
     ~g<#{name} = NULL;>
   end
 

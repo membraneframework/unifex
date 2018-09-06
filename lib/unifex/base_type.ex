@@ -21,17 +21,12 @@ defmodule Unifex.BaseType do
   @callback generate_arg_serialize(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates a declaration of variable holding parsed value of UNIFEX_TERM. May include initialization.
+  Generates an initialization of variable content. Should be paired with `c:generate_destruction/1`
   """
-  @callback generate_parsed_arg_declaration(name :: atom) :: NativeCodeGenerator.code_t()
+  @callback generate_initialization(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates an allocation of variable content. Should be paired with `c:generate_destruction/1`
-  """
-  @callback generate_allocation(name :: atom) :: NativeCodeGenerator.code_t()
-
-  @doc """
-  Generates a destrucition of variable content. Should be paired with `c:generate_allocation/1`
+  Generates a destrucition of variable content. Should be paired with `c:generate_initialization/1`
   """
   @callback generate_destruction(name :: atom) :: NativeCodeGenerator.code_t()
 
@@ -56,8 +51,7 @@ defmodule Unifex.BaseType do
   @callback generate_elixir_postprocessing(name :: atom) :: Macro.t()
 
   @optional_callbacks generate_arg_serialize: 1,
-                      generate_parsed_arg_declaration: 1,
-                      generate_allocation: 1,
+                      generate_initialization: 1,
                       generate_destruction: 1,
                       generate_native_type: 0,
                       generate_arg_parse: 2,
@@ -76,6 +70,22 @@ defmodule Unifex.BaseType do
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
   @spec generate_arg_serialize(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  def generate_arg_serialize({name, {:list, type}}) do
+    ~g"""
+    ({
+      ERL_NIF_TERM list = enif_make_list(env, 0);
+      for(int i = #{name}_length-1; i >= 0; i--) {
+        list = enif_make_list_cell(
+          env,
+          #{generate_arg_serialize({:"#{name}[i]", type})},
+          list
+        );
+      }
+      list;
+    })
+    """t
+  end
+
   def generate_arg_serialize({name, type}) do
     call(type, :generate_arg_serialize, [name], fn ->
       ~g<enif_make_#{type}(env, #{name})>
@@ -88,40 +98,50 @@ defmodule Unifex.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_parameter_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
-  def generate_parameter_declaration({name, type}) do
-    native_type = call(type, :generate_native_type, [], fn -> ~g<#{type}> end)
-    ~g<#{native_type} #{name}>
+  @spec generate_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  def generate_declaration({name, {:list, type}}) do
+    do_generate_declaration(name, {:list, type}) ++ [~g<unsigned int #{name}_length>]
+  end
+
+  def generate_declaration({name, type}) do
+    do_generate_declaration(name, type)
+  end
+
+  defp do_generate_declaration(name, type) do
+    [~g<#{call_generate_native_type(type)} #{name}>]
   end
 
   @doc """
-  Generates a declaration of variable holding parsed value of UNIFEX_TERM. May include initialization.
+  Generates an initialization of variable content. Should be paired with `generate_destruction/1`
 
-  Tries to get value from type-specific module, uses parameter declaration with `;` as fallback value.
+  Returns an empty string if the type does not provide initialization
   """
-  @spec generate_parsed_arg_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
-  def generate_parsed_arg_declaration({name, type}) do
-    call(type, :generate_parsed_arg_declaration, [name], fn ->
-      generate_parameter_declaration({name, type}) <> ";"
-    end)
+  @spec generate_initialization(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  def generate_initialization({name, {:list, _type}}) do
+    ~g<#{name} = NULL;>
+  end
+
+  def generate_initialization({name, type}) do
+    call(type, :generate_initialization, [name], fn -> "" end)
   end
 
   @doc """
-  Generates an allocation of variable content. Should be paired with `generate_destruction/1`
-
-  Returns an empty string if the type does not provide allocation
-  """
-  @spec generate_allocation(spec_tuple_t()) :: NativeCodeGenerator.code_t()
-  def generate_allocation({name, type}) do
-    call(type, :generate_allocation, [name], fn -> "" end)
-  end
-
-  @doc """
-  Generates an destrucition of variable content. Should be paired with `generate_allocation/1`
+  Generates an destrucition of variable content. Should be paired with `generate_initialization/1`
 
   Returns an empty string if the type does not provide destructor
   """
   @spec generate_destruction(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  def generate_destruction({name, {:list, type}}) do
+    ~g"""
+    if(#{name} != NULL) {
+      for(unsigned int i = 0; i < #{name}_length; i++) {
+        #{generate_destruction({:"#{name}[i]", type})}
+      }
+      enif_free(#{name});
+    }
+    """t
+  end
+
   def generate_destruction({name, type}) do
     call(type, :generate_destruction, [name], fn -> "" end)
   end
@@ -131,21 +151,55 @@ defmodule Unifex.BaseType do
   """
   @spec generate_arg_parse({spec_tuple_t(), i :: non_neg_integer()}, ctx :: arg_parse_ctx_t()) ::
           NativeCodeGenerator.code_t()
-  def generate_arg_parse({{name, type}, i}, ctx) do
+  def generate_arg_parse({{name, {:list, type}}, i}, ctx) do
+    elem_name = :"#{name}[i]"
+    len_var_name = "#{name}_length"
     argument = ~g<argv[#{i}]>
 
+    ~g"""
+    if(!enif_get_list_length(env, #{argument}, &#{len_var_name})){
+      #{ctx.result_var} = unifex_raise_args_error(env, "#{name}", "enif_get_list_length");
+      goto #{ctx.exit_label};
+    }
+    #{name} = enif_alloc(sizeof(#{call_generate_native_type(type)}) * #{len_var_name});
+
+    for(unsigned int i = 0; i < #{len_var_name}; i++) {
+      #{generate_initialization({elem_name, type})}
+    }
+
+    ERL_NIF_TERM list = #{argument};
+    for(unsigned int i = 0; i < #{len_var_name}; i++) {
+      ERL_NIF_TERM elem;
+      enif_get_list_cell(env, list, &elem, &list);
+      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> sigil_g('i')}
+    }
+    """t
+  end
+
+  def generate_arg_parse({{name, type}, i}, ctx) do
+    do_generate_arg_parse(name, type, ~g<argv[#{i}]>, ctx)
+  end
+
+  defp do_generate_arg_parse(name, type, argument, ctx) do
     arg_getter =
       call(type, :generate_arg_parse, [argument, name], fn ->
         ~g<enif_get_#{type}(env, #{argument}, &#{name})>
       end)
 
     ~g"""
-    #{generate_allocation({name, type})}
     if(!#{arg_getter}) {
       #{ctx.result_var} = unifex_raise_args_error(env, "#{name}", "#{arg_getter}");
       goto #{ctx.exit_label};
     }
-    """
+    """t
+  end
+
+  def generate_arg_name({name, {:list, _type}}) do
+    [~g<#{name}>, ~g<#{name}_length>]
+  end
+
+  def generate_arg_name({name, _type}) do
+    [~g<#{name}>]
   end
 
   @doc """
@@ -158,6 +212,18 @@ defmodule Unifex.BaseType do
     call(type, :generate_elixir_postprocessing, [name], fn ->
       Macro.var(name, nil)
     end)
+  end
+
+  defp call_generate_native_type({:list, type}) do
+    ~g<#{call_generate_native_type(type)}*>
+  end
+
+  defp call_generate_native_type(type) do
+    call(type, :generate_native_type, [], fn -> ~g<#{type}> end)
+  end
+
+  defp call({:list, _type}, _callback, _args, default_f) do
+    apply(default_f, [])
   end
 
   defp call(type, callback, args, default_f) do

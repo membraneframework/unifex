@@ -3,6 +3,7 @@ defmodule Unifex.NativeCodeGenerator do
   Module responsible for C code genearation based on Unifex specs
   """
   alias Unifex.{BaseType, InterfaceIO}
+  use Bunch
 
   defmacro __using__(_args) do
     quote do
@@ -48,6 +49,35 @@ defmodule Unifex.NativeCodeGenerator do
   * `I` indents every line of string
   """
   @spec sigil_g(String.t(), charlist()) :: String.t()
+  def sigil_g(content, 'j(' ++ flags) when is_list(content) do
+    {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
+    content = content |> Enum.join("#{joiner}")
+    sigil_g(content, flags)
+  end
+
+  def sigil_g(content, 'n' ++ flags) when is_list(content) do
+    sigil_g(content, 'j(\n)' ++ flags)
+  end
+
+  def sigil_g(content, flags) when is_list(content) do
+    content |> Enum.map(&sigil_g(&1, flags))
+  end
+
+  def sigil_g(content, 'r' ++ flags) do
+    content =
+      content
+      |> String.split("\n")
+      |> Enum.map(&String.trim_trailing/1)
+      |> Enum.reduce([], fn
+        "", ["" | _] = acc -> acc
+        v, acc -> [v | acc]
+      end)
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    sigil_g(content, flags)
+  end
+
   def sigil_g(content, 't' ++ flags) do
     content = content |> String.trim()
     sigil_g(content, flags)
@@ -86,7 +116,7 @@ defmodule Unifex.NativeCodeGenerator do
     #{generate_lib_lifecycle_and_state_related_declarations()}
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
     #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
-    """
+    """r
   end
 
   defp generate_source(name, module, functions, results, sends) do
@@ -98,12 +128,12 @@ defmodule Unifex.NativeCodeGenerator do
     #{generate_lib_lifecycle_and_state_related_stuff()}
     #{generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions)}
-    """
+    """r
   end
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
@@ -123,39 +153,49 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_result_function({name, specs}) do
+    declaration = generate_result_function_declaration({name, specs})
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
+
     ~g"""
-    #{generate_result_function_declaration({name, specs})} {
-      return #{generate_function_spec_traverse_helper(specs).return |> sigil_g('it')};
+    #{declaration} {
+      return #{result |> sigil_g('it')};
     }
     """
   end
 
   defp generate_result_function_declaration({name, specs}) do
-    %{labels: labels, args: args} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    args = meta |> Keyword.get_values(:arg)
+    labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)]
+      [~g<UnifexEnv* env> | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
   defp generate_send_function(specs) do
+    declaration = generate_send_function_declaration(specs)
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
+
     ~g"""
-    #{generate_send_function_declaration(specs)} {
-      ERL_NIF_TERM term = #{generate_function_spec_traverse_helper(specs).return |> sigil_g('it')};
+    #{declaration} {
+      ERL_NIF_TERM term = #{result |> sigil_g('it')};
       return enif_send(env, &pid, NULL, term);
     }
     """
   end
 
   defp generate_send_function_declaration(specs) do
-    %{labels: labels, args: args} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    args = meta |> Keyword.get_values(:arg)
+    labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
       [
         ~g<UnifexEnv* env>,
-        ~g<UnifexPid pid> | args |> Enum.map(&BaseType.generate_parameter_declaration/1)
+        ~g<UnifexPid pid> | args |> Enum.flat_map(&BaseType.generate_declaration/1)
       ]
       |> Enum.join(", ")
 
@@ -163,33 +203,40 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_function_spec_traverse_helper(node) do
-    case node do
+    node
+    |> case do
       atom when is_atom(atom) ->
-        %{return: generate_const_atom_maker(atom), args: [], labels: []}
+        {generate_const_atom_maker(atom), []}
 
       {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
-        %{return: generate_const_atom_maker(name), args: [], labels: [name]}
+        {generate_const_atom_maker(name), label: name}
 
       {:::, _, [{name, _, _}, {type, _, _}]} ->
-        %{return: BaseType.generate_arg_serialize({name, type}), args: [{name, type}], labels: []}
+        {BaseType.generate_arg_serialize({name, type}), arg: {name, type}}
+
+      {:::, meta, [name_var, [{type, type_meta, type_ctx}]]} ->
+        generate_function_spec_traverse_helper(
+          {:::, meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
+        )
 
       {a, b} ->
         generate_function_spec_traverse_helper({:{}, [], [a, b]})
 
       {:{}, _, content} ->
-        results =
+        {results, meta} =
           content
           |> Enum.map(&generate_function_spec_traverse_helper/1)
+          |> Enum.unzip()
 
-        %{
-          return: generate_tuple_maker(results |> Enum.map(& &1.return)),
-          args: results |> Enum.flat_map(& &1.args),
-          labels: results |> Enum.flat_map(& &1.labels)
-        }
+        {generate_tuple_maker(results), meta}
 
-      {name, _, _} ->
-        generate_function_spec_traverse_helper({:::, [], [{name, [], nil}, {name, [], nil}]})
+      [{_name, _, _} = name_var] ->
+        generate_function_spec_traverse_helper({:::, [], [name_var, [name_var]]})
+
+      {_name, _, _} = name_var ->
+        generate_function_spec_traverse_helper({:::, [], [name_var, name_var]})
     end
+    ~> ({result, meta} -> {result, meta |> List.flatten()})
   end
 
   defp generate_tuple_maker(content) do
@@ -197,7 +244,7 @@ defmodule Unifex.NativeCodeGenerator do
     enif_make_tuple_from_array(
       env,
       (ERL_NIF_TERM []) {
-        #{content |> Enum.join(",\n") |> sigil_g('iit')}
+        #{content |> sigil_g('j(,\n)iit')}
       },
       #{length(content)}
     )
@@ -245,28 +292,30 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_export_function({name, args}) do
     ctx = %{:result_var => "result", :exit_label => "exit_export_#{name}"}
 
-    args_declarations =
+    args_declaration =
       args
-      |> Enum.map(&BaseType.generate_parsed_arg_declaration/1)
-      |> Enum.map(&sigil_g(&1, 'I'))
-      |> Enum.join("\n")
-      |> sigil_g('t')
+      |> Enum.flat_map(&BaseType.generate_declaration/1)
+      |> Enum.map(&~g<#{&1};>)
+      |> sigil_g('nIt')
+
+    args_initialization =
+      args
+      |> Enum.map(&BaseType.generate_initialization/1)
+      |> sigil_g('nIt')
 
     args_parsing =
       args
       |> Enum.with_index()
       |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
-      |> Enum.map(&sigil_g(&1, 'tI'))
-      |> Enum.join("\n")
-      |> sigil_g('t')
+      |> sigil_g('nIt')
 
     args_destruction =
       args
       |> Enum.map(&BaseType.generate_destruction/1)
       |> Enum.reject(&("" == &1))
-      |> Enum.map(&sigil_g(&1, 'I'))
-      |> Enum.join("\n")
-      |> sigil_g('t')
+      |> sigil_g('nIt')
+
+    args_names = args |> Enum.flat_map(&BaseType.generate_arg_name/1)
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
@@ -274,11 +323,13 @@ defmodule Unifex.NativeCodeGenerator do
       ERL_NIF_TERM #{ctx.result_var};
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
-      #{args_declarations}
+      #{args_declaration}
+
+      #{args_initialization}
 
       #{args_parsing}
 
-      #{ctx.result_var} = #{name}(#{[:unifex_env | args |> Keyword.keys()] |> Enum.join(", ")});
+      #{ctx.result_var} = #{name}(#{[:unifex_env | args_names] |> Enum.join(", ")});
       goto #{ctx.exit_label};
     #{ctx.exit_label}:
       #{args_destruction}
@@ -293,8 +344,7 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.map(fn {name, args} ->
         ~g<{"unifex_#{name}", #{length(args)}, export_#{name}, 0}>ii
       end)
-      |> Enum.join(",\n")
-      |> sigil_g('i')
+      |> sigil_g('j(,\n)i')
 
     ~g"""
     static ErlNifFunc nif_funcs[] =

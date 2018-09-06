@@ -16,12 +16,7 @@ defmodule Unifex.BaseType.Payload do
   end
 
   @impl BaseType
-  def generate_parsed_arg_declaration(name) do
-    ~g<#{generate_native_type()} #{name} = NULL;>
-  end
-
-  @impl BaseType
-  def generate_allocation(name) do
+  def generate_initialization(name) do
     ~g<#{name} = enif_alloc(sizeof (UnifexPayload));>
   end
 
