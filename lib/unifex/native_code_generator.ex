@@ -202,101 +202,6 @@ defmodule Unifex.NativeCodeGenerator do
     ~g<int #{[:send | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
-  defp generate_function_spec_traverse_helper(node) do
-    node
-    |> case do
-      atom when is_atom(atom) ->
-        {generate_const_atom_maker(atom), []}
-
-      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
-        {generate_const_atom_maker(name), label: name}
-
-      {:::, _, [{name, _, _}, {type, _, _}]} ->
-        {BaseType.generate_arg_serialize({name, type}), arg: {name, type}}
-
-      {:::, meta, [name_var, [{type, type_meta, type_ctx}]]} ->
-        generate_function_spec_traverse_helper(
-          {:::, meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
-        )
-
-      {a, b} ->
-        generate_function_spec_traverse_helper({:{}, [], [a, b]})
-
-      {:{}, _, content} ->
-        {results, meta} =
-          content
-          |> Enum.map(&generate_function_spec_traverse_helper/1)
-          |> Enum.unzip()
-
-        {generate_tuple_maker(results), meta}
-
-      [{_name, _, _} = name_var] ->
-        generate_function_spec_traverse_helper({:::, [], [name_var, [name_var]]})
-
-      {_name, _, _} = name_var ->
-        generate_function_spec_traverse_helper({:::, [], [name_var, name_var]})
-    end
-    ~> ({result, meta} -> {result, meta |> List.flatten()})
-  end
-
-  defp generate_tuple_maker(content) do
-    ~g"""
-    enif_make_tuple_from_array(
-      env,
-      (ERL_NIF_TERM []) {
-        #{content |> sigil_g('j(,\n)iit')}
-      },
-      #{length(content)}
-    )
-    """
-  end
-
-  defp generate_const_atom_maker(name) do
-    ~g<enif_make_atom(env, "#{name}")>
-  end
-
-  defp generate_lib_lifecycle_and_state_related_declarations(nil) do
-    ~g<>
-  end
-
-  defp generate_lib_lifecycle_and_state_related_declarations(_module) do
-    ~g"""
-    State* unifex_alloc_state(UnifexEnv* env);
-    void handle_destroy_state(UnifexEnv* env, State* state);
-    """
-  end
-
-  defp generate_lib_lifecycle_and_state_related_stuff(nil) do
-    ~g<>
-  end
-
-  defp generate_lib_lifecycle_and_state_related_stuff(_module) do
-    ~g"""
-    ErlNifResourceType *STATE_RESOURCE_TYPE;
-
-    State* unifex_alloc_state(UnifexEnv* env) {
-      UNIFEX_UNUSED(env);
-      return enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(State));
-    }
-
-    static void destroy_state(ErlNifEnv* env, void* value) {
-      State *state = (State*) value;
-      #{generate_unifex_env()}
-      handle_destroy_state(unifex_env, state);
-    }
-
-    static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
-      UNIFEX_UNUSED(load_info);
-      UNIFEX_UNUSED(priv_data);
-
-      int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
-      STATE_RESOURCE_TYPE =
-       enif_open_resource_type(env, NULL, "State", destroy_state, flags, NULL);
-      return 0;
-    }
-    """
-  end
-
   defp generate_export_function({name, args}) do
     ctx = %{:result_var => "result", :exit_label => "exit_export_#{name}"}
 
@@ -346,6 +251,48 @@ defmodule Unifex.NativeCodeGenerator do
     """
   end
 
+  defp generate_lib_lifecycle_and_state_related_declarations(nil) do
+    ~g<>
+  end
+
+  defp generate_lib_lifecycle_and_state_related_declarations(_module) do
+    ~g"""
+    State* unifex_alloc_state(UnifexEnv* env);
+    void handle_destroy_state(UnifexEnv* env, State* state);
+    """
+  end
+
+  defp generate_lib_lifecycle_and_state_related_stuff(nil) do
+    ~g<>
+  end
+
+  defp generate_lib_lifecycle_and_state_related_stuff(_module) do
+    ~g"""
+    ErlNifResourceType *STATE_RESOURCE_TYPE;
+
+    State* unifex_alloc_state(UnifexEnv* env) {
+      UNIFEX_UNUSED(env);
+      return enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(State));
+    }
+
+    static void destroy_state(ErlNifEnv* env, void* value) {
+      State *state = (State*) value;
+      #{generate_unifex_env()}
+      handle_destroy_state(unifex_env, state);
+    }
+
+    static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
+      UNIFEX_UNUSED(load_info);
+      UNIFEX_UNUSED(priv_data);
+
+      int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
+      STATE_RESOURCE_TYPE =
+       enif_open_resource_type(env, NULL, "State", destroy_state, flags, NULL);
+      return 0;
+    }
+    """
+  end
+
   defp generate_erlang_boilerplate(nil, _functions) do
     ~g<>
   end
@@ -365,6 +312,55 @@ defmodule Unifex.NativeCodeGenerator do
     };
 
     ERL_NIF_INIT(#{module}.Nif, nif_funcs, load, NULL, NULL, NULL)
+    """
+  end
+
+  defp generate_function_spec_traverse_helper(node) do
+    node
+    |> case do
+      atom when is_atom(atom) ->
+        {BaseType.generate_arg_serialize({:"\"#{atom}\"", :atom}), []}
+
+      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
+        {BaseType.generate_arg_serialize({:"\"#{name}\"", :atom}), label: name}
+
+      {:::, _, [{name, _, _}, {type, _, _}]} ->
+        {BaseType.generate_arg_serialize({name, type}), arg: {name, type}}
+
+      {:::, meta, [name_var, [{type, type_meta, type_ctx}]]} ->
+        generate_function_spec_traverse_helper(
+          {:::, meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
+        )
+
+      {a, b} ->
+        generate_function_spec_traverse_helper({:{}, [], [a, b]})
+
+      {:{}, _, content} ->
+        {results, meta} =
+          content
+          |> Enum.map(&generate_function_spec_traverse_helper/1)
+          |> Enum.unzip()
+
+        {generate_tuple_maker(results), meta}
+
+      [{_name, _, _} = name_var] ->
+        generate_function_spec_traverse_helper({:::, [], [name_var, [name_var]]})
+
+      {_name, _, _} = name_var ->
+        generate_function_spec_traverse_helper({:::, [], [name_var, name_var]})
+    end
+    ~> ({result, meta} -> {result, meta |> List.flatten()})
+  end
+
+  defp generate_tuple_maker(content) do
+    ~g"""
+    enif_make_tuple_from_array(
+      env,
+      (ERL_NIF_TERM []) {
+        #{content |> sigil_g('j(,\n)iit')}
+      },
+      #{length(content)}
+    )
     """
   end
 
