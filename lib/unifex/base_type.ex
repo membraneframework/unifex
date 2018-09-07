@@ -8,8 +8,8 @@ defmodule Unifex.BaseType do
   alias Unifex.NativeCodeGenerator
   use NativeCodeGenerator
 
-  @type t :: atom
-  @type spec_tuple_t :: {name :: atom(), type :: atom()}
+  @type t :: atom | {:list, atom}
+  @type spec_tuple_t :: {name :: atom(), type :: t}
   @type arg_parse_ctx_t :: %{
           result_var: NativeCodeGenerator.code_t(),
           exit_label: NativeCodeGenerator.code_t()
@@ -98,7 +98,7 @@ defmodule Unifex.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_declaration(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  @spec generate_declaration(spec_tuple_t()) :: [NativeCodeGenerator.code_t()]
   def generate_declaration({name, {:list, type}}) do
     do_generate_declaration(name, {:list, type}) ++ [~g<unsigned int #{name}_length>]
   end
@@ -171,7 +171,7 @@ defmodule Unifex.BaseType do
     for(unsigned int i = 0; i < #{len_var_name}; i++) {
       ERL_NIF_TERM elem;
       enif_get_list_cell(env, list, &elem, &list);
-      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> sigil_g('i')}
+      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> g('i')}
     }
     """t
   end
@@ -229,8 +229,7 @@ defmodule Unifex.BaseType do
   defp call(type, callback, args, default_f) do
     module = Module.concat(__MODULE__, type |> to_string() |> String.capitalize())
 
-    if !default_f ||
-         (module |> Code.ensure_loaded?() and function_exported?(module, callback, length(args))) do
+    if module |> Code.ensure_loaded?() and function_exported?(module, callback, length(args)) do
       apply(module, callback, args)
     else
       apply(default_f, [])

@@ -7,7 +7,7 @@ defmodule Unifex.NativeCodeGenerator do
 
   defmacro __using__(_args) do
     quote do
-      import unquote(__MODULE__), only: [sigil_g: 2]
+      import unquote(__MODULE__), only: [g: 2, sigil_g: 2]
     end
   end
 
@@ -43,26 +43,14 @@ defmodule Unifex.NativeCodeGenerator do
   Sigil used for indentation of generated code.
 
   By itself it does nothing, but has very useful flags:
+  * `r` trims trailing whitespaces of each line and removes subsequent empty
+    lines
   * `t` trims the string
   * `i` indents all but the first line. Helpful when used
     inside string interpolation that already has been indented
   * `I` indents every line of string
   """
   @spec sigil_g(String.t(), charlist()) :: String.t()
-  def sigil_g(content, 'j(' ++ flags) when is_list(content) do
-    {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
-    content = content |> Enum.join("#{joiner}")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'n' ++ flags) when is_list(content) do
-    sigil_g(content, 'j(\n)' ++ flags)
-  end
-
-  def sigil_g(content, flags) when is_list(content) do
-    content |> Enum.map(&sigil_g(&1, flags))
-  end
-
   def sigil_g(content, 'r' ++ flags) do
     content =
       content
@@ -99,8 +87,33 @@ defmodule Unifex.NativeCodeGenerator do
     content
   end
 
-  defp indent(line) do
-    "  #{line}"
+  @doc """
+  Helper for generating code. Uses `sigil_g/2` underneath.
+
+  It supports all the flags supported by `sigil_g/2` and the following ones:
+  * `j(joiner)` - joins list of strings using `joiner`
+  * n - alias for `j(\\n)`
+
+  If passed a list and flags supported by `sigil_g/2`, each flag will be executed
+  on each element of the list, until the list is joined by using `j` or `n` flag.
+  """
+  @spec g(String.Chars.t() | [String.Chars.t()], charlist()) :: String.t() | [String.t()]
+  def g(content, 'j(' ++ flags) when is_list(content) do
+    {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
+    content = content |> Enum.join("#{joiner}")
+    g(content, flags)
+  end
+
+  def g(content, 'n' ++ flags) when is_list(content) do
+    g(content, 'j(\n)' ++ flags)
+  end
+
+  def g(content, flags) when is_list(content) do
+    content |> Enum.map(&g(&1, flags))
+  end
+
+  def g(content, flags) do
+    sigil_g(content, flags)
   end
 
   defp generate_header(name, module, functions, results, sends) do
@@ -158,7 +171,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      return #{result |> sigil_g('it')};
+      return #{result |> g('it')};
     }
     """
   end
@@ -181,7 +194,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      ERL_NIF_TERM term = #{result |> sigil_g('it')};
+      ERL_NIF_TERM term = #{result |> g('it')};
       return unifex_send(env, &pid, term, flags);
     }
     """
@@ -210,24 +223,24 @@ defmodule Unifex.NativeCodeGenerator do
       args
       |> Enum.flat_map(&BaseType.generate_declaration/1)
       |> Enum.map(&~g<#{&1};>)
-      |> sigil_g('nIt')
+      |> g('nIt')
 
     args_initialization =
       args
       |> Enum.map(&BaseType.generate_initialization/1)
-      |> sigil_g('nIt')
+      |> g('nIt')
 
     args_parsing =
       args
       |> Enum.with_index()
       |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
-      |> sigil_g('nIt')
+      |> g('nIt')
 
     args_destruction =
       args
       |> Enum.map(&BaseType.generate_destruction/1)
       |> Enum.reject(&("" == &1))
-      |> sigil_g('nIt')
+      |> g('nIt')
 
     args_names = args |> Enum.flat_map(&BaseType.generate_arg_name/1)
 
@@ -304,7 +317,7 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.map(fn {name, args} ->
         ~g<{"unifex_#{name}", #{length(args)}, export_#{name}, 0}>ii
       end)
-      |> sigil_g('j(,\n)i')
+      |> g('j(,\n)i')
 
     ~g"""
     static ErlNifFunc nif_funcs[] =
@@ -358,7 +371,7 @@ defmodule Unifex.NativeCodeGenerator do
     enif_make_tuple_from_array(
       env,
       (ERL_NIF_TERM []) {
-        #{content |> sigil_g('j(,\n)iit')}
+        #{content |> g('j(,\n)iit')}
       },
       #{length(content)}
     )
@@ -367,5 +380,9 @@ defmodule Unifex.NativeCodeGenerator do
 
   defp generate_unifex_env() do
     ~g<UnifexEnv *unifex_env = env;>
+  end
+
+  defp indent(line) do
+    "  #{line}"
   end
 end
