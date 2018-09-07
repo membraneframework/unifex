@@ -129,3 +129,18 @@ void unifex_payload_release_ptr(UnifexPayload ** payload) {
   enif_free(*payload);
   *payload = NULL;
 }
+
+
+UNIFEX_TERM unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags) {
+  int res;
+  if(flags & UNIFEX_SEND_THREADED) {
+    res = enif_send(env, pid, NULL, term);
+  } else {
+    res = enif_send(NULL, pid, env, term);
+  }
+  return res;
+}
+
+int unifex_get_pid_by_name(UnifexEnv* env, char* name, UnifexPid* pid) {
+  return enif_whereis_pid(env, enif_make_atom(env, name), pid);
+}

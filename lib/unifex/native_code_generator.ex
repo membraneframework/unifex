@@ -182,7 +182,7 @@ defmodule Unifex.NativeCodeGenerator do
     ~g"""
     #{declaration} {
       ERL_NIF_TERM term = #{result |> sigil_g('it')};
-      return enif_send(env, &pid, NULL, term);
+      return unifex_send(env, &pid, term, flags);
     }
     """
   end
@@ -195,7 +195,8 @@ defmodule Unifex.NativeCodeGenerator do
     args_declarations =
       [
         ~g<UnifexEnv* env>,
-        ~g<UnifexPid pid> | args |> Enum.flat_map(&BaseType.generate_declaration/1)
+        ~g<UnifexPid pid>,
+        ~g<int flags> | args |> Enum.flat_map(&BaseType.generate_declaration/1)
       ]
       |> Enum.join(", ")
 

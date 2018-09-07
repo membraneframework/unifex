@@ -8,6 +8,10 @@
 
 #define UNIFEX_UNUSED(x) (void)(x)
 
+#define UNIFEX_NO_FLAGS 0
+
+#define UNIFEX_SEND_THREADED 1
+
 typedef ErlNifEnv UnifexEnv;
 
 typedef ErlNifPid UnifexPid;
@@ -46,3 +50,7 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
 void unifex_payload_realloc(UnifexPayload * payload, unsigned int size);
 void unifex_payload_release(UnifexPayload * payload);
 void unifex_payload_release_ptr(UnifexPayload ** payload);
+
+// send helpers
+UNIFEX_TERM unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags);
+int unifex_get_pid_by_name(UnifexEnv* env, char* name, UnifexPid* pid);
