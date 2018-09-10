@@ -49,7 +49,8 @@ defmodule Unifex.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:membrane_common_c, git: "https://github.com/membraneframework/membrane-common-c.git"},
+      {:bunch, "~> 0.1"},
+      {:shmex, "~> 0.1"},
       {:bundlex, "~> 0.1"}
     ]
   end

@@ -26,11 +26,17 @@ defmodule Unifex.PostprocessingAstGenerator do
       {:::, _, [{name, _, _}, {_type, _, _}]} ->
         Macro.var(name, nil)
 
+      {:::, _, [{name, _, _}, [{_type, _, _}]]} ->
+        Macro.var(name, nil)
+
       {a, b} ->
         generate_pattern({:{}, [], [a, b]})
 
       {:{}, _, content} ->
         {:{}, [], content |> Enum.map(&generate_pattern/1)}
+
+      [{name, _, _}] ->
+        Macro.var(name, nil)
 
       {name, _, _} ->
         Macro.var(name, nil)
@@ -48,11 +54,30 @@ defmodule Unifex.PostprocessingAstGenerator do
       {:::, _, [{name, _, _}, {type, _, _}]} ->
         BaseType.generate_elixir_postprocessing({name, type})
 
+      {:::, _, [{name, _, _}, [{type, _, _}]]} ->
+        elem_name = :"#{name}_elem"
+        elem_var = Macro.var(elem_name, nil)
+        postprocessing = BaseType.generate_elixir_postprocessing({elem_name, type})
+
+        if(postprocessing == elem_var) do
+          Macro.var(name, nil)
+        else
+          quote do
+            unquote(Macro.var(name, nil))
+            |> Enum.map(fn unquote(elem_var) ->
+              unquote(postprocessing)
+            end)
+          end
+        end
+
       {a, b} ->
         generate_postprocessing({:{}, [], [a, b]})
 
       {:{}, _, content} ->
         {:{}, [], content |> Enum.map(&generate_postprocessing/1)}
+
+      [{_name, _, _} = name_var] ->
+        generate_postprocessing({:::, [], [name_var, [name_var]]})
 
       {name, _, _} ->
         BaseType.generate_elixir_postprocessing({name, name})

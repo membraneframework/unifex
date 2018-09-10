@@ -1,4 +1,6 @@
 %{
+  "bunch": {:hex, :bunch, "0.1.1", "6a010c8d7a9e52294a359cfe2fc669ce0472f7cb467c85a432994a3314732a0b", [:mix], [], "hexpm"},
+  "bunch_native": {:hex, :bunch_native, "0.1.0", "f4bf24aedde8b88da41a7bc19393c1ff4982a5c52e7d57690370fd05d7354696", [:mix], [{:bundlex, "~> 0.1", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm"},
   "bundlex": {:hex, :bundlex, "0.1.3", "f55cce979fe656e48ae7fc4d36a90c65fce907632d65b54828388735a71b840b", [:mix], [{:porcelain, "~> 2.0", [hex: :porcelain, repo: "hexpm", optional: false]}], "hexpm"},
   "earmark": {:hex, :earmark, "1.2.6", "b6da42b3831458d3ecc57314dff3051b080b9b2be88c2e5aa41cd642a5b044ed", [:mix], [], "hexpm"},
   "ex_doc": {:hex, :ex_doc, "0.19.1", "519bb9c19526ca51d326c060cb1778d4a9056b190086a8c6c115828eaccea6cf", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.7", [hex: :makeup_elixir, repo: "hexpm", optional: false]}], "hexpm"},
@@ -9,4 +11,5 @@
   "nimble_parsec": {:hex, :nimble_parsec, "0.2.2", "d526b23bdceb04c7ad15b33c57c4526bf5f50aaa70c7c141b4b4624555c68259", [:mix], [], "hexpm"},
   "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
   "qex": {:hex, :qex, "0.4.0", "43516761a2d278755d5f6da28eab86ddb0808bca90c1e186ec89a3ea26855928", [:mix], [], "hexpm"},
+  "shmex": {:hex, :shmex, "0.1.0", "365086bd97f0aa4faace3ca6d0fae505740a5815cd041455d5ba781233ad2f23", [:mix], [{:bunch, "~> 0.1.1", [hex: :bunch, repo: "hexpm", optional: false]}, {:bunch_native, "~> 0.1", [hex: :bunch_native, repo: "hexpm", optional: false]}, {:bundlex, "~> 0.1", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm"},
 }

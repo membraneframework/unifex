@@ -1,6 +1,6 @@
 defmodule Unifex.BaseType.Payload do
   @moduledoc """
-  Module implementing `Unifex.BaseType` behaviour for `Membrane.Payload`
+  Module implementing `Unifex.BaseType` behaviour for payloads.
   """
   alias Unifex.BaseType
   use BaseType
@@ -16,12 +16,7 @@ defmodule Unifex.BaseType.Payload do
   end
 
   @impl BaseType
-  def generate_parsed_arg_declaration(name) do
-    ~g<#{generate_native_type()} #{name} = NULL;>
-  end
-
-  @impl BaseType
-  def generate_allocation(name) do
+  def generate_initialization(name) do
     ~g<#{name} = enif_alloc(sizeof (UnifexPayload));>
   end
 
@@ -36,8 +31,8 @@ defmodule Unifex.BaseType.Payload do
 
     quote do
       case unquote(var) do
-        %Membrane.Payload.Shm{guard: nil} ->
-          {:ok, guarded_shm} = Membrane.Payload.Shm.Native.add_guard(unquote(var))
+        %Shmex{guard: nil} ->
+          {:ok, guarded_shm} = Shmex.Native.add_guard(unquote(var))
           guarded_shm
 
         _ ->
