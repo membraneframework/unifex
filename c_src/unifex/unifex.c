@@ -1,9 +1,5 @@
 #include "unifex.h"
 
-void* unifex_alloc(size_t size) {
-  return enif_alloc(size);
-}
-
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description) {
   ERL_NIF_TERM exception_content = enif_make_tuple2(
     env,

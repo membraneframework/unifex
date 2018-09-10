@@ -34,7 +34,9 @@ struct _UnifexPayload {
 typedef struct _UnifexPayload UnifexPayload;
 
 
-void* unifex_alloc(size_t size);
+static inline void* unifex_alloc(size_t size) {
+  return enif_alloc(size);
+}
 
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
