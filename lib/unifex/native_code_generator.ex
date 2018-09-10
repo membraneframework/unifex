@@ -7,7 +7,7 @@ defmodule Unifex.NativeCodeGenerator do
 
   defmacro __using__(_args) do
     quote do
-      import unquote(__MODULE__), only: [g: 2, sigil_g: 2]
+      import unquote(__MODULE__), only: [gen: 2, sigil_g: 2]
     end
   end
 
@@ -97,22 +97,22 @@ defmodule Unifex.NativeCodeGenerator do
   If passed a list and flags supported by `sigil_g/2`, each flag will be executed
   on each element of the list, until the list is joined by using `j` or `n` flag.
   """
-  @spec g(String.Chars.t() | [String.Chars.t()], charlist()) :: String.t() | [String.t()]
-  def g(content, 'j(' ++ flags) when is_list(content) do
+  @spec gen(String.Chars.t() | [String.Chars.t()], charlist()) :: String.t() | [String.t()]
+  def gen(content, 'j(' ++ flags) when is_list(content) do
     {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
     content = content |> Enum.join("#{joiner}")
-    g(content, flags)
+    gen(content, flags)
   end
 
-  def g(content, 'n' ++ flags) when is_list(content) do
-    g(content, 'j(\n)' ++ flags)
+  def gen(content, 'n' ++ flags) when is_list(content) do
+    gen(content, 'j(\n)' ++ flags)
   end
 
-  def g(content, flags) when is_list(content) do
-    content |> Enum.map(&g(&1, flags))
+  def gen(content, flags) when is_list(content) do
+    content |> Enum.map(&gen(&1, flags))
   end
 
-  def g(content, flags) do
+  def gen(content, flags) do
     sigil_g(content, flags)
   end
 
@@ -171,7 +171,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      return #{result |> g('it')};
+      return #{result |> gen('it')};
     }
     """
   end
@@ -194,7 +194,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      ERL_NIF_TERM term = #{result |> g('it')};
+      ERL_NIF_TERM term = #{result |> gen('it')};
       return unifex_send(env, &pid, term, flags);
     }
     """
@@ -223,24 +223,24 @@ defmodule Unifex.NativeCodeGenerator do
       args
       |> Enum.flat_map(&BaseType.generate_declaration/1)
       |> Enum.map(&~g<#{&1};>)
-      |> g('nIt')
+      |> gen('nIt')
 
     args_initialization =
       args
       |> Enum.map(&BaseType.generate_initialization/1)
-      |> g('nIt')
+      |> gen('nIt')
 
     args_parsing =
       args
       |> Enum.with_index()
       |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
-      |> g('nIt')
+      |> gen('nIt')
 
     args_destruction =
       args
       |> Enum.map(&BaseType.generate_destruction/1)
       |> Enum.reject(&("" == &1))
-      |> g('nIt')
+      |> gen('nIt')
 
     args_names = args |> Enum.flat_map(&BaseType.generate_arg_name/1)
 
@@ -317,7 +317,7 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.map(fn {name, args} ->
         ~g<{"unifex_#{name}", #{length(args)}, export_#{name}, 0}>ii
       end)
-      |> g('j(,\n)i')
+      |> gen('j(,\n)i')
 
     ~g"""
     static ErlNifFunc nif_funcs[] =
@@ -371,7 +371,7 @@ defmodule Unifex.NativeCodeGenerator do
     enif_make_tuple_from_array(
       env,
       (ERL_NIF_TERM []) {
-        #{content |> g('j(,\n)iit')}
+        #{content |> gen('j(,\n)iit')}
       },
       #{length(content)}
     )

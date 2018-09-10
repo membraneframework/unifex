@@ -171,7 +171,7 @@ defmodule Unifex.BaseType do
     for(unsigned int i = 0; i < #{len_var_name}; i++) {
       ERL_NIF_TERM elem;
       enif_get_list_cell(env, list, &elem, &list);
-      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> g('i')}
+      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> gen('i')}
     }
     """t
   end
