@@ -302,7 +302,10 @@ defmodule Unifex.NativeCodeGenerator do
 
       int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
       STATE_RESOURCE_TYPE =
-       enif_open_resource_type(env, NULL, "State", destroy_state, flags, NULL);
+        enif_open_resource_type(env, NULL, "UnifexState", destroy_state, flags, NULL);
+
+      UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE =
+        enif_open_resource_type(env, NULL, "UnifexPayloadGuard", unifex_payload_guard_destructor, flags, NULL);
       return 0;
     }
     """
