@@ -12,7 +12,7 @@ defmodule Unifex.BundlexProject do
       unifex: [
         deps: [shmex: :lib],
         export_only?: Mix.env() != :test,
-        sources: ["unifex.c"]
+        sources: ["unifex.c", "payload.c"]
       ]
     ]
   end

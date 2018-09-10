@@ -123,6 +123,7 @@ defmodule Unifex.NativeCodeGenerator do
     #include <stdio.h>
     #include <erl_nif.h>
     #include <unifex/unifex.h>
+    #include <unifex/payload.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
     #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
