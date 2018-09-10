@@ -50,7 +50,8 @@ defmodule Unifex.MixProject do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bunch, "~> 0.1"},
-      {:shmex, "~> 0.1"},
+      # {:shmex, "~> 0.1"},
+      {:shmex, github: "membraneframework/shmex"},
       {:bundlex, "~> 0.1"}
     ]
   end
