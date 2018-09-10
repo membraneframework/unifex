@@ -38,6 +38,10 @@ static inline void* unifex_alloc(size_t size) {
   return enif_alloc(size);
 }
 
+static inline void unifex_free(void* ptr) {
+  enif_free(ptr);
+}
+
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 
