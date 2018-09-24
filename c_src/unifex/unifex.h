@@ -28,7 +28,8 @@ static inline void unifex_free(void* ptr) {
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 
 // term manipulation helpers
-UNIFEX_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource);
+UNIFEX_TERM unifex_make_resource(ErlNifEnv* env, void* resource);
+void unifex_release_resource(void * resource);
 int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** string);
 UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string);
 

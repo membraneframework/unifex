@@ -9,10 +9,13 @@ UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const cha
   return enif_raise_exception(env, exception_content);
 }
 
-UNIFEX_TERM unifex_make_and_release_resource(ErlNifEnv* env, void* resource) {
+UNIFEX_TERM unifex_make_resource(ErlNifEnv* env, void* resource) {
   ERL_NIF_TERM resource_term = enif_make_resource(env, resource);
-  enif_release_resource(resource);
   return resource_term;
+}
+
+void unifex_release_resource(void * resource) {
+  enif_release_resource(resource);
 }
 
 int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** string) {

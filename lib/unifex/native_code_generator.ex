@@ -126,9 +126,26 @@ defmodule Unifex.NativeCodeGenerator do
     #include <unifex/payload.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
+    /*
+     * Declaration of native functions for module #{module}.
+     * The implementation have to be provided by the user.
+     */
     #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
+    /*
+     * Functions that manage lib and state lifecycle
+     * Functions with 'unifex_' prefix are generated automatically,
+     * the user have to implement rest of them.
+     */
     #{generate_lib_lifecycle_and_state_related_declarations(module)}
+    /*
+     * Functions that create the defined output from Nif.
+     * They are automatically generated and don't need to be implemented.
+     */
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
+    /*
+     * Functions that send the defined messages from Nif.
+     * They are automatically generated and don't need to be implemented.
+     */
     #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
     """r
   end
@@ -271,9 +288,25 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_lib_lifecycle_and_state_related_declarations(_module) do
+    state_type = BaseType.State.generate_native_type()
+
     ~g"""
-    State* unifex_alloc_state(UnifexEnv* env);
-    void handle_destroy_state(UnifexEnv* env, State* state);
+    /**
+     * Allocates the state struct. Have to be paired with 'unifex_release_state' call
+     */
+    #{state_type} unifex_alloc_state(UnifexEnv* env);
+
+    /**
+     * Releases state stuct allocated via 'unifex_alloc_state'.
+     * State struct should be considered invalid after this call.
+     */
+    void unifex_release_state(UnifexEnv* env, #{state_type} state);
+
+    /**
+     * Callback called when the state struct is destroyed. It should
+     * be responsible for releasing any resources kept inside state.
+     */
+    void handle_destroy_state(UnifexEnv* env, #{state_type} state);
     """
   end
 
@@ -282,16 +315,23 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_lib_lifecycle_and_state_related_stuff(_module) do
+    state_type = BaseType.State.generate_native_type()
+
     ~g"""
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
-    State* unifex_alloc_state(UnifexEnv* env) {
+    #{state_type} unifex_alloc_state(UnifexEnv* env) {
       UNIFEX_UNUSED(env);
-      return enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(State));
+      return enif_alloc_resource(STATE_RESOURCE_TYPE, #{BaseType.State.generate_sizeof()});
+    }
+
+    void unifex_release_state(UnifexEnv * env, #{state_type} state) {
+      UNIFEX_UNUSED(env);
+      enif_release_resource(state);
     }
 
     static void destroy_state(ErlNifEnv* env, void* value) {
-      State *state = (State*) value;
+      #{state_type} state = (#{state_type}) value;
       #{generate_unifex_env()}
       handle_destroy_state(unifex_env, state);
     }
@@ -302,7 +342,7 @@ defmodule Unifex.NativeCodeGenerator do
 
       int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
       STATE_RESOURCE_TYPE =
-        enif_open_resource_type(env, NULL, "UnifexState", destroy_state, flags, NULL);
+        enif_open_resource_type(env, NULL, "UnifexNifState", destroy_state, flags, NULL);
 
       UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE =
         enif_open_resource_type(env, NULL, "UnifexPayloadGuard", unifex_payload_guard_destructor, flags, NULL);

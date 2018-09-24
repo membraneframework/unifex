@@ -36,6 +36,11 @@ defmodule Unifex.BaseType do
   @callback generate_native_type() :: NativeCodeGenerator.code_t()
 
   @doc """
+  Generates a expression that will return how many bytes should be allocated for this type.
+  """
+  @callback generate_sizeof() :: NativeCodeGenerator.code_t()
+
+  @doc """
   Generates function call parsing UNIFEX_TERM `argument` into the native variable with name `variable`. Function should
   return boolean value.
   """
@@ -54,6 +59,7 @@ defmodule Unifex.BaseType do
                       generate_initialization: 1,
                       generate_destruction: 1,
                       generate_native_type: 0,
+                      generate_sizeof: 0,
                       generate_arg_parse: 2,
                       generate_elixir_postprocessing: 1
 
