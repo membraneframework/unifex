@@ -130,22 +130,28 @@ defmodule Unifex.NativeCodeGenerator do
      * Declaration of native functions for module #{module}.
      * The implementation have to be provided by the user.
      */
+
     #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
+
     /*
      * Functions that manage lib and state lifecycle
      * Functions with 'unifex_' prefix are generated automatically,
      * the user have to implement rest of them.
      */
+
     #{generate_lib_lifecycle_and_state_related_declarations(module)}
+
     /*
      * Functions that create the defined output from Nif.
      * They are automatically generated and don't need to be implemented.
      */
+
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
     /*
      * Functions that send the defined messages from Nif.
      * They are automatically generated and don't need to be implemented.
      */
+
     #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
     """r
   end
