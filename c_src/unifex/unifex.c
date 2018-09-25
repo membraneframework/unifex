@@ -37,7 +37,7 @@ UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string) {
   return output_term;
 }
 
-UNIFEX_TERM unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags) {
+int unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags) {
   int res;
   if(flags & UNIFEX_SEND_THREADED) {
     res = enif_send(env, pid, NULL, term);

@@ -34,5 +34,5 @@ int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** stri
 UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string);
 
 // send helpers
-UNIFEX_TERM unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags);
+int unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags);
 int unifex_get_pid_by_name(UnifexEnv* env, char* name, UnifexPid* pid);
