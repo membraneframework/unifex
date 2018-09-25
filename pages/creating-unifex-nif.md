@@ -2,7 +2,7 @@
 
 ## Preparation
 
-In order to start working on NIF we need prepare a wew things:
+In order to start working on NIF we need prepare a few things:
 
 1. We need to add [Bunch](http://gihub.com/membraneframework/bunch) and [Unifex](http://gihub.com/membraneframework/unifex) to deps in `mix.exs`
     ```elixir
@@ -140,7 +140,7 @@ Along with the header there will be `_generated/example.c` providing definitions
 you see in header.
 
 Next step is to create struct that will be used as state for created nif and include generated header inside `example.h`.
-Since there is no name collision, we can use `typdef` to use `State` as an alias for `UnifexNifState`.
+Since there is no name collision, we can use `typdef` to create an alias for `UnifexNifState` and refer to it as `State`.
 
 ```c
 #pragma once
@@ -169,7 +169,7 @@ UNIFEX_TERM init(UnifexEnv* env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv* env, UnifexPid pid, UnifexNifState* state) {
+UNIFEX_TERM foo(UnifexEnv* env, UnifexPid pid, State* state) {
   int res = send_example_msg(env, pid, 0, state->a);
   if (!res) {
     return foo_result_error(env, "send_failed");
@@ -177,7 +177,7 @@ UNIFEX_TERM foo(UnifexEnv* env, UnifexPid pid, UnifexNifState* state) {
   return foo_result_ok(env, state->a);
 }
 
-void handle_destroy_state(UnifexEnv* env, UnifexNifState* state) {
+void handle_destroy_state(UnifexEnv* env, State* state) {
   UNIFEX_UNUSED(env);
   state->a = 0;
 }

@@ -63,7 +63,7 @@ defmodule Unifex.SpecsParser do
 
       int send_example_msg(UnifexEnv* env, UnifexPid pid, int flags, int num);
 
-  The value returned from `send_` functions is boolean inticating weather the send succeeded.
+  The value returned from `send_` functions is boolean indicating whether the send succeeded.
   """
 
   @type parsed_specs_t :: [{:module, module()} | {:fun_specs, tuple()}]

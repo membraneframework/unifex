@@ -147,6 +147,7 @@ defmodule Unifex.NativeCodeGenerator do
      */
 
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
+
     /*
      * Functions that send the defined messages from Nif.
      * They are automatically generated and don't need to be implemented.
