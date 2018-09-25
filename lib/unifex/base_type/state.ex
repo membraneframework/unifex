@@ -7,16 +7,21 @@ defmodule Unifex.BaseType.State do
 
   @impl BaseType
   def generate_arg_serialize(name) do
-    ~g<unifex_make_and_release_resource(env, #{name})>
+    ~g<unifex_make_resource(env, #{name})>
   end
 
   @impl BaseType
   def generate_native_type() do
-    ~g<State*>
+    ~g<UnifexNifState*>
   end
 
   @impl BaseType
   def generate_arg_parse(arg, var_name) do
     ~g<enif_get_resource(env, #{arg}, STATE_RESOURCE_TYPE, (void **)&#{var_name})>
+  end
+
+  @impl BaseType
+  def generate_sizeof() do
+    ~g<sizeof(UnifexNifState)>
   end
 end

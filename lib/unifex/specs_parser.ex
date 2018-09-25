@@ -15,6 +15,8 @@ defmodule Unifex.SpecsParser do
              | {:error :: label, :malformed :: label}
              | {:error :: label, {:recoverable :: label, bytes_to_skip :: int}}
 
+      sends {:example_msg ::label, number :: int}
+
   It means that module `Membrane.Element.Mad.Decoder.Native` should contain 2 functions: `create/0`
   and `decode_frame/3`
   That module should use `Unifex.Loader` to provide access to these functions.
@@ -53,6 +55,15 @@ defmodule Unifex.SpecsParser do
       UNIFEX_TERM decode_frame_result_error_malformed(UnifexEnv* env);
       UNIFEX_TERM decode_frame_result_error_recoverable(UnifexEnv* env, int bytes_to_skip);
 
+  ## Messages that the nif sends
+
+  Specs starting with `sends` keyword declare messages that the nif can send. The rules are similiar to ones for returned values,
+  although prefix for all the genereted message-sending functions is simply `send_`
+  For the example above there will be generated the following function:
+
+      int send_example_msg(UnifexEnv* env, UnifexPid pid, int flags, int num);
+
+  The value returned from `send_` functions is boolean indicating whether the send succeeded.
   """
 
   @type parsed_specs_t :: [{:module, module()} | {:fun_specs, tuple()}]
