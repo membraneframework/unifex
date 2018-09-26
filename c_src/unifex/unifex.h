@@ -20,6 +20,10 @@ static inline void* unifex_alloc(size_t size) {
   return enif_alloc(size);
 }
 
+static inline void* unifex_realloc(void* ptr, size_t size) {
+  return enif_realloc(ptr, size);
+}
+
 static inline void unifex_free(void* ptr) {
   enif_free(ptr);
 }
