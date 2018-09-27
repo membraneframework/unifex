@@ -48,6 +48,7 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
   case UNIFEX_PAYLOAD_SHM:
     p_struct = &payload->payload_struct.shm;
     shmex_init(env, p_struct, size);
+    shmex_generate_name(p_struct);
     shmex_add_guard(env, UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE, p_struct);
     shmex_allocate(p_struct);
     shmex_open_and_mmap(p_struct);
