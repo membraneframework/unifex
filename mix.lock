@@ -11,5 +11,5 @@
   "nimble_parsec": {:hex, :nimble_parsec, "0.2.2", "d526b23bdceb04c7ad15b33c57c4526bf5f50aaa70c7c141b4b4624555c68259", [:mix], [], "hexpm"},
   "porcelain": {:hex, :porcelain, "2.0.3", "2d77b17d1f21fed875b8c5ecba72a01533db2013bd2e5e62c6d286c029150fdc", [:mix], [], "hexpm"},
   "qex": {:hex, :qex, "0.4.0", "43516761a2d278755d5f6da28eab86ddb0808bca90c1e186ec89a3ea26855928", [:mix], [], "hexpm"},
-  "shmex": {:git, "https://github.com/membraneframework/shmex.git", "5b7e32a6cbb94e48740eb07da01515bce22682eb", []},
+  "shmex": {:git, "https://github.com/membraneframework/shmex.git", "379d4a91b4641922240d2ae1beb202f05671fc23", []},
 }

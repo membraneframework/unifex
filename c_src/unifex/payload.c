@@ -64,19 +64,32 @@ void unifex_payload_guard_destructor(UnifexEnv* env, void * resource) {
   shmex_guard_destructor(env, resource);
 }
 
-void unifex_payload_realloc(UnifexPayload * payload, unsigned int size) {
+int unifex_payload_realloc(UnifexPayload * payload, unsigned int size) {
+  int res = 1;
   payload->size = size;
+  Shmex * shmex;
 
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
     payload->owned = 1;
-    enif_realloc_binary(&payload->payload_struct.binary, size);
+    res = enif_realloc_binary(&payload->payload_struct.binary, size);
+    payload->data = payload->payload_struct.binary.data;
     break;
   case UNIFEX_PAYLOAD_SHM:
-    shmex_set_capacity(&payload->payload_struct.shm, size);
+    shmex = &payload->payload_struct.shm;
+    shmex_unmap(shmex);
+    ShmexLibResult shmex_res = shmex_set_capacity(shmex, size);
+    if (shmex_res != SHMEX_RES_OK) {
+      return 0;
+    }
+    shmex_res = shmex_open_and_mmap(shmex);
+    if (shmex_res != SHMEX_RES_OK) {
+      return 0;
+    }
     payload->payload_struct.shm.size = payload->size;
     break;
   }
+  return res;
 }
 
 void unifex_payload_release(UnifexPayload * payload) {
