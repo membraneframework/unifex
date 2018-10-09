@@ -25,6 +25,7 @@ defmodule Unifex.NativeCodeGenerator do
   def generate_code(name, specs) do
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
+    dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
     sends = specs |> Keyword.get_values(:sends)
 
     {functions, results} =
@@ -34,7 +35,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
     header = generate_header(name, module, functions, results, sends)
-    source = generate_source(name, module, functions, results, sends)
+    source = generate_source(name, module, functions, results, dirty_funs, sends)
 
     {header, source}
   end
@@ -157,7 +158,7 @@ defmodule Unifex.NativeCodeGenerator do
     """r
   end
 
-  defp generate_source(name, module, functions, results, sends) do
+  defp generate_source(name, module, functions, results, dirty_funs, sends) do
     ~g"""
     #include "#{name}.h"
 
@@ -165,7 +166,7 @@ defmodule Unifex.NativeCodeGenerator do
     #{generate_functions(sends, &generate_send_function/1)}
     #{generate_lib_lifecycle_and_state_related_stuff(module)}
     #{generate_functions(functions, &generate_export_function/1)}
-    #{generate_erlang_boilerplate(module, functions)}
+    #{generate_erlang_boilerplate(module, functions, dirty_funs)}
     """r
   end
 
@@ -358,15 +359,24 @@ defmodule Unifex.NativeCodeGenerator do
     """
   end
 
-  defp generate_erlang_boilerplate(nil, _functions) do
+  defp generate_erlang_boilerplate(nil, _functions, _dirty_funs) do
     ~g<>
   end
 
-  defp generate_erlang_boilerplate(module, functions) do
+  defp generate_erlang_boilerplate(module, functions, dirty_funs) do
     printed_funcs =
       functions
       |> Enum.map(fn {name, args} ->
-        ~g<{"unifex_#{name}", #{length(args)}, export_#{name}, 0}>ii
+        arity = length(args)
+
+        flags =
+          case dirty_funs[{name, arity}] do
+            :cpu -> ~g<ERL_NIF_DIRTY_JOB_CPU_BOUND>
+            :io -> ~g<ERL_NIF_DIRTY_JOB_IO_BOUND>
+            nil -> ~g<0>
+          end
+
+        ~g<{"unifex_#{name}", #{arity}, export_#{name}, #{flags}}>ii
       end)
       |> gen('j(,\n)i')
 

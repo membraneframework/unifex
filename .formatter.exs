@@ -8,6 +8,7 @@
     locals_without_parens: [
       module: 1,
       spec: 1,
+      dirty: 2,
       sends: 1
     ]
   ]

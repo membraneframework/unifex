@@ -108,6 +108,14 @@ defmodule Unifex.SpecsParser do
     end
 
     @doc """
+    Macro used for marking functions as dirty, i.e. performing long cpu-bound or
+    io-bound operations.
+    """
+    defmacro dirty(type, funs) when type in [:cpu, :io] and is_list(funs) do
+      store_config(:dirty, funs |> Enum.map(&{&1, type}))
+    end
+
+    @doc """
     Macro used for defining what can be sent from the native code to elixir processes.
 
     Creates native function that can be invoked to send specified data. Name of the
