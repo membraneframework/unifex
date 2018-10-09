@@ -15,10 +15,12 @@ defmodule Unifex.SpecsParser do
              | {:error :: label, :malformed :: label}
              | {:error :: label, {:recoverable :: label, bytes_to_skip :: int}}
 
+      dirty :cpu, decode_frame: 3
+
       sends {:example_msg ::label, number :: int}
 
   It means that module `Membrane.Element.Mad.Decoder.Native` should contain 2 functions: `create/0`
-  and `decode_frame/3`
+  and `decode_frame/3` (which is a cpu-bound dirty function).
   That module should use `Unifex.Loader` to provide access to these functions.
 
   The specs for functions (preceded by word `spec`) should contain function name, specs for parameters and then for
