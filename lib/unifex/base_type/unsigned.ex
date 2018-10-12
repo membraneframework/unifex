@@ -1,6 +1,6 @@
 defmodule Unifex.BaseType.Unsigned do
   @moduledoc """
-  Module implementing `Unifex.BaseType` behaviour for Unifex state.
+  Module implementing `Unifex.BaseType` behaviour for unsigned int.
   """
   alias Unifex.BaseType
   use BaseType

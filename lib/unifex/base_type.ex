@@ -26,7 +26,7 @@ defmodule Unifex.BaseType do
   @callback generate_initialization(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates a destrucition of variable content. Should be paired with `c:generate_initialization/1`
+  Generates a destruction of variable content. Should be paired with `c:generate_initialization/1`
   """
   @callback generate_destruction(name :: atom) :: NativeCodeGenerator.code_t()
 
@@ -36,7 +36,7 @@ defmodule Unifex.BaseType do
   @callback generate_native_type() :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates a expression that will return how many bytes should be allocated for this type.
+  Generates an expression that will return how many bytes should be allocated for this type.
   """
   @callback generate_sizeof() :: NativeCodeGenerator.code_t()
 
