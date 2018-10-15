@@ -1,4 +1,7 @@
 defmodule Unifex.BaseType.Pid do
+  @moduledoc """
+  Module implementing `Unifex.BaseType` behaviour for Erlang PIDs
+  """
   alias Unifex.BaseType
   use BaseType
 

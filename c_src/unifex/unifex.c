@@ -29,6 +29,21 @@ int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** stri
   return res;
 }
 
+int unifex_alloc_and_get_atom(ErlNifEnv* env, ERL_NIF_TERM atom_term, char ** output) {
+  unsigned length;
+  int res = enif_get_atom_length(env, atom_term, &length, ERL_NIF_LATIN1);
+  if (!res) {
+    return res;
+  }
+
+  *output = enif_alloc(length + 1);
+  if (*output == NULL) {
+    return 0;
+  }
+
+  return enif_get_atom(env, atom_term, *output, length + 1, ERL_NIF_LATIN1);
+}
+
 UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string) {
   ERL_NIF_TERM output_term;
   int string_length = strlen(string);
