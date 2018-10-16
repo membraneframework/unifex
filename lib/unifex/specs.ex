@@ -41,7 +41,7 @@ defmodule Unifex.Specs do
   """
 
   @doc """
-  Macro used for defining module that is to export native functions to Elixir world.
+  Defines module that exports native functions to Elixir world.
 
   The module needs to be defined manually, but it can `use` `Unifex.Loader` to
   have functions declared with `spec/1` automatically defined.
@@ -51,7 +51,7 @@ defmodule Unifex.Specs do
   end
 
   @doc """
-  Macro used for defining native function specification.
+  Defines native function specification.
 
   The specification should be in the form of
 
@@ -103,7 +103,7 @@ defmodule Unifex.Specs do
   end
 
   @doc """
-  Macro used for defining what can be sent from the native code to elixir processes.
+  Defines terms that can be sent from the native code to elixir processes.
 
   Creates native function that can be invoked to send specified data. Name of the
   function starts with `send_` and is constructed from `label`s.
