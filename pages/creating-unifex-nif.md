@@ -4,7 +4,7 @@
 
 In order to start working on NIF we need prepare a few things:
 
-1. We need to add [Bunch](http://gihub.com/membraneframework/bunch) and [Unifex](http://gihub.com/membraneframework/unifex) to deps in `mix.exs`
+1. We need to add [Bundlex](https://github.com/membraneframework/bundlex) and [Unifex](https://github.com/membraneframework/unifex) to deps in `mix.exs`
     ```elixir
     defp deps do
         [
