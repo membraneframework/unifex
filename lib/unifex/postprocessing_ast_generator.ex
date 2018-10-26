@@ -18,7 +18,7 @@ defmodule Unifex.PostprocessingAstGenerator do
   defp generate_pattern(node) do
     case node do
       atom when is_atom(atom) ->
-        atom
+        Macro.var(atom, nil)
 
       {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
         name
