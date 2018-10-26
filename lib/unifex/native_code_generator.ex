@@ -393,6 +393,9 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_function_spec_traverse_helper(node) do
     node
     |> case do
+      {:__aliases__, [alias: als], atoms} ->
+        generate_function_spec_traverse_helper(als || Module.concat(atoms))
+
       atom when is_atom(atom) ->
         {BaseType.generate_arg_serialize({:"\"#{atom}\"", :atom}), []}
 
