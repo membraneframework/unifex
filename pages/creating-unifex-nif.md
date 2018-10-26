@@ -8,10 +8,10 @@ In order to start working on NIF we need prepare a few things:
     ```elixir
     defp deps do
         [
-        (..)
-        {:bundlex, "~> 0.1"},
-        {:unifex, "~> 0.1"},
-        (..)
+          (..)
+          {:bundlex, "~> 0.1"},
+          {:unifex, "~> 0.1"},
+          (..)
         ]
     end
     ```
@@ -19,8 +19,8 @@ In order to start working on NIF we need prepare a few things:
     ```elixir
     def project do
         [
-        compilers: [:unifex, :bundlex] ++ Mix.compilers(),
-        (..)
+          compilers: [:unifex, :bundlex] ++ Mix.compilers(),
+          (..)
         ]
     end
     ```
