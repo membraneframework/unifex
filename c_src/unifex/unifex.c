@@ -55,9 +55,9 @@ UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string) {
 int unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags) {
   int res;
   if(flags & UNIFEX_SEND_THREADED) {
-    res = enif_send(env, pid, NULL, term);
-  } else {
     res = enif_send(NULL, pid, env, term);
+  } else {
+    res = enif_send(env, pid, NULL, term);
   }
   return res;
 }
