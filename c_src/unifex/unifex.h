@@ -49,6 +49,7 @@ void unifex_release_resource(void * resource);
 int unifex_string_from_term(ErlNifEnv* env, ERL_NIF_TERM input_term, char** string);
 UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string);
 int unifex_alloc_and_get_atom(ErlNifEnv* env, ERL_NIF_TERM atom_term, char ** output);
+int unifex_parse_bool(ErlNifEnv* env, ERL_NIF_TERM atom_term, int *output);
 
 // send helpers
 int unifex_send(UnifexEnv* env, UnifexPid* pid, UNIFEX_TERM term, int flags);

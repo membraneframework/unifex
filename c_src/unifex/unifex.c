@@ -44,6 +44,26 @@ int unifex_alloc_and_get_atom(ErlNifEnv* env, ERL_NIF_TERM atom_term, char ** ou
   return enif_get_atom(env, atom_term, *output, length + 1, ERL_NIF_LATIN1);
 }
 
+int unifex_parse_bool(ErlNifEnv* env, ERL_NIF_TERM atom_term, int *output) {
+  static const int TMP_LEN = 6;
+  char boolean_str[TMP_LEN];
+  int res = enif_get_atom(env, atom_term, boolean_str, TMP_LEN, ERL_NIF_LATIN1);
+  if (!res) {
+    return res;
+  }
+
+  if (strcmp(boolean_str, "true") == 0) {
+    *output = 1;
+    return 1;
+  }
+  if (strcmp(boolean_str, "false") == 0) {
+    *output = 0;
+    return 1;
+  }
+
+  return 0;
+}
+
 UNIFEX_TERM unifex_string_to_term(ErlNifEnv* env, char* string) {
   ERL_NIF_TERM output_term;
   int string_length = strlen(string);
