@@ -17,8 +17,11 @@ defmodule Unifex.PostprocessingAstGenerator do
 
   defp generate_pattern(node) do
     case node do
+      {:__aliases__, [alias: als], atoms} ->
+        generate_pattern(als || Module.concat(atoms))
+
       atom when is_atom(atom) ->
-        atom
+        Macro.var(atom, nil)
 
       {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
         name
@@ -45,6 +48,9 @@ defmodule Unifex.PostprocessingAstGenerator do
 
   defp generate_postprocessing(node) do
     case node do
+      {:__aliases__, [alias: als], atoms} ->
+        generate_postprocessing(als || Module.concat(atoms))
+
       atom when is_atom(atom) ->
         BaseType.generate_elixir_postprocessing({atom, :atom})
 

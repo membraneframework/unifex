@@ -28,6 +28,18 @@ static inline void unifex_free(void* ptr) {
   enif_free(ptr);
 }
 
+static inline UnifexEnv* unifex_alloc_env() {
+  return enif_alloc_env();
+}
+
+static inline void unifex_clear_env(UnifexEnv* env) {
+  enif_clear_env(env);
+}
+
+static inline void unifex_free_env(UnifexEnv* env) {
+  enif_free_env(env);
+}
+
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv* env, const char* field, const char *description);
 

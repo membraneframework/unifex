@@ -295,10 +295,12 @@ defmodule Unifex.NativeCodeGenerator do
     ~g<>
   end
 
-  defp generate_lib_lifecycle_and_state_related_declarations(_module) do
+  defp generate_lib_lifecycle_and_state_related_declarations(module) do
     state_type = BaseType.State.generate_native_type()
 
     ~g"""
+    #define UNIFEX_MODULE "#{module}"
+
     /**
      * Allocates the state struct. Have to be paired with 'unifex_release_state' call
      */
@@ -393,6 +395,9 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_function_spec_traverse_helper(node) do
     node
     |> case do
+      {:__aliases__, [alias: als], atoms} ->
+        generate_function_spec_traverse_helper(als || Module.concat(atoms))
+
       atom when is_atom(atom) ->
         {BaseType.generate_arg_serialize({:"\"#{atom}\"", :atom}), []}
 
