@@ -295,10 +295,12 @@ defmodule Unifex.NativeCodeGenerator do
     ~g<>
   end
 
-  defp generate_lib_lifecycle_and_state_related_declarations(_module) do
+  defp generate_lib_lifecycle_and_state_related_declarations(module) do
     state_type = BaseType.State.generate_native_type()
 
     ~g"""
+    #define UNIFEX_MODULE "#{module}"
+
     /**
      * Allocates the state struct. Have to be paired with 'unifex_release_state' call
      */
