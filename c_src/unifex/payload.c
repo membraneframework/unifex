@@ -1,6 +1,7 @@
 #include "payload.h"
 
-int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* payload) {
+int unifex_payload_from_term(ErlNifEnv *env, ERL_NIF_TERM term,
+                             UnifexPayload *payload) {
   int res = enif_inspect_binary(env, term, &payload->payload_struct.binary);
   if (res) {
     payload->data = payload->payload_struct.binary.data;
@@ -21,7 +22,7 @@ int unifex_payload_from_term(ErlNifEnv * env, ERL_NIF_TERM term, UnifexPayload* 
   return res;
 }
 
-UNIFEX_TERM unifex_payload_to_term(ErlNifEnv * env, UnifexPayload * payload) {
+UNIFEX_TERM unifex_payload_to_term(ErlNifEnv *env, UnifexPayload *payload) {
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
     payload->owned = 0;
@@ -30,15 +31,17 @@ UNIFEX_TERM unifex_payload_to_term(ErlNifEnv * env, UnifexPayload * payload) {
     return shmex_make_term(env, &payload->payload_struct.shm);
   }
   // Switch should be exhaustive, this is added just to silence the warning
-  return enif_raise_exception(env, enif_make_atom(env, "unifex_payload_to_term"));
+  return enif_raise_exception(env,
+                              enif_make_atom(env, "unifex_payload_to_term"));
 }
 
-UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, unsigned int size) {
-  UnifexPayload * payload = enif_alloc(sizeof (UnifexPayload));
+UnifexPayload *unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
+                                    unsigned int size) {
+  UnifexPayload *payload = enif_alloc(sizeof(UnifexPayload));
   payload->size = size;
   payload->type = type;
   payload->owned = 1;
-  Shmex * p_struct;
+  Shmex *p_struct;
 
   switch (type) {
   case UNIFEX_PAYLOAD_BINARY:
@@ -60,14 +63,14 @@ UnifexPayload * unifex_payload_alloc(UnifexEnv* env, UnifexPayloadType type, uns
   return payload;
 }
 
-void unifex_payload_guard_destructor(UnifexEnv* env, void * resource) {
+void unifex_payload_guard_destructor(UnifexEnv *env, void *resource) {
   shmex_guard_destructor(env, resource);
 }
 
-int unifex_payload_realloc(UnifexPayload * payload, unsigned int size) {
+int unifex_payload_realloc(UnifexPayload *payload, unsigned int size) {
   int res = 1;
   payload->size = size;
-  Shmex * shmex;
+  Shmex *shmex;
 
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
@@ -92,7 +95,7 @@ int unifex_payload_realloc(UnifexPayload * payload, unsigned int size) {
   return res;
 }
 
-void unifex_payload_release(UnifexPayload * payload) {
+void unifex_payload_release(UnifexPayload *payload) {
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
     if (payload->owned) {
@@ -105,7 +108,7 @@ void unifex_payload_release(UnifexPayload * payload) {
   }
 }
 
-void unifex_payload_release_ptr(UnifexPayload ** payload) {
+void unifex_payload_release_ptr(UnifexPayload **payload) {
   if (*payload == NULL) {
     return;
   }
