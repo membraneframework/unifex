@@ -9,10 +9,10 @@ defmodule Unifex.MixProject do
       app: :unifex,
       compilers: [:bundlex] ++ Mix.compilers(),
       version: @version,
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       name: "Unifex",
-      description: "An abstraction over native code",
+      description: "Tool for generating interfaces between native C code and Elixir",
       source_url: @github_link,
       package: package(),
       docs: docs(),
@@ -49,10 +49,9 @@ defmodule Unifex.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:bunch, "~> 0.1"},
-      # {:shmex, "~> 0.1"},
-      {:shmex, github: "membraneframework/shmex"},
-      {:bundlex, "~> 0.1"}
+      {:bunch, "~> 0.1.2"},
+      {:shmex, "~> 0.1.2"},
+      {:bundlex, "~> 0.1.3"}
     ]
   end
 end
