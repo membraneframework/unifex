@@ -37,7 +37,7 @@ end
 
 ## Usage
 
-  For detailed usage description see [Creating Unifex NIF](https://hexdocs.pm/unifex/creating-unifex-nif.html) tutorial.
+  For detailed usage description see [Creating Unifex NIF](https://hexdocs.pm/unifex/creating_unifex_nif.html) guide.
 
 ## See also
 

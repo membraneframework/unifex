@@ -41,7 +41,7 @@ defmodule Unifex.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md" | Path.wildcard("pages/**.md")],
+      extras: ["README.md", "pages/creating_unifex_nif.md"],
       source_ref: "v#{@version}"
     ]
   end
