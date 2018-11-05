@@ -4,14 +4,11 @@
 
 In order to start working on NIF we need prepare a few things:
 
-1. We need to add [Bundlex](https://github.com/membraneframework/bundlex) and [Unifex](https://github.com/membraneframework/unifex) to deps in `mix.exs`
+1. We need to [Unifex](https://github.com/membraneframework/unifex) to deps in `mix.exs`
     ```elixir
     defp deps do
         [
-          (..)
-          {:bundlex, "~> 0.1"},
           {:unifex, "~> 0.1"},
-          (..)
         ]
     end
     ```
