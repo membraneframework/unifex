@@ -2,17 +2,17 @@
 
 ## Preparation
 
-In order to start working on NIF we need prepare a few things:
+In order to start working on NIF, you need to prepare a few things:
 
-1. We need to [Unifex](https://github.com/membraneframework/unifex) to deps in `mix.exs`
+1. Add [Unifex](https://github.com/membraneframework/unifex) to deps in `mix.exs`:
     ```elixir
     defp deps do
         [
-          {:unifex, "~> 0.1"},
+          {:unifex, "~> 0.1"}
         ]
     end
     ```
-2. New compilers have to be added into project definition
+2. And compilers to the project definition:
     ```elixir
     def project do
         [
@@ -21,7 +21,7 @@ In order to start working on NIF we need prepare a few things:
         ]
     end
     ```
-3. Create `bundlex.exs` in your project's root directory with the following content:
+3. Then, create the `bundlex.exs` file in the project's root directory, with the following content:
     ```elixir
     defmodule Example.BundlexProject do
       use Bundlex.Project
@@ -37,14 +37,14 @@ In order to start working on NIF we need prepare a few things:
           example: [
             deps: [unifex: :unifex],
             src_base: "example",
-            sources: ["_generated/example.c", "example.c"],
+            sources: ["_generated/example.c", "example.c"]
           ]
         ]
       end
     end
     ```
-    This defines a nif called `example` that will be implemented in 2 `.c` files.
-    Bundlex expects that these files will be located in `c_src/example` directory.
+    This defines a nif called `example` that will be implemented in two `.c` files.
+    Bundlex expects these files to be located in `c_src/example` directory.
 
 ## Native code
 
@@ -131,13 +131,13 @@ int send_example_msg(UnifexEnv* env, UnifexPid pid, int flags, int num);
 ```
 
 More information on how `.spec.exs` files should be created can be found in docs for
-`Unifex.SpecsParser`
+`Unifex.Specs` module.
 
-Along with the header there will be `_generated/example.c` providing definitions for some of the functions
-you see in header.
+Along with the header, `_generated/example.c` file will be created, providing definitions for some of the functions
+you see in the header.
 
 Next step is to create struct that will be used as state for created nif and include generated header inside `example.h`.
-Since there is no name collision, we can use `typdef` to create an alias for `UnifexNifState` and refer to it as `State`.
+Since there is no name collision, `typdef` can be used to create an alias for `UnifexNifState` and refer to it as `State`.
 
 ```c
 #pragma once
@@ -184,7 +184,7 @@ Now the project should sucessfully compile. Run `mix deps.get && mix compile` to
 
 ## Elixir module
 
-All you have to do in order to access natively implemented functions is creating a module with the name as defined in `example.spec.exs` and use `Unifex.Loader`:
+All you have to do in order to access natively implemented functions is to create a module with the name as defined in `example.spec.exs` and to use `Unifex.Loader` there:
 
 ```elixir
 defmodule Example.Native do
