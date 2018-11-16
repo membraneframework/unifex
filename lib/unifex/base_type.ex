@@ -31,7 +31,7 @@ defmodule Unifex.BaseType do
   @callback generate_destruction(name :: atom) :: NativeCodeGenerator.code_t()
 
   @doc """
-  Generates a native type.
+  Generates a native counterpart for the type.
   """
   @callback generate_native_type() :: NativeCodeGenerator.code_t()
 
@@ -99,7 +99,7 @@ defmodule Unifex.BaseType do
   end
 
   @doc """
-  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/1` and
+  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/0` and
   provided `name`.
 
   Uses `type` as fallback for `c:generate_native_type/1`
