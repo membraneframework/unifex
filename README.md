@@ -1,5 +1,7 @@
 # Unifex
 
+[![Hex.pm](https://img.shields.io/hexpm/v/unifex.svg)](https://hex.pm/packages/unifex)
+[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/unifex/)
 [![Build Status](https://travis-ci.com/membraneframework/unifex.svg?branch=master)](https://travis-ci.com/membraneframework/unifex)
 
 Unifex is a tool for generating interfaces between native C code and Elixir, that:

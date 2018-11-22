@@ -21,7 +21,8 @@ In order to start working on NIF, you need to prepare a few things:
         ]
     end
     ```
-3. Then, create the `bundlex.exs` file in the project's root directory, with the following content:
+3. Unifex uses [Bundlex](https://github.com/membraneframework/bundlex) to compile the native code.
+   To make it work, create the `bundlex.exs` file in the project's root directory, with the following content:
     ```elixir
     defmodule Example.BundlexProject do
       use Bundlex.Project
@@ -43,8 +44,9 @@ In order to start working on NIF, you need to prepare a few things:
       end
     end
     ```
-    This defines a nif called `example` that will be implemented in two `.c` files.
-    Bundlex expects these files to be located in `c_src/example` directory.
+   This defines a nif called `example` that will be implemented in two `.c` files.
+   [Bundlex](https://github.com/membraneframework/bundlex) expects these files to be located in `c_src/example` directory.
+   More details on how to use it can be found in [its documentation](https://hexdocs.pm/bundlex).
 
 ## Native code
 
