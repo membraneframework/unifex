@@ -16,7 +16,7 @@ defmodule Unifex.Specs do
 
       dirty :cpu, decode_frame: 3
 
-      sends {:example_msg ::label, number :: int}
+      sends {:example_msg :: label, number :: int}
 
   According to this specification, module `Membrane.Element.Mad.Decoder.Native` should contain 2 functions: `create/0`
   and `decode_frame/3` (which is a cpu-bound dirty NIF). The module should use `Unifex.Loader` to provide access to
