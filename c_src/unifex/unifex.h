@@ -60,6 +60,9 @@ int unifex_alloc_and_get_atom(ErlNifEnv *env, ERL_NIF_TERM atom_term,
                               char **output);
 int unifex_parse_bool(ErlNifEnv *env, ERL_NIF_TERM atom_term, int *output);
 
-// send helpers
+// send & pid helpers
 int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags);
 int unifex_get_pid_by_name(UnifexEnv *env, char *name, UnifexPid *pid);
+static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
+  return enif_self(env, pid);
+}
