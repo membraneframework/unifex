@@ -30,6 +30,22 @@ static inline void unifex_clear_env(UnifexEnv *env) { enif_clear_env(env); }
 
 static inline void unifex_free_env(UnifexEnv *env) { enif_free_env(env); }
 
+// Mutexes
+typedef ErlNifMutex UnifexMutex;
+static inline UnifexMutex *unifex_mutex_create(char *name) {
+  return enif_mutex_create(name);
+}
+static inline void unifex_mutex_destroy(UnifexMutex *mtx) {
+  enif_mutex_destroy(mtx);
+}
+static inline void unifex_mutex_lock(UnifexMutex *mtx) { enif_mutex_lock(mtx); }
+static inline int unifex_mutex_trylock(UnifexMutex *mtx) {
+  return enif_mutex_trylock(mtx);
+}
+static inline void unifex_mutex_unlock(UnifexMutex *mtx) {
+  enif_mutex_unlock(mtx);
+}
+
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv *env, const char *field,
                                     const char *description);
