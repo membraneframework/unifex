@@ -46,6 +46,19 @@ static inline void unifex_mutex_unlock(UnifexMutex *mtx) {
   enif_mutex_unlock(mtx);
 }
 
+// Threads
+typedef ErlNifTid UnifexTid;
+static inline int unifex_thread_create(char *name, UnifexTid *tid,
+                                       void *(*func)(void *), void *args) {
+  return enif_thread_create(name, tid, func, args, NULL);
+}
+static inline void unifex_thread_exit(void *exit_val) {
+  enif_thread_exit(exit_val);
+}
+static inline int unifex_thread_join(UnifexTid tid, void **exit_val) {
+  return enif_thread_join(tid, exit_val);
+}
+
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv *env, const char *field,
                                     const char *description);
