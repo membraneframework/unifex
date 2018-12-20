@@ -1,8 +1,7 @@
 #pragma once
 
 #include <erl_nif.h>
-#include <string.h>
-#include <time.h>
+#include <stddef.h>
 
 #define UNIFEX_TERM ERL_NIF_TERM
 
