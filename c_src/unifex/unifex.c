@@ -1,5 +1,8 @@
 #include "unifex.h"
 
+#include <string.h>
+#include <time.h>
+
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv *env, const char *field,
                                     const char *description) {
   ERL_NIF_TERM exception_content = enif_make_tuple2(
