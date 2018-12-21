@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.1"
   @github_link "https://github.com/membraneframework/unifex"
 
   def project do
@@ -50,7 +50,7 @@ defmodule Unifex.MixProject do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bunch, "~> 0.1.2"},
-      {:shmex, "~> 0.1.2"},
+      {:shmex, "~> 0.1.3"},
       {:bundlex, "~> 0.1.3"}
     ]
   end
