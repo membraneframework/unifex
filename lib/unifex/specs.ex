@@ -112,6 +112,37 @@ defmodule Unifex.Specs do
     store_config(:sends, spec |> enquote())
   end
 
+  @doc """
+  Defines names of callbacks invoked on specified hook.
+
+  The available hooks are:
+
+  * `:load` - invoked when the library is loaded. Callback must have the following typing:
+
+    `int on_load(UnifexEnv *env, void ** priv_data)`
+
+    The callback receives an `env` and a pointer to private data that is initialized
+    with NULL and can be set to whatever should be passed to other callbacks.
+    If callback returns anything else than 0, the library fails to load.
+
+  * `:upgrade` - called when the library is loaded while there is old code for this module
+    with a native library loaded. Compared to `:load`, it also receives `old_priv_data`:
+
+    `int on_upgrade(UnifexEnv* env, void** priv_data, void** old_priv_data)`
+
+    Both old and new private data can be modified
+    If this callback is not defined, the module code cannot be hot-swapped. Non-zero return
+    value also prevents code upgrade.
+
+  * `:unload` - called when the code for module is unloaded. It has the following declaration:
+
+    `void on_unload(UnifexEnv *env, void * priv_data)`
+
+  """
+  defmacro callback(hook, fun) when hook in [:load, :upgrade, :unload] and is_atom(fun) do
+    store_config(:callbacks, {hook, fun})
+  end
+
   defp store_config(key, value) when is_atom(key) do
     config_store = Macro.var(:unifex_config__, nil)
 
