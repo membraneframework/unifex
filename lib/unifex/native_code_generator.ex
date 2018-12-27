@@ -173,9 +173,9 @@ defmodule Unifex.NativeCodeGenerator do
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(sends, &generate_send_function/1)}
     #{generate_state_related_stuff(module)}
-    #{generate_nif_lifecycle_callbacks(callbacks)}
+    #{generate_nif_lifecycle_callbacks(module, callbacks)}
     #{generate_functions(functions, &generate_export_function/1)}
-    #{generate_erlang_boilerplate(module, functions, dirty_funs)}
+    #{generate_erlang_boilerplate(module, functions, dirty_funs, callbacks)}
     """r
   end
 
@@ -367,11 +367,15 @@ defmodule Unifex.NativeCodeGenerator do
         ~g"int #{fun_name}(UnifexEnv * env, void ** priv_data, void **old_priv_data);"
 
       {:unload, fun_name} ->
-        ~g"int #{fun_name}(UnifexEnv * env, void * priv_data);"
+        ~g"void #{fun_name}(UnifexEnv * env, void * priv_data);"
     end)
   end
 
-  defp generate_nif_lifecycle_callbacks(callbacks) do
+  defp generate_nif_lifecycle_callbacks(nil, _callbacks) do
+    ~g""
+  end
+
+  defp generate_nif_lifecycle_callbacks(_module, callbacks) do
     load_result =
       case callbacks[:load] do
         nil -> "0"
@@ -379,7 +383,7 @@ defmodule Unifex.NativeCodeGenerator do
       end
 
     load = ~g"""
-    static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
+    static int unifex_load_nif(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
       UNIFEX_UNUSED(load_info);
       UNIFEX_UNUSED(priv_data);
 
@@ -401,7 +405,7 @@ defmodule Unifex.NativeCodeGenerator do
 
         name ->
           ~g"""
-          static int upgrade(ErlNifEnv * env, void ** priv_data, void **old_priv_data, ERL_NIF_TERM load_info) {
+          static int unifex_upgrade_nif(ErlNifEnv * env, void ** priv_data, void **old_priv_data, ERL_NIF_TERM load_info) {
             return #{name}(env, priv_data, old_priv_data);
           }
           """
@@ -414,7 +418,7 @@ defmodule Unifex.NativeCodeGenerator do
 
         name ->
           ~g"""
-          static void unload(ErlNifEnv* env, void* priv_data) {
+          static void unifex_unload_nif(ErlNifEnv* env, void* priv_data) {
             #{name}(env, priv_data);
           }
           """
@@ -424,11 +428,11 @@ defmodule Unifex.NativeCodeGenerator do
     |> Enum.join("\n")
   end
 
-  defp generate_erlang_boilerplate(nil, _functions, _dirty_funs) do
+  defp generate_erlang_boilerplate(nil, _functions, _dirty_funs, _callbacks) do
     ~g<>
   end
 
-  defp generate_erlang_boilerplate(module, functions, dirty_funs) do
+  defp generate_erlang_boilerplate(module, functions, dirty_funs, callbacks) do
     printed_funcs =
       functions
       |> Enum.map(fn {name, args} ->
@@ -445,13 +449,24 @@ defmodule Unifex.NativeCodeGenerator do
       end)
       |> gen('j(,\n)i')
 
+    # Erlang used to have reload callback. It is unsupported from OTP 20
+    # Its entry in ERL_NIF_INIT parameters is always NULL
+    callback_pointers =
+      [:load, :deprecated_reload, :upgrade, :unload]
+      |> Enum.map_join(", ", fn hook ->
+        case callbacks[hook] do
+          nil -> "NULL"
+          _ -> "unifex_#{hook}_nif"
+        end
+      end)
+
     ~g"""
     static ErlNifFunc nif_funcs[] =
     {
       #{printed_funcs}
     };
 
-    ERL_NIF_INIT(#{module}.Nif, nif_funcs, load, NULL, NULL, NULL)
+    ERL_NIF_INIT(#{module}.Nif, nif_funcs, #{callback_pointers})
     """
   end
 
