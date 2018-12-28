@@ -316,10 +316,18 @@ defmodule Unifex.NativeCodeGenerator do
     #{state_type} unifex_alloc_state(UnifexEnv* env);
 
     /**
-     * Releases state stuct allocated via 'unifex_alloc_state'.
-     * State struct should be considered invalid after this call.
+     * Removes a reference to the state object.
+     * The state is destructed when the last reference is removed.
+     * Each call to 'unifex_release_state' must correspond to a previous
+     * call to 'unifex_alloc_state' or 'unifex_keep_state'.
      */
     void unifex_release_state(UnifexEnv* env, #{state_type} state);
+
+    /**
+     * Increases reference count of state object.
+     * Each call has to be balanced by 'unifex_release_state' call
+     */
+    void unifex_keep_state(UnifexEnv* env, #{state_type} state);
 
     /**
      * Callback called when the state struct is destroyed. It should
@@ -347,6 +355,11 @@ defmodule Unifex.NativeCodeGenerator do
     void unifex_release_state(UnifexEnv * env, #{state_type} state) {
       UNIFEX_UNUSED(env);
       enif_release_resource(state);
+    }
+
+    void unifex_keep_state(UnifexEnv * env, #{state_type} state) {
+      UNIFEX_UNUSED(env);
+      enif_keep_resource(state);
     }
 
     static void destroy_state(ErlNifEnv* env, void* value) {
