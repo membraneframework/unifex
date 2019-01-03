@@ -34,6 +34,9 @@ typedef ErlNifMutex UnifexMutex;
 static inline UnifexMutex *unifex_mutex_create(char *name) {
   return enif_mutex_create(name);
 }
+static inline char * unifex_mutex_name(UnifexMutex * mtx) {
+  return enif_mutex_name(mtx);
+}
 static inline void unifex_mutex_destroy(UnifexMutex *mtx) {
   enif_mutex_destroy(mtx);
 }
@@ -43,6 +46,27 @@ static inline int unifex_mutex_trylock(UnifexMutex *mtx) {
 }
 static inline void unifex_mutex_unlock(UnifexMutex *mtx) {
   enif_mutex_unlock(mtx);
+}
+
+// Condition variables
+typedef ErlNifCond UnifexCond;
+static inline UnifexCond * unifex_cond_create(char * name) {
+  return enif_cond_create(name);
+}
+static inline char * unifex_cond_name(UnifexCond * cond) {
+  return enif_cond_name(cond);
+}
+static inline void unifex_cond_signal(UnifexCond * cond) {
+  enif_cond_signal(cond);
+}
+static inline void unifex_cond_wait(UnifexCond * cond, UnifexMutex *mutex) {
+  enif_cond_wait(cond, mutex);
+}
+static inline void unifex_cond_broadcast(UnifexCond * cond) {
+  enif_cond_broadcast(cond);
+}
+static inline void unifex_cond_destroy(UnifexCond * cond) {
+  enif_cond_destroy(cond);
 }
 
 // Threads
@@ -56,6 +80,18 @@ static inline void unifex_thread_exit(void *exit_val) {
 }
 static inline int unifex_thread_join(UnifexTid tid, void **exit_val) {
   return enif_thread_join(tid, exit_val);
+}
+
+// Time
+typedef ErlNifTime UnifexTime;
+typedef ErlNifTimeUnit UnifexTimeUnit;
+#define UNIFEX_TIME_SEC ERL_NIF_SEC
+#define UNIFEX_TIME_MSEC ERL_NIF_MSEC
+#define UNIFEX_TIME_USEC ERL_NIF_USEC
+#define UNIFEX_TIME_NSEC ERL_NIF_NSEC
+
+static inline UnifexTime unifex_monotonic_time(UnifexTimeUnit unit) {
+  return enif_monotonic_time(unit);
 }
 
 // args parse helpers
