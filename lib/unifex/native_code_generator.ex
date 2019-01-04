@@ -465,7 +465,7 @@ defmodule Unifex.NativeCodeGenerator do
     # Erlang used to have reload callback. It is unsupported from OTP 20
     # Its entry in ERL_NIF_INIT parameters is always NULL
     callback_pointers =
-      [:load, :deprecated_reload, :upgrade, :unload]
+      [:deprecated_reload, :upgrade, :unload]
       |> Enum.map_join(", ", fn hook ->
         case callbacks[hook] do
           nil -> "NULL"
@@ -479,7 +479,7 @@ defmodule Unifex.NativeCodeGenerator do
       #{printed_funcs}
     };
 
-    ERL_NIF_INIT(#{module}.Nif, nif_funcs, #{callback_pointers})
+    ERL_NIF_INIT(#{module}.Nif, nif_funcs, unifex_load_nif, #{callback_pointers})
     """
   end
 
