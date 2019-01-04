@@ -88,5 +88,18 @@ int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags) {
 }
 
 int unifex_get_pid_by_name(UnifexEnv *env, char *name, UnifexPid *pid) {
-  return enif_whereis_pid(env, enif_make_atom(env, name), pid);
+  UnifexEnv * atom_env;
+  if (env == NULL) {
+    atom_env = unifex_alloc_env();
+  } else {
+    atom_env = env;
+  }
+
+  int res = enif_whereis_pid(env, enif_make_atom(atom_env, name), pid);
+
+  if (env == NULL) {
+    unifex_free_env(atom_env);
+  }
+
+  return res;
 }
