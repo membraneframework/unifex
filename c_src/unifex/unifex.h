@@ -10,6 +10,7 @@
 #define UNIFEX_NO_FLAGS 0
 
 #define UNIFEX_SEND_THREADED 1
+#define UNIFEX_FROM_CREATED_THREAD UNIFEX_SEND_THREADED
 
 typedef ErlNifEnv UnifexEnv;
 
@@ -110,7 +111,7 @@ int unifex_parse_bool(ErlNifEnv *env, ERL_NIF_TERM atom_term, int *output);
 
 // send & pid helpers
 int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags);
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, UnifexPid *pid);
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid);
 static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
   return enif_self(env, pid);
 }

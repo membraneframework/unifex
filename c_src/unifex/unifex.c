@@ -81,25 +81,17 @@ int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags) {
   int res;
   if (flags & UNIFEX_SEND_THREADED) {
     res = enif_send(NULL, pid, env, term);
+    unifex_clear_env(env);
   } else {
     res = enif_send(env, pid, NULL, term);
   }
   return res;
 }
 
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, UnifexPid *pid) {
-  UnifexEnv * atom_env;
-  if (env == NULL) {
-    atom_env = unifex_alloc_env();
-  } else {
-    atom_env = env;
-  }
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid) {
+  UnifexEnv * looking_env = flags & UNIFEX_FROM_CREATED_THREAD ? NULL : env;
 
-  int res = enif_whereis_pid(env, enif_make_atom(atom_env, name), pid);
-
-  if (env == NULL) {
-    unifex_free_env(atom_env);
-  }
+  int res = enif_whereis_pid(looking_env, enif_make_atom(env, name), pid);
 
   return res;
 }
