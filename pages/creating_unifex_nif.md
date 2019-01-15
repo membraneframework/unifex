@@ -67,7 +67,7 @@ Here are the contents of `example.spec.exs`:
 ```elixir
 module Example.Native
 
-callback :load, :on_load
+callback :load
 
 spec init() :: {:ok :: label, state}
 
@@ -125,7 +125,7 @@ void handle_destroy_state(UnifexEnv* env, UnifexNifState* state);
  * Have to be implemented by user.
  */
 
-int on_load(UnifexEnv * env, void ** priv_data);
+int handle_load(UnifexEnv * env, void ** priv_data);
 
 /*
  * Functions that create the defined output from Nif.
@@ -172,7 +172,7 @@ Finally, let's provide required implementations in `example.c`:
 ```c
 #include "example.h"
 
-int on_load(UnifexEnv * env, void ** priv_data) {
+int handle_load(UnifexEnv * env, void ** priv_data) {
   UNIFEX_UNUSED(env);
   UNIFEX_UNUSED(priv_data);
   printf("Hello from the native side!\r\n");

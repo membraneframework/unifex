@@ -139,7 +139,14 @@ defmodule Unifex.Specs do
     `void on_unload(UnifexEnv *env, void * priv_data)`
 
   """
-  defmacro callback(hook, fun) when hook in [:load, :upgrade, :unload] and is_atom(fun) do
+  defmacro callback(hook, fun \\ nil) when hook in [:load, :upgrade, :unload] and is_atom(fun) do
+    fun =
+      if fun == nil do
+        "handle_#{hook}" |> String.to_atom()
+      else
+        fun
+      end
+
     store_config(:callbacks, {hook, fun})
   end
 
