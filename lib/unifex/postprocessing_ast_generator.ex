@@ -65,7 +65,7 @@ defmodule Unifex.PostprocessingAstGenerator do
         elem_var = Macro.var(elem_name, nil)
         postprocessing = BaseType.generate_elixir_postprocessing({elem_name, type})
 
-        if(postprocessing == elem_var) do
+        if postprocessing == elem_var do
           Macro.var(name, nil)
         else
           quote do

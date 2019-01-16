@@ -67,6 +67,8 @@ Here are the contents of `example.spec.exs`:
 ```elixir
 module Example.Native
 
+callback :load
+
 spec init() :: {:ok :: label, state}
 
 spec foo(target :: pid, state) :: {:ok :: label, answer :: int} | {:error :: label, reason :: atom}
@@ -91,13 +93,15 @@ This will result in generating the following header:
  */
 
 UNIFEX_TERM init(UnifexEnv* env);
-UNIFEX_TERM foo(UnifexEnv* env, UnifexNifState* state);
+UNIFEX_TERM foo(UnifexEnv* env, UnifexPid target, UnifexNifState* state);
 
 /*
  * Functions that manage lib and state lifecycle
  * Functions with 'unifex_' prefix are generated automatically,
  * the user have to implement rest of them.
  */
+
+#define UNIFEX_MODULE "Elixir.Example.Native"
 
 /**
  * Allocates the state struct. Have to be paired with 'unifex_release_state' call
@@ -117,6 +121,13 @@ void unifex_release_state(UnifexEnv* env, UnifexNifState* state);
 void handle_destroy_state(UnifexEnv* env, UnifexNifState* state);
 
 /*
+ * Callbacks for nif lifecycle hooks.
+ * Have to be implemented by user.
+ */
+
+int handle_load(UnifexEnv * env, void ** priv_data);
+
+/*
  * Functions that create the defined output from Nif.
  * They are automatically generated and don't need to be implemented.
  */
@@ -124,6 +135,7 @@ void handle_destroy_state(UnifexEnv* env, UnifexNifState* state);
 UNIFEX_TERM init_result_ok(UnifexEnv* env, UnifexNifState* state);
 UNIFEX_TERM foo_result_ok(UnifexEnv* env, int answer);
 UNIFEX_TERM foo_result_error(UnifexEnv* env, char* reason);
+
 /*
  * Functions that send the defined messages from Nif.
  * They are automatically generated and don't need to be implemented.
@@ -159,6 +171,13 @@ Finally, let's provide required implementations in `example.c`:
 
 ```c
 #include "example.h"
+
+int handle_load(UnifexEnv * env, void ** priv_data) {
+  UNIFEX_UNUSED(env);
+  UNIFEX_UNUSED(priv_data);
+  printf("Hello from the native side!\r\n");
+  return 0;
+}
 
 UNIFEX_TERM init(UnifexEnv* env) {
   State * state = unifex_alloc_state(env);
@@ -199,6 +218,7 @@ And that's it! You can now run `iex -S mix` and check it out yourself:
 ```elixir
 iex(1)> alias Example.Native
 iex(2)> {:ok, state} = Native.init()
+Hello from the native side!
 {:ok, #Reference<0.3961161465.633208834.69562>}
 iex(3)> Native.foo(self(), state)
 {:ok, 42}

@@ -27,6 +27,7 @@ defmodule Unifex.NativeCodeGenerator do
     fun_specs = specs |> Keyword.get_values(:fun_specs)
     dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
     sends = specs |> Keyword.get_values(:sends)
+    callbacks = specs |> Keyword.get_values(:callbacks)
 
     {functions, results} =
       fun_specs
@@ -34,8 +35,8 @@ defmodule Unifex.NativeCodeGenerator do
       |> Enum.unzip()
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = generate_header(name, module, functions, results, sends)
-    source = generate_source(name, module, functions, results, dirty_funs, sends)
+    header = generate_header(name, module, functions, results, sends, callbacks)
+    source = generate_source(name, module, functions, results, dirty_funs, sends, callbacks)
 
     {header, source}
   end
@@ -117,7 +118,7 @@ defmodule Unifex.NativeCodeGenerator do
     sigil_g(content, flags)
   end
 
-  defp generate_header(name, module, functions, results, sends) do
+  defp generate_header(name, module, functions, results, sends, callbacks) do
     ~g"""
     #pragma once
 
@@ -140,7 +141,14 @@ defmodule Unifex.NativeCodeGenerator do
      * the user have to implement rest of them.
      */
 
-    #{generate_lib_lifecycle_and_state_related_declarations(module)}
+    #{generate_state_related_declarations(module)}
+
+    /*
+     * Callbacks for nif lifecycle hooks.
+     * Have to be implemented by user.
+     */
+
+    #{generate_nif_lifecycle_callbacks_declarations(callbacks)}
 
     /*
      * Functions that create the defined output from Nif.
@@ -158,15 +166,16 @@ defmodule Unifex.NativeCodeGenerator do
     """r
   end
 
-  defp generate_source(name, module, functions, results, dirty_funs, sends) do
+  defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
     ~g"""
     #include "#{name}.h"
 
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(sends, &generate_send_function/1)}
-    #{generate_lib_lifecycle_and_state_related_stuff(module)}
+    #{generate_state_related_stuff(module)}
+    #{generate_nif_lifecycle_callbacks(module, callbacks)}
     #{generate_functions(functions, &generate_export_function/1)}
-    #{generate_erlang_boilerplate(module, functions, dirty_funs)}
+    #{generate_erlang_boilerplate(module, functions, dirty_funs, callbacks)}
     """r
   end
 
@@ -291,11 +300,11 @@ defmodule Unifex.NativeCodeGenerator do
     """
   end
 
-  defp generate_lib_lifecycle_and_state_related_declarations(nil) do
+  defp generate_state_related_declarations(nil) do
     ~g<>
   end
 
-  defp generate_lib_lifecycle_and_state_related_declarations(module) do
+  defp generate_state_related_declarations(module) do
     state_type = BaseType.State.generate_native_type()
 
     ~g"""
@@ -307,10 +316,18 @@ defmodule Unifex.NativeCodeGenerator do
     #{state_type} unifex_alloc_state(UnifexEnv* env);
 
     /**
-     * Releases state stuct allocated via 'unifex_alloc_state'.
-     * State struct should be considered invalid after this call.
+     * Removes a reference to the state object.
+     * The state is destructed when the last reference is removed.
+     * Each call to 'unifex_release_state' must correspond to a previous
+     * call to 'unifex_alloc_state' or 'unifex_keep_state'.
      */
     void unifex_release_state(UnifexEnv* env, #{state_type} state);
+
+    /**
+     * Increases reference count of state object.
+     * Each call has to be balanced by 'unifex_release_state' call
+     */
+    void unifex_keep_state(UnifexEnv* env, #{state_type} state);
 
     /**
      * Callback called when the state struct is destroyed. It should
@@ -320,11 +337,11 @@ defmodule Unifex.NativeCodeGenerator do
     """
   end
 
-  defp generate_lib_lifecycle_and_state_related_stuff(nil) do
+  defp generate_state_related_stuff(nil) do
     ~g<>
   end
 
-  defp generate_lib_lifecycle_and_state_related_stuff(_module) do
+  defp generate_state_related_stuff(_module) do
     state_type = BaseType.State.generate_native_type()
 
     ~g"""
@@ -340,13 +357,46 @@ defmodule Unifex.NativeCodeGenerator do
       enif_release_resource(state);
     }
 
+    void unifex_keep_state(UnifexEnv * env, #{state_type} state) {
+      UNIFEX_UNUSED(env);
+      enif_keep_resource(state);
+    }
+
     static void destroy_state(ErlNifEnv* env, void* value) {
       #{state_type} state = (#{state_type}) value;
       #{generate_unifex_env()}
       handle_destroy_state(unifex_env, state);
     }
+    """
+  end
 
-    static int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
+  defp generate_nif_lifecycle_callbacks_declarations(callbacks) do
+    callbacks
+    |> Enum.map_join("\n", fn
+      {:load, fun_name} ->
+        ~g"int #{fun_name}(UnifexEnv * env, void ** priv_data);"
+
+      {:upgrade, fun_name} ->
+        ~g"int #{fun_name}(UnifexEnv * env, void ** priv_data, void **old_priv_data);"
+
+      {:unload, fun_name} ->
+        ~g"void #{fun_name}(UnifexEnv * env, void * priv_data);"
+    end)
+  end
+
+  defp generate_nif_lifecycle_callbacks(nil, _callbacks) do
+    ~g""
+  end
+
+  defp generate_nif_lifecycle_callbacks(_module, callbacks) do
+    load_result =
+      case callbacks[:load] do
+        nil -> "0"
+        name -> ~g"#{name}(env, priv_data)"
+      end
+
+    load = ~g"""
+    static int unifex_load_nif(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
       UNIFEX_UNUSED(load_info);
       UNIFEX_UNUSED(priv_data);
 
@@ -356,16 +406,46 @@ defmodule Unifex.NativeCodeGenerator do
 
       UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE =
         enif_open_resource_type(env, NULL, "UnifexPayloadGuard", unifex_payload_guard_destructor, flags, NULL);
-      return 0;
+
+      return #{load_result};
     }
     """
+
+    upgrade =
+      case callbacks[:upgrade] do
+        nil ->
+          ~g""
+
+        name ->
+          ~g"""
+          static int unifex_upgrade_nif(ErlNifEnv * env, void ** priv_data, void **old_priv_data, ERL_NIF_TERM load_info) {
+            return #{name}(env, priv_data, old_priv_data);
+          }
+          """
+      end
+
+    unload =
+      case callbacks[:unload] do
+        nil ->
+          ~g""
+
+        name ->
+          ~g"""
+          static void unifex_unload_nif(ErlNifEnv* env, void* priv_data) {
+            #{name}(env, priv_data);
+          }
+          """
+      end
+
+    [load, upgrade, unload]
+    |> Enum.join("\n")
   end
 
-  defp generate_erlang_boilerplate(nil, _functions, _dirty_funs) do
+  defp generate_erlang_boilerplate(nil, _functions, _dirty_funs, _callbacks) do
     ~g<>
   end
 
-  defp generate_erlang_boilerplate(module, functions, dirty_funs) do
+  defp generate_erlang_boilerplate(module, functions, dirty_funs, callbacks) do
     printed_funcs =
       functions
       |> Enum.map(fn {name, args} ->
@@ -382,13 +462,24 @@ defmodule Unifex.NativeCodeGenerator do
       end)
       |> gen('j(,\n)i')
 
+    # Erlang used to have reload callback. It is unsupported from OTP 20
+    # Its entry in ERL_NIF_INIT parameters is always NULL
+    callback_pointers =
+      [:deprecated_reload, :upgrade, :unload]
+      |> Enum.map_join(", ", fn hook ->
+        case callbacks[hook] do
+          nil -> "NULL"
+          _ -> "unifex_#{hook}_nif"
+        end
+      end)
+
     ~g"""
     static ErlNifFunc nif_funcs[] =
     {
       #{printed_funcs}
     };
 
-    ERL_NIF_INIT(#{module}.Nif, nif_funcs, load, NULL, NULL, NULL)
+    ERL_NIF_INIT(#{module}.Nif, nif_funcs, unifex_load_nif, #{callback_pointers})
     """
   end
 
