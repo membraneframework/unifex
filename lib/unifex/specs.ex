@@ -140,12 +140,7 @@ defmodule Unifex.Specs do
 
   """
   defmacro callback(hook, fun \\ nil) when hook in [:load, :upgrade, :unload] and is_atom(fun) do
-    fun =
-      if fun == nil do
-        "handle_#{hook}" |> String.to_atom()
-      else
-        fun
-      end
+    fun = fun || "handle_#{hook}" |> String.to_atom()
 
     store_config(:callbacks, {hook, fun})
   end
