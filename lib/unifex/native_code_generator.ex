@@ -123,6 +123,7 @@ defmodule Unifex.NativeCodeGenerator do
     #pragma once
 
     #include <stdio.h>
+    #include <stdint.h>
     #include <erl_nif.h>
     #include <unifex/unifex.h>
     #include <unifex/payload.h>
