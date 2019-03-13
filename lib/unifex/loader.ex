@@ -46,10 +46,18 @@ defmodule Unifex.Loader do
         end
       end)
 
+    overrides =
+      fun_specs
+      |> Enum.map(fn {name, args, _results} ->
+        {name, length(args)}
+      end)
+
     quote do
       use Bundlex.Loader, nif: unquote(name)
 
       unquote_splicing(funs)
+
+      defoverridable unquote(overrides)
     end
   end
 end
