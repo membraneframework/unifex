@@ -3,15 +3,14 @@ defmodule Unifex.BundlexProject do
 
   def project do
     [
-      nifs: nifs(Bundlex.platform())
+      libs: libs()
     ]
   end
 
-  defp nifs(_platform) do
+  defp libs do
     [
       unifex: [
         deps: [shmex: :lib],
-        export_only?: Mix.env() != :test,
         sources: ["unifex.c", "payload.c"]
       ]
     ]
