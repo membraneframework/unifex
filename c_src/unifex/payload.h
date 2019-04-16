@@ -1,7 +1,7 @@
 #pragma once
 
+#include <shmex/lib_nif.h>
 #include "unifex.h"
-#include <shmex/lib.h>
 
 typedef enum { UNIFEX_PAYLOAD_BINARY, UNIFEX_PAYLOAD_SHM } UnifexPayloadType;
 
