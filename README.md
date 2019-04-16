@@ -31,7 +31,7 @@ defmodule MyApp.Mixfile do
 
   defp deps() do
     [
-      {:unifex, "~> 0.1"} # add unifex to deps
+      {:unifex, "~> 0.2.0"} # add unifex to deps
     ]
   end
 end
