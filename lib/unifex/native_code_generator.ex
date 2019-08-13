@@ -420,6 +420,7 @@ defmodule Unifex.NativeCodeGenerator do
         name ->
           ~g"""
           static int unifex_upgrade_nif(ErlNifEnv * env, void ** priv_data, void **old_priv_data, ERL_NIF_TERM load_info) {
+            UNIFEX_UNUSED(load_info);
             return #{name}(env, priv_data, old_priv_data);
           }
           """
