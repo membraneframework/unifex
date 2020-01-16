@@ -23,13 +23,13 @@ defmodule Unifex.PostprocessingAstGenerator do
       atom when is_atom(atom) ->
         Macro.var(atom, nil)
 
-      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
+      {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
         name
 
-      {:::, _, [{name, _, _}, {_type, _, _}]} ->
+      {:"::", _, [{name, _, _}, {_type, _, _}]} ->
         Macro.var(name, nil)
 
-      {:::, _, [{name, _, _}, [{_type, _, _}]]} ->
+      {:"::", _, [{name, _, _}, [{_type, _, _}]]} ->
         Macro.var(name, nil)
 
       {a, b} ->
@@ -54,13 +54,13 @@ defmodule Unifex.PostprocessingAstGenerator do
       atom when is_atom(atom) ->
         BaseType.generate_elixir_postprocessing({atom, :atom})
 
-      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
+      {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
         name
 
-      {:::, _, [{name, _, _}, {type, _, _}]} ->
+      {:"::", _, [{name, _, _}, {type, _, _}]} ->
         BaseType.generate_elixir_postprocessing({name, type})
 
-      {:::, _, [{name, _, _}, [{type, _, _}]]} ->
+      {:"::", _, [{name, _, _}, [{type, _, _}]]} ->
         elem_name = :"#{name}_elem"
         elem_var = Macro.var(elem_name, nil)
         postprocessing = BaseType.generate_elixir_postprocessing({elem_name, type})
@@ -83,7 +83,7 @@ defmodule Unifex.PostprocessingAstGenerator do
         {:{}, [], content |> Enum.map(&generate_postprocessing/1)}
 
       [{_name, _, _} = name_var] ->
-        generate_postprocessing({:::, [], [name_var, [name_var]]})
+        generate_postprocessing({:"::", [], [name_var, [name_var]]})
 
       {name, _, _} ->
         BaseType.generate_elixir_postprocessing({name, name})

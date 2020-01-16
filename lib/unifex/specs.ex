@@ -153,13 +153,13 @@ defmodule Unifex.Specs do
     end
   end
 
-  defp parse_fun_spec({:::, _, [{fun_name, _, args}, results]}) do
+  defp parse_fun_spec({:"::", _, [{fun_name, _, args}, results]}) do
     args =
       args
       |> Enum.map(fn
-        {:::, _, [{name, _, _}, [{type, _, _}]]} -> {name, {:list, type}}
+        {:"::", _, [{name, _, _}, [{type, _, _}]]} -> {name, {:list, type}}
         [{name, _, _}] -> {name, {:list, name}}
-        {:::, _, [{name, _, _}, {type, _, _}]} -> {name, type}
+        {:"::", _, [{name, _, _}, {type, _, _}]} -> {name, type}
         {name, _, _} -> {name, name}
       end)
 

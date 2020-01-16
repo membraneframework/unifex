@@ -494,15 +494,15 @@ defmodule Unifex.NativeCodeGenerator do
       atom when is_atom(atom) ->
         {BaseType.generate_arg_serialize({:"\"#{atom}\"", :atom}), []}
 
-      {:::, _, [name, {:label, _, _}]} when is_atom(name) ->
+      {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
         {BaseType.generate_arg_serialize({:"\"#{name}\"", :atom}), label: name}
 
-      {:::, _, [{name, _, _}, {type, _, _}]} ->
+      {:"::", _, [{name, _, _}, {type, _, _}]} ->
         {BaseType.generate_arg_serialize({name, type}), arg: {name, type}}
 
-      {:::, meta, [name_var, [{type, type_meta, type_ctx}]]} ->
+      {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]} ->
         generate_function_spec_traverse_helper(
-          {:::, meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
+          {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
         )
 
       {a, b} ->
@@ -517,10 +517,10 @@ defmodule Unifex.NativeCodeGenerator do
         {generate_tuple_maker(results), meta}
 
       [{_name, _, _} = name_var] ->
-        generate_function_spec_traverse_helper({:::, [], [name_var, [name_var]]})
+        generate_function_spec_traverse_helper({:"::", [], [name_var, [name_var]]})
 
       {_name, _, _} = name_var ->
-        generate_function_spec_traverse_helper({:::, [], [name_var, name_var]})
+        generate_function_spec_traverse_helper({:"::", [], [name_var, name_var]})
     end
     ~> ({result, meta} -> {result, meta |> List.flatten()})
   end
