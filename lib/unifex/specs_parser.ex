@@ -5,7 +5,14 @@ defmodule Unifex.SpecsParser do
   For information on how to create such specs, see `Unifex.Specs` module.
   """
 
-  @type parsed_specs_t :: [{:module, module()} | {:fun_specs, tuple()}]
+  @type parsed_specs_t :: [
+          {:module, module()}
+          | {:fun_specs,
+             {fun_name :: atom, [{arg_name :: atom, arg_type :: atom | {:list, atom}}],
+              return_type :: Macro.t()}}
+          | {:sends, sent_term_type :: Macro.t()}
+          | {:dirty, [{{fun_name :: atom, fun_arity :: non_neg_integer}, :cpu | :io}]}
+        ]
 
   @doc """
   Parses Unifex specs of native functions.
@@ -13,7 +20,7 @@ defmodule Unifex.SpecsParser do
   @spec parse_specs(specs :: Macro.t()) :: parsed_specs_t()
   def parse_specs(specs) do
     {_res, binds} = Code.eval_string(specs, [{:unifex_config__, []}], make_env())
-    binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
+    binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse() |> IO.inspect()
   end
 
   # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
