@@ -365,7 +365,9 @@ defmodule Unifex.NativeCodeGenerator do
 
     #{state_type} unifex_alloc_state(UnifexEnv* env) {
       UNIFEX_UNUSED(env);
-      return (#{state_type}) enif_alloc_resource(STATE_RESOURCE_TYPE, #{BaseType.State.generate_sizeof()});
+      return (#{state_type}) enif_alloc_resource(STATE_RESOURCE_TYPE, #{
+      BaseType.State.generate_sizeof()
+    });
     }
 
     void unifex_release_state(UnifexEnv * env, #{state_type} state) {
