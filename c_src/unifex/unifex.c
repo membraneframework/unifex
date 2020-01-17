@@ -88,8 +88,9 @@ int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags) {
   return res;
 }
 
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid) {
-  UnifexEnv * looking_env = flags & UNIFEX_FROM_CREATED_THREAD ? NULL : env;
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags,
+                           UnifexPid *pid) {
+  UnifexEnv *looking_env = flags & UNIFEX_FROM_CREATED_THREAD ? NULL : env;
 
   int res = enif_whereis_pid(looking_env, enif_make_atom(env, name), pid);
 

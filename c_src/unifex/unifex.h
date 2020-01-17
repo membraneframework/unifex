@@ -12,6 +12,10 @@
 #define UNIFEX_SEND_THREADED 1
 #define UNIFEX_FROM_CREATED_THREAD UNIFEX_SEND_THREADED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef ErlNifEnv UnifexEnv;
 
 typedef ErlNifPid UnifexPid;
@@ -35,7 +39,7 @@ typedef ErlNifMutex UnifexMutex;
 static inline UnifexMutex *unifex_mutex_create(char *name) {
   return enif_mutex_create(name);
 }
-static inline char * unifex_mutex_name(UnifexMutex * mtx) {
+static inline char *unifex_mutex_name(UnifexMutex *mtx) {
   return enif_mutex_name(mtx);
 }
 static inline void unifex_mutex_destroy(UnifexMutex *mtx) {
@@ -51,22 +55,22 @@ static inline void unifex_mutex_unlock(UnifexMutex *mtx) {
 
 // Condition variables
 typedef ErlNifCond UnifexCond;
-static inline UnifexCond * unifex_cond_create(char * name) {
+static inline UnifexCond *unifex_cond_create(char *name) {
   return enif_cond_create(name);
 }
-static inline char * unifex_cond_name(UnifexCond * cond) {
+static inline char *unifex_cond_name(UnifexCond *cond) {
   return enif_cond_name(cond);
 }
-static inline void unifex_cond_signal(UnifexCond * cond) {
+static inline void unifex_cond_signal(UnifexCond *cond) {
   enif_cond_signal(cond);
 }
-static inline void unifex_cond_wait(UnifexCond * cond, UnifexMutex *mutex) {
+static inline void unifex_cond_wait(UnifexCond *cond, UnifexMutex *mutex) {
   enif_cond_wait(cond, mutex);
 }
-static inline void unifex_cond_broadcast(UnifexCond * cond) {
+static inline void unifex_cond_broadcast(UnifexCond *cond) {
   enif_cond_broadcast(cond);
 }
-static inline void unifex_cond_destroy(UnifexCond * cond) {
+static inline void unifex_cond_destroy(UnifexCond *cond) {
   enif_cond_destroy(cond);
 }
 
@@ -111,7 +115,12 @@ int unifex_parse_bool(ErlNifEnv *env, ERL_NIF_TERM atom_term, int *output);
 
 // send & pid helpers
 int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags);
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid);
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags,
+                           UnifexPid *pid);
 static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
   return enif_self(env, pid);
 }
+
+#ifdef __cplusplus
+}
+#endif
