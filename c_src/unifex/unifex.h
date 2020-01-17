@@ -12,6 +12,10 @@
 #define UNIFEX_SEND_THREADED 1
 #define UNIFEX_FROM_CREATED_THREAD UNIFEX_SEND_THREADED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef ErlNifEnv UnifexEnv;
 
 typedef ErlNifPid UnifexPid;
@@ -118,3 +122,7 @@ int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags,
 static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
   return enif_self(env, pid);
 }
+
+#ifdef __cplusplus
+}
+#endif

@@ -129,6 +129,10 @@ defmodule Unifex.NativeCodeGenerator do
     #include <unifex/payload.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
     /*
      * Declaration of native functions for module #{module}.
      * The implementation have to be provided by the user.
@@ -164,12 +168,23 @@ defmodule Unifex.NativeCodeGenerator do
      */
 
     #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
+
+    #ifdef __cplusplus
+    }
+    #endif
     """r
   end
 
   defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
     ~g"""
     #include "#{name}.h"
+
+    ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
+
+    UnifexPayload *unifex_payload_alloc(
+            UnifexEnv *env, UnifexPayloadType type, unsigned int size) {
+      return unifex_payload_alloc_template(env, type, size, &UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE);
+    }
 
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(sends, &generate_send_function/1)}
@@ -350,7 +365,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     #{state_type} unifex_alloc_state(UnifexEnv* env) {
       UNIFEX_UNUSED(env);
-      return enif_alloc_resource(STATE_RESOURCE_TYPE, #{BaseType.State.generate_sizeof()});
+      return (#{state_type}) enif_alloc_resource(STATE_RESOURCE_TYPE, #{BaseType.State.generate_sizeof()});
     }
 
     void unifex_release_state(UnifexEnv * env, #{state_type} state) {
@@ -401,12 +416,12 @@ defmodule Unifex.NativeCodeGenerator do
       UNIFEX_UNUSED(load_info);
       UNIFEX_UNUSED(priv_data);
 
-      int flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
+      ErlNifResourceFlags flags = (ErlNifResourceFlags) (ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
       STATE_RESOURCE_TYPE =
-        enif_open_resource_type(env, NULL, "UnifexNifState", destroy_state, flags, NULL);
+        enif_open_resource_type(env, NULL, "UnifexNifState", (ErlNifResourceDtor*) destroy_state, flags, NULL);
 
       UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE =
-        enif_open_resource_type(env, NULL, "UnifexPayloadGuard", unifex_payload_guard_destructor, flags, NULL);
+        enif_open_resource_type(env, NULL, "UnifexPayloadGuard", (ErlNifResourceDtor*) unifex_payload_guard_destructor, flags, NULL);
 
       return #{load_result};
     }
