@@ -20,7 +20,7 @@ defmodule Unifex.SpecsParser do
   @spec parse_specs(specs :: Macro.t()) :: parsed_specs_t()
   def parse_specs(specs) do
     {_res, binds} = Code.eval_string(specs, [{:unifex_config__, []}], make_env())
-    binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse() |> IO.inspect()
+    binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
   end
 
   # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
