@@ -27,11 +27,13 @@ defmodule Unifex.InterfaceIO do
     out_base_path = Path.join(out_dir_name, name)
     File.write!("#{out_base_path}.h", header)
 
-    src_f_ext = if File.exists?(Path.join(dir, name <> ".cpp")) do
-      ".cpp"
-    else
-      ".c"
-    end
+    src_f_ext =
+      if File.exists?(Path.join(dir, name <> ".cpp")) do
+        ".cpp"
+      else
+        ".c"
+      end
+
     File.write!(out_base_path <> src_f_ext, source)
 
     out_dir_name
