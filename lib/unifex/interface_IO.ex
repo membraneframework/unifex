@@ -39,6 +39,7 @@ defmodule Unifex.InterfaceIO do
     out_dir_name
     |> Path.join(".gitignore")
     |> File.write!("""
+    *.cpp
     *.c
     *.h
     """)
