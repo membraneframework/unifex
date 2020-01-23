@@ -543,24 +543,12 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_tuple_maker(content) do
-    # """    const ERL_NIF_TERM arr[] = {
-    #   #{content |> gen('j(,\n)iit')}
-    # };
-    # enif_make_tuple_from_array(env, arr, #{length(content)}
-    # )"
-
-    # ~g"""
-    # enif_make_tuple_from_fixed_len_array(env, #{content |> gen('j(,\n)iit')})
-    # """
-    ~g"""
-    enif_make_tuple_from_array(
-      env,
-      (ERL_NIF_TERM []) {
-        #{content |> gen('j(,\n)iit')}
-      },
-      #{length(content)}
-    )
-    """
+    ~g<({
+      const ERL_NIF_TERM terms[] = {
+        #{content |> gen('j(,\n    )iit')}
+      };
+      enif_make_tuple_from_array(env, terms, #{length(content)});
+    })>
   end
 
   defp generate_unifex_env() do
