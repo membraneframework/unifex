@@ -33,9 +33,9 @@ void unifex_payload_guard_destructor(UnifexEnv *env, void *resource);
 int unifex_payload_realloc(UnifexPayload *payload, unsigned int size);
 void unifex_payload_release(UnifexPayload *payload);
 void unifex_payload_release_ptr(UnifexPayload **payload);
-UNIFEX_TERM enif_make_tuple_from_fixed_len_array(ErlNifEnv *env,
-                                                 ERL_NIF_TERM *first,
-                                                 ERL_NIF_TERM *second);
+// UNIFEX_TERM enif_make_tuple_from_fixed_len_array(ErlNifEnv *env,
+//                                                  ERL_NIF_TERM *first,
+//                                                  ERL_NIF_TERM *second);
 
 #ifdef __cplusplus
 }

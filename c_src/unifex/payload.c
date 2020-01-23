@@ -127,9 +127,9 @@ void unifex_payload_release_ptr(UnifexPayload **payload) {
   *payload = NULL;
 }
 
-UNIFEX_TERM enif_make_tuple_from_fixed_len_array(ErlNifEnv *env,
-                                                 ERL_NIF_TERM *first,
-                                                 ERL_NIF_TERM *second) {
-  const UNIFEX_TERM arr[] = {*first, *second};
-  return enif_make_tuple_from_array(env, arr, 2);
-}
+// UNIFEX_TERM enif_make_tuple_from_fixed_len_array(ErlNifEnv *env,
+//                                                  ERL_NIF_TERM *first,
+//                                                  ERL_NIF_TERM *second) {
+//   const UNIFEX_TERM arr[] = {*first, *second};
+//   return enif_make_tuple_from_array(env, arr, 2);
+// }
