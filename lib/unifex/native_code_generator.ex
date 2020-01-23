@@ -245,6 +245,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
+
       ERL_NIF_TERM term = #{result |> gen('it')};
       return unifex_send(env, &pid, term, flags);
     }
@@ -544,13 +545,10 @@ defmodule Unifex.NativeCodeGenerator do
 
   defp generate_tuple_maker(content) do
     ~g"""
-    enif_make_tuple_from_array(
-      env,
-      (ERL_NIF_TERM []) {
-        #{content |> gen('j(,\n)iit')}
-      },
-      #{length(content)}
-    )
+    const ERL_NIF_TERM arr[] = {
+      #{content |> gen('j(,\n)iit')}
+    };
+    enif_make_tuple_from_array(env, arr, #{length(content)})
     """
   end
 
