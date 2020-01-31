@@ -17,7 +17,7 @@ defmodule Unifex.BaseType.Payload do
 
   @impl BaseType
   def generate_initialization(name) do
-    ~g<#{name} = enif_alloc(sizeof (UnifexPayload));>
+    ~g<#{name} = (UnifexPayload *) enif_alloc(sizeof (UnifexPayload));>
   end
 
   @impl BaseType
