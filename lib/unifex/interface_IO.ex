@@ -26,23 +26,8 @@ defmodule Unifex.InterfaceIO do
     File.mkdir_p!(out_dir_name)
     out_base_path = Path.join(out_dir_name, name)
     File.write!("#{out_base_path}.h", header)
-
-    src_f_ext =
-      if File.exists?(Path.join(dir, name <> ".cpp")) do
-        ".cpp"
-      else
-        ".c"
-      end
-
-    File.write!(out_base_path <> src_f_ext, source)
-
-    out_dir_name
-    |> Path.join(".gitignore")
-    |> File.write!("""
-    *.cpp
-    *.c
-    *.h
-    """)
+    File.write!("#{out_base_path}.c", source)
+    File.write!("#{out_base_path}.cpp", source)
 
     :ok
   end
