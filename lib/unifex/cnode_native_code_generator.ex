@@ -8,6 +8,8 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     end
   end
 
+  @type code_t() :: String.t()
+
   @doc """
   Sigil used for indentation of generated code.
 
@@ -85,12 +87,9 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     sigil_g(content, flags)
   end
 
-  @spec generate_code(
-          implementation :: any,
-          name :: String.t(),
-          specs :: Unifex.SpecsParser.parsed_specs_t()
-        ) :: {String.t(), String.t()}
-  def generate_code(implementation, name, specs) do
+  @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
+          {code_t(), code_t()}
+  def generate_code(name, specs) do
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
     dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
@@ -103,18 +102,8 @@ defmodule Unifex.CNodeNativeCodeGenerator do
       |> Enum.unzip()
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = implementation.generate_header(name, module, functions, results, sends, callbacks)
-
-    source =
-      implementation.generate_source(
-        name,
-        module,
-        functions,
-        results,
-        dirty_funs,
-        sends,
-        callbacks
-      )
+    header = generate_header(name, module, functions, results, sends, callbacks)
+    source = generate_source(name, module, functions, results, dirty_funs, sends, callbacks)
 
     {header, source}
   end
@@ -159,7 +148,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     ~> ({result, meta} -> {result, meta |> List.flatten()})
   end
 
-  defp generate_tuple_maker(content) do
+  defp generate_tuple_maker(_content) do
     # IO.inspect(content)
     # IO.inspect ~g<({
     #   const ERL_NIF_TERM terms[] = {
@@ -431,21 +420,12 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     """r
   end
 
-  defp generate_implemented_function_declaration({name, args}) do
-    args_declarations =
-      args
-      |> Enum.flat_map(&BaseType.generate_declaration/1)
-      |> Enum.join(", ")
-
-    ~g<ei_x_buff * #{name}(#{args_declarations})>
-  end
-
   def generate_caller_function({name, args}) do
     declaration = generate_caller_function_declaration(name)
     args_decoding = generate_args_decoding(args)
 
     implemented_fun_args =
-      ["ctx" | args |> Enum.map(fn {name, type} -> to_string(name) end)]
+      ["ctx" | args |> Enum.map(fn {name, _type} -> to_string(name) end)]
       |> Enum.join(", ")
 
     implemented_fun_call = ~g<#{name}(#{implemented_fun_args});>
@@ -459,7 +439,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     """
   end
 
-  def generate_caller_function_declaration({name, args}) do
+  def generate_caller_function_declaration({name, _args}) do
     generate_caller_function_declaration(name)
   end
 
@@ -467,7 +447,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     ~g"void #{name}_caller(ei_buff * in_buff, int * index, const cnode_context * ctx)"
   end
 
-  def generate_header(name, module, functions, results, sends, callbacks) do
+  def generate_header(name, _module, functions, results, _sends, _callbacks) do
     ~g"""
     #pragma once
 
@@ -498,8 +478,8 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     """r
   end
 
-  defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
-    {fun_names, args} = Enum.unzip(functions)
+  defp generate_source(name, _module, functions, results, _dirty_funs, _sends, _callbacks) do
+    {fun_names, _args} = Enum.unzip(functions)
 
     ~g"""
     #include "#{name}.h"
@@ -515,5 +495,9 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     #{generate_handle_message(fun_names)}
     #{generate_cnode_generic_utilities()}
     """r
+  end
+
+  defp indent(line) do
+    "  #{line}"
   end
 end
