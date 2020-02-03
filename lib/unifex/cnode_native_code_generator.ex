@@ -186,16 +186,16 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     |> Enum.map(fn
       {name, :atom} ->
         ~g<char #{name}[2048];
-                ei_decode_atom(&in_buff, &index, #{name}));>
+                ei_decode_atom(in_buff, index, #{name}));>
 
       {name, :int} ->
         ~g<long long #{name};
-                ei_decode_longlong(&in_buff, &index, #{name});>
+                ei_decode_longlong(in_buff, index, #{name});>
 
       {name, :string} ->
         ~g<char #{name}[2048];
                 long #{name}_len;
-                ei_decode_binary((void*) &in_buff, &index, #{name}, &#{name}_len);
+                ei_decode_binary(in_buff, index, (void *) #{name}, &#{name}_len);
                 #{name}[#{name}_len] = 0;>
     end)
     |> Enum.join("\n")
@@ -207,16 +207,16 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
   defp generate_result_encoding({var_name, :int}) do
     ~g<long long casted_#{var_name} = (long long) var_name;
-        ei_x_encode_longlong(out_buff, casted_#{var_name});>
+        ei_x_encode_longlong(&out_buff, casted_#{var_name});>
   end
 
   defp generate_result_encoding({var_name, :string}) do
     ~g<long #{var_name}_len = (long) strlen(#{var_name});
-        ei_x_encode_binary(out_buff, #{var_name}, #{var_name}_len);>
+        ei_x_encode_binary(&out_buff, #{var_name}, #{var_name}_len);>
   end
 
   defp generate_result_encoding({var_name, :atom}) do
-    ~g<ei_x_encode_atom(out_buff, #{var_name});>
+    ~g<ei_x_encode_atom(&out_buff, #{var_name});>
   end
 
   def generate_result_function({name, specs}) do
@@ -233,6 +233,8 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         ei_x_buff out_buff;
         prepare_ei_x_buff(&out_buff, ctx->node_name);
 
+        ei_x_encode_tuple_header(&out_buff, #{length(encodings)});
+
         #{encodings |> Enum.join("\n    ")}
 
         ei_send(ctx->ei_fd, ctx->e_pid, out_buff.buff, out_buff.index);
@@ -246,16 +248,15 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      ["const cnode_context * ctx" | args]
-      |> Enum.flat_map(&BaseType.generate_declaration/1)
+      ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
-    ~g<ei_x_buff* #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+    ~g<void #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
   def generate_handle_message_declaration() do
     "int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,
-            ei_x_buff *in_buf)"
+            ei_x_buff *in_buff)"
   end
 
   def generate_handle_message(fun_names) do
@@ -264,7 +265,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
       |> Enum.map(fn
         f_name ->
           ~g"""
-          if (strcmp(fun_name, \"#{f_name}\") == 0) {
+          if (strcmp(fun_name, "#{f_name}") == 0) {
               #{f_name}_caller(in_buff->buff, &index, &ctx);
           }
           """r
@@ -284,10 +285,10 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
         int index = 0;
         int version;
-        ei_decode_version(in_buf->buff, &index, &version);
+        ei_decode_version(in_buff->buff, &index, &version);
 
         int arity;
-        ei_decode_tuple_header(buff, &index, &arity);
+        ei_decode_tuple_header(in_buff->buff, &index, &arity);
 
         char fun_name[2048];
         ei_decode_atom(in_buff->buff, &index, fun_name);
@@ -295,7 +296,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         cnode_context ctx = {
             .node_name = node_name, 
             .ei_fd = ei_fd,
-            .ei_pid = &emsg.from
+            .e_pid = &emsg.from
         };
 
         #{handling}
@@ -341,6 +342,48 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         }
         return 0;
       }
+
+      #ifdef CNODE_DEBUG
+#define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
+#else
+#define DEBUG(...)
+#endif
+
+
+int listen_sock(int *listen_fd, int *port) {
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (fd < 0) {
+    return 1;
+  }
+
+  int opt_on = 1;
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on))) {
+    return 1;
+  }
+
+  struct sockaddr_in addr;
+  unsigned int addr_size = sizeof(addr);
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(0);
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  if (bind(fd, (struct sockaddr *)&addr, addr_size) < 0) {
+    return 1;
+  }
+
+  if (getsockname(fd, (struct sockaddr *)&addr, &addr_size)) {
+    return 1;
+  }
+  *port = (int)ntohs(addr.sin_port);
+
+  const int queue_size = 5;
+  if (listen(fd, queue_size)) {
+    return 1;
+  }
+
+  *listen_fd = fd;
+  return 0;
+}
       
 
     int main(int argc, char **argv) {
@@ -433,7 +476,6 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         #{declaration} {
             #{args_decoding}
             #{implemented_fun_call}
-            return 0;
         }
     """
   end
@@ -443,7 +485,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
   end
 
   def generate_caller_function_declaration(name) do
-    ~g"void #{name}_caller(ei_buff * in_buff, int * index, const cnode_context * ctx)"
+    ~g"void #{name}_caller(const char * in_buff, int * index, const cnode_context * ctx)"
   end
 
   def generate_header(name, _module, functions, results, _sends, _callbacks) do
@@ -452,16 +494,23 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
     #include <stdio.h>
     #include <stdint.h>
-    #include <erl_nif.h>
-    #include <unifex/unifex.h>
-    #include <unifex/payload.h>
+
+    #ifndef _REENTRANT
+    #define _REENTRANT // For some reason __erl_errno is undefined unless _REENTRANT
+                      // is defined
+    #endif
+    #include <ei_connect.h>
+    #include <erl_interface.h>
+
     #include "#{InterfaceIO.user_header_path(name)}"
+
+
 
     #ifdef __cplusplus
     extern "C" {
     #endif
 
-    struct cnode_context {
+    typedef struct cnode_context {
         const char * node_name;
         int ei_fd; 
         erlang_pid * e_pid;
