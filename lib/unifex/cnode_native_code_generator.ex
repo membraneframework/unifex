@@ -1,6 +1,6 @@
 defmodule Unifex.CNodeNativeCodeGenerator do
-    alias Unifex.{BaseType, InterfaceIO}
-    use Bunch
+  alias Unifex.{BaseType, InterfaceIO}
+  use Bunch
 
   defmacro __using__(_args) do
     quote do
@@ -85,41 +85,41 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     sigil_g(content, flags)
   end
 
-
   @spec generate_code(
-    implementation :: any,
-    name :: String.t(),
-    specs :: Unifex.SpecsParser.parsed_specs_t()
-  ) :: {String.t(), String.t()}
-def generate_code(implementation, name, specs) do
-module = specs |> Keyword.get(:module)
-fun_specs = specs |> Keyword.get_values(:fun_specs)
-dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
-sends = specs |> Keyword.get_values(:sends)
-callbacks = specs |> Keyword.get_values(:callbacks)
+          implementation :: any,
+          name :: String.t(),
+          specs :: Unifex.SpecsParser.parsed_specs_t()
+        ) :: {String.t(), String.t()}
+  def generate_code(implementation, name, specs) do
+    module = specs |> Keyword.get(:module)
+    fun_specs = specs |> Keyword.get_values(:fun_specs)
+    dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
+    sends = specs |> Keyword.get_values(:sends)
+    callbacks = specs |> Keyword.get_values(:callbacks)
 
-{functions, results} =
-fun_specs
-|> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
-|> Enum.unzip()
+    {functions, results} =
+      fun_specs
+      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
+      |> Enum.unzip()
 
-results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-header = implementation.generate_header(name, module, functions, results, sends, callbacks)
+    results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
+    header = implementation.generate_header(name, module, functions, results, sends, callbacks)
 
-source =
-implementation.generate_source(
-  name,
-  module,
-  functions,
-  results,
-  dirty_funs,
-  sends,
-  callbacks
-)
+    source =
+      implementation.generate_source(
+        name,
+        module,
+        functions,
+        results,
+        dirty_funs,
+        sends,
+        callbacks
+      )
 
-{header, source}
-end
-defp generate_function_spec_traverse_helper(node) do
+    {header, source}
+  end
+
+  defp generate_function_spec_traverse_helper(node) do
     node
     |> case do
       {:__aliases__, [alias: als], atoms} ->
@@ -159,7 +159,7 @@ defp generate_function_spec_traverse_helper(node) do
     ~> ({result, meta} -> {result, meta |> List.flatten()})
   end
 
-defp generate_tuple_maker(content) do
+  defp generate_tuple_maker(content) do
     # IO.inspect(content)
     # IO.inspect ~g<({
     #   const ERL_NIF_TERM terms[] = {
@@ -170,7 +170,6 @@ defp generate_tuple_maker(content) do
 
     ""
   end
-
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
@@ -235,8 +234,11 @@ defp generate_tuple_maker(content) do
     declaration = generate_result_function_declaration({name, specs})
 
     {_result, meta} = generate_function_spec_traverse_helper(specs)
-    encodings = meta |> Keyword.get_values(:arg) 
-        |> Enum.map(&generate_result_encoding/1)
+
+    encodings =
+      meta
+      |> Keyword.get_values(:arg)
+      |> Enum.map(&generate_result_encoding/1)
 
     ~g[#{declaration} {
         ei_x_buff out_buff;
@@ -255,8 +257,8 @@ defp generate_tuple_maker(content) do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-    args 
-    |> Enum.flat_map(&BaseType.generate_declaration/1)
+      args
+      |> Enum.flat_map(&BaseType.generate_declaration/1)
 
     merged_args = ["const cnode_context * ctx" | args_declarations] |> Enum.join(", ")
 
@@ -429,7 +431,6 @@ defp generate_tuple_maker(content) do
     """r
   end
 
-
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
       args
@@ -444,7 +445,7 @@ defp generate_tuple_maker(content) do
     args_decoding = generate_args_decoding(args)
 
     implemented_fun_args =
-      ["ctx" | (args |> Enum.map(fn {name, type} -> to_string(name) end))]
+      ["ctx" | args |> Enum.map(fn {name, type} -> to_string(name) end)]
       |> Enum.join(", ")
 
     implemented_fun_call = ~g<#{name}(#{implemented_fun_args});>
@@ -465,7 +466,6 @@ defp generate_tuple_maker(content) do
   def generate_caller_function_declaration(name) do
     ~g"void #{name}_caller(ei_buff * in_buff, int * index, const cnode_context * ctx)"
   end
-
 
   def generate_header(name, module, functions, results, sends, callbacks) do
     ~g"""
@@ -498,8 +498,6 @@ defp generate_tuple_maker(content) do
     """r
   end
 
-
-
   defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
     {fun_names, args} = Enum.unzip(functions)
 
@@ -518,5 +516,4 @@ defp generate_tuple_maker(content) do
     #{generate_cnode_generic_utilities()}
     """r
   end
-
 end
