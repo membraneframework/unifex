@@ -35,9 +35,8 @@ UNIFEX_TERM unifex_payload_to_term(ErlNifEnv *env, UnifexPayload *payload) {
                               enif_make_atom(env, "unifex_payload_to_term"));
 }
 
-UnifexPayload *unifex_payload_alloc_template(
-    UnifexEnv *env, UnifexPayloadType type, unsigned int size,
-    ErlNifResourceType **unifex_payload_guard_resource_type) {
+UnifexPayload *unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
+                                    unsigned int size) {
   UnifexPayload *payload = enif_alloc(sizeof(UnifexPayload));
   payload->size = size;
   payload->type = type;
@@ -53,7 +52,7 @@ UnifexPayload *unifex_payload_alloc_template(
   case UNIFEX_PAYLOAD_SHM:
     p_struct = &payload->payload_struct.shm;
     shmex_init(env, p_struct, size);
-    result = shmex_allocate(env, *unifex_payload_guard_resource_type, p_struct);
+    result = shmex_allocate(env, UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE, p_struct);
     if (SHMEX_RES_OK != result) {
       return NULL;
     }
@@ -124,10 +123,3 @@ void unifex_payload_release_ptr(UnifexPayload **payload) {
   enif_free(*payload);
   *payload = NULL;
 }
-
-// UNIFEX_TERM enif_make_tuple_from_fixed_len_array(ErlNifEnv *env,
-//                                                  ERL_NIF_TERM *first,
-//                                                  ERL_NIF_TERM *second) {
-//   const UNIFEX_TERM arr[] = {*first, *second};
-//   return enif_make_tuple_from_array(env, arr, 2);
-// }
