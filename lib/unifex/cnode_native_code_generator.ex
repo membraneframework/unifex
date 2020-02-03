@@ -246,12 +246,11 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      args
+      ["const cnode_context * ctx" | args]
       |> Enum.flat_map(&BaseType.generate_declaration/1)
+      |> Enum.join(", ")
 
-    merged_args = ["const cnode_context * ctx" | args_declarations] |> Enum.join(", ")
-
-    ~g<ei_x_buff* #{[name, :result | labels] |> Enum.join("_")}(#{merged_args})>
+    ~g<ei_x_buff* #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
   def generate_handle_message_declaration() do
