@@ -231,7 +231,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
     {_result, meta} = generate_function_spec_traverse_helper(specs)
 
-    encoding_labels = 
+    encoding_labels =
       meta
       |> Keyword.get_values(:label)
       |> Enum.map(&generate_label_encoding/1)
@@ -362,46 +362,46 @@ defmodule Unifex.CNodeNativeCodeGenerator do
       }
 
       #ifdef CNODE_DEBUG
-#define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
+    #define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
+    #else
+    #define DEBUG(...)
+    #endif
 
 
-int listen_sock(int *listen_fd, int *port) {
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (fd < 0) {
+    int listen_sock(int *listen_fd, int *port) {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
     return 1;
-  }
+    }
 
-  int opt_on = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on))) {
+    int opt_on = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt_on, sizeof(opt_on))) {
     return 1;
-  }
+    }
 
-  struct sockaddr_in addr;
-  unsigned int addr_size = sizeof(addr);
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(0);
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    struct sockaddr_in addr;
+    unsigned int addr_size = sizeof(addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(0);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (bind(fd, (struct sockaddr *)&addr, addr_size) < 0) {
+    if (bind(fd, (struct sockaddr *)&addr, addr_size) < 0) {
     return 1;
-  }
+    }
 
-  if (getsockname(fd, (struct sockaddr *)&addr, &addr_size)) {
+    if (getsockname(fd, (struct sockaddr *)&addr, &addr_size)) {
     return 1;
-  }
-  *port = (int)ntohs(addr.sin_port);
+    }
+    *port = (int)ntohs(addr.sin_port);
 
-  const int queue_size = 5;
-  if (listen(fd, queue_size)) {
+    const int queue_size = 5;
+    if (listen(fd, queue_size)) {
     return 1;
-  }
+    }
 
-  *listen_fd = fd;
-  return 0;
-}
+    *listen_fd = fd;
+    return 0;
+    }
       
 
     int main(int argc, char **argv) {
