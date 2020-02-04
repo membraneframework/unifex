@@ -219,15 +219,29 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     ~g<ei_x_encode_atom(&out_buff, #{var_name});>
   end
 
+  defp generate_label_encoding(label_name) do
+    var_name = ~g<label_#{label_name}>
+    encoding = generate_result_encoding({var_name, :atom})
+    ~g<char #{var_name}[] = "#{label_name}";
+        #{encoding}>
+  end
+
   def generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
 
     {_result, meta} = generate_function_spec_traverse_helper(specs)
 
-    encodings =
+    encoding_labels = 
+      meta
+      |> Keyword.get_values(:label)
+      |> Enum.map(&generate_label_encoding/1)
+
+    encoding_args =
       meta
       |> Keyword.get_values(:arg)
       |> Enum.map(&generate_result_encoding/1)
+
+    encodings = encoding_labels ++ encoding_args
 
     ~g[#{declaration} {
         ei_x_buff out_buff;
@@ -259,11 +273,11 @@ defmodule Unifex.CNodeNativeCodeGenerator do
             ei_x_buff *in_buff)"
   end
 
-  def generate_handle_message(fun_names) do
+  def generate_handle_message(functions) do
     if_statements =
-      fun_names
+      functions
       |> Enum.map(fn
-        f_name ->
+        {f_name, _args} ->
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
               #{f_name}_caller(in_buff->buff, &index, &ctx);
@@ -273,7 +287,11 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
     last_statement = """
     {
-        fprintf(stderr, \"CNode error: no match for function %s\", fun_name);
+        char err_msg[4000];
+        strcpy(err_msg, "function ");
+        strcat(err_msg, fun_name);
+        strcat(err_msg, " not available");
+        send_error(&ctx, err_msg);
         fflush(stderr);
     }
     """
@@ -527,8 +545,6 @@ int listen_sock(int *listen_fd, int *port) {
   end
 
   defp generate_source(name, _module, functions, results, _dirty_funs, _sends, _callbacks) do
-    {fun_names, _args} = Enum.unzip(functions)
-
     ~g"""
     #include "#{name}.h"
 
@@ -538,9 +554,21 @@ int listen_sock(int *listen_fd, int *port) {
         ei_x_encode_atom(buff, node_name);
     }
 
+    static void send_error(const cnode_context * ctx, const char * msg) {
+      ei_x_buff out_buff;
+      prepare_ei_x_buff(&out_buff, ctx->node_name);
+      
+      ei_x_encode_tuple_header(&out_buff, 2);
+      #{generate_label_encoding("error")}
+      #{generate_result_encoding({"msg", :string})}
+
+      ei_send(ctx->ei_fd, ctx->e_pid, out_buff.buff, out_buff.index);
+      ei_x_free(&out_buff);
+    }
+
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(functions, &generate_caller_function/1)}
-    #{generate_handle_message(fun_names)}
+    #{generate_handle_message(functions)}
     #{generate_cnode_generic_utilities()}
     """r
   end
