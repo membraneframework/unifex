@@ -15,6 +15,4 @@ defmodule Unifex.BundlexProject do
       ]
     ]
   end
-
-  
 end
