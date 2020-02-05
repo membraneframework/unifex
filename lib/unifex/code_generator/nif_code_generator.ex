@@ -1,126 +1,21 @@
-defmodule Unifex.NativeCodeGenerator do
+defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   @moduledoc """
   Module responsible for C code genearation based on Unifex specs
   """
-  alias Unifex.{BaseType, InterfaceIO}
-  use Bunch
+  alias Unifex.{BaseType, InterfaceIO, CodeGenerator}
+  alias Unifex.CodeGenerator.CodeGeneratorUtils
 
-  defmacro __using__(_args) do
-    quote do
-      import unquote(__MODULE__), only: [gen: 2, sigil_g: 2]
-    end
-  end
+  use Bunch
+  use CodeGeneratorUtils
+
+  @behaviour CodeGeneratorUtils
+
+  CodeGeneratorUtils.spec_traverse_helper_generating_macro()
 
   @type code_t() :: String.t()
 
-  @doc """
-  Generates C boilerplate for a native code based on a spec
-
-  Takes the name for the `.c` and `.h` files and the specs
-  parsed by `Unifex.SpecsParser.parse_specs()/1` and generates code of header
-  and source code, returning them in a tuple of 2 strings.
-  """
-  @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
-          {code_t(), code_t()}
-  def generate_code(name, specs) do
-    IO.puts("\n\n\n generating nif \n\n\n")
-
-    module = specs |> Keyword.get(:module)
-    fun_specs = specs |> Keyword.get_values(:fun_specs)
-    dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
-    sends = specs |> Keyword.get_values(:sends)
-    callbacks = specs |> Keyword.get_values(:callbacks)
-
-    {functions, results} =
-      fun_specs
-      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
-      |> Enum.unzip()
-
-    results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-    header = generate_header(name, module, functions, results, sends, callbacks)
-    source = generate_source(name, module, functions, results, dirty_funs, sends, callbacks)
-
-    {header, source}
-  end
-
-  @doc """
-  Sigil used for indentation of generated code.
-
-  By itself it does nothing, but has very useful flags:
-  * `r` trims trailing whitespaces of each line and removes subsequent empty
-    lines
-  * `t` trims the string
-  * `i` indents all but the first line. Helpful when used
-    inside string interpolation that already has been indented
-  * `I` indents every line of string
-  """
-  @spec sigil_g(String.t(), charlist()) :: String.t()
-  def sigil_g(content, 'r' ++ flags) do
-    content =
-      content
-      |> String.split("\n")
-      |> Enum.map(&String.trim_trailing/1)
-      |> Enum.reduce([], fn
-        "", ["" | _] = acc -> acc
-        v, acc -> [v | acc]
-      end)
-      |> Enum.reverse()
-      |> Enum.join("\n")
-
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 't' ++ flags) do
-    content = content |> String.trim()
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'i' ++ flags) do
-    [first | rest] = content |> String.split("\n")
-    content = [first | rest |> Enum.map(&indent/1)] |> Enum.join("\n")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'I' ++ flags) do
-    lines = content |> String.split("\n")
-    content = lines |> Enum.map(&indent/1) |> Enum.join("\n")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, []) do
-    content
-  end
-
-  @doc """
-  Helper for generating code. Uses `sigil_g/2` underneath.
-
-  It supports all the flags supported by `sigil_g/2` and the following ones:
-  * `j(joiner)` - joins list of strings using `joiner`
-  * n - alias for `j(\\n)`
-
-  If passed a list and flags supported by `sigil_g/2`, each flag will be executed
-  on each element of the list, until the list is joined by using `j` or `n` flag.
-  """
-  @spec gen(String.Chars.t() | [String.Chars.t()], charlist()) :: String.t() | [String.t()]
-  def gen(content, 'j(' ++ flags) when is_list(content) do
-    {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
-    content = content |> Enum.join("#{joiner}")
-    gen(content, flags)
-  end
-
-  def gen(content, 'n' ++ flags) when is_list(content) do
-    gen(content, 'j(\n)' ++ flags)
-  end
-
-  def gen(content, flags) when is_list(content) do
-    content |> Enum.map(&gen(&1, flags))
-  end
-
-  def gen(content, flags) do
-    sigil_g(content, flags)
-  end
-
-  defp generate_header(name, module, functions, results, sends, callbacks) do
+  @impl CodeGenerator
+  def generate_header(name, module, functions, results, sends, callbacks) do
     ~g"""
     #pragma once
 
@@ -140,7 +35,12 @@ defmodule Unifex.NativeCodeGenerator do
      * The implementation have to be provided by the user.
      */
 
-    #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
+    #{
+      CodeGeneratorUtils.generate_functions_declarations(
+        functions,
+        &generate_implemented_function_declaration/1
+      )
+    }
 
     /*
      * Functions that manage lib and state lifecycle
@@ -162,14 +62,24 @@ defmodule Unifex.NativeCodeGenerator do
      * They are automatically generated and don't need to be implemented.
      */
 
-    #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
+    #{
+      CodeGeneratorUtils.generate_functions_declarations(
+        results,
+        &generate_result_function_declaration/1
+      )
+    }
 
     /*
      * Functions that send the defined messages from Nif.
      * They are automatically generated and don't need to be implemented.
      */
 
-    #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
+    #{
+      CodeGeneratorUtils.generate_functions_declarations(
+        sends,
+        &generate_send_function_declaration/1
+      )
+    }
 
     #ifdef __cplusplus
     }
@@ -177,15 +87,16 @@ defmodule Unifex.NativeCodeGenerator do
     """r
   end
 
-  defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
+  @impl CodeGenerator
+  def generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
     ~g"""
     #include "#{name}.h"
 
-    #{generate_functions(results, &generate_result_function/1)}
-    #{generate_functions(sends, &generate_send_function/1)}
+    #{CodeGeneratorUtils.generate_functions(results, &generate_result_function/1)}
+    #{CodeGeneratorUtils.generate_functions(sends, &generate_send_function/1)}
     #{generate_state_related_stuff(module)}
     #{generate_nif_lifecycle_callbacks(module, callbacks)}
-    #{generate_functions(functions, &generate_export_function/1)}
+    #{CodeGeneratorUtils.generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions, dirty_funs, callbacks)}
     """r
   end
@@ -198,22 +109,9 @@ defmodule Unifex.NativeCodeGenerator do
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
 
-  defp generate_functions(results, generator) do
-    results
-    |> Enum.map(generator)
-    |> Enum.join("\n")
-  end
-
-  defp generate_functions_declarations(results, generator) do
-    results
-    |> Enum.map(generator)
-    |> Enum.map(&(&1 <> ";"))
-    |> Enum.join("\n")
-  end
-
   defp generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
-    {result, _meta} = generate_function_spec_traverse_helper(specs)
+    {result, _meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
 
     ~g"""
     #{declaration} {
@@ -223,7 +121,7 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_result_function_declaration({name, specs}) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -236,7 +134,7 @@ defmodule Unifex.NativeCodeGenerator do
 
   defp generate_send_function(specs) do
     declaration = generate_send_function_declaration(specs)
-    {result, _meta} = generate_function_spec_traverse_helper(specs)
+    {result, _meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
 
     ~g"""
     #{declaration} {
@@ -247,7 +145,7 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   defp generate_send_function_declaration(specs) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -497,47 +395,7 @@ defmodule Unifex.NativeCodeGenerator do
     """
   end
 
-  defp generate_function_spec_traverse_helper(node) do
-    node
-    |> case do
-      {:__aliases__, [alias: als], atoms} ->
-        generate_function_spec_traverse_helper(als || Module.concat(atoms))
-
-      atom when is_atom(atom) ->
-        {BaseType.generate_arg_serialize({:"\"#{atom}\"", :atom}), []}
-
-      {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
-        {BaseType.generate_arg_serialize({:"\"#{name}\"", :atom}), label: name}
-
-      {:"::", _, [{name, _, _}, {type, _, _}]} ->
-        {BaseType.generate_arg_serialize({name, type}), arg: {name, type}}
-
-      {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]} ->
-        generate_function_spec_traverse_helper(
-          {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]}
-        )
-
-      {a, b} ->
-        generate_function_spec_traverse_helper({:{}, [], [a, b]})
-
-      {:{}, _, content} ->
-        {results, meta} =
-          content
-          |> Enum.map(&generate_function_spec_traverse_helper/1)
-          |> Enum.unzip()
-
-        {generate_tuple_maker(results), meta}
-
-      [{_name, _, _} = name_var] ->
-        generate_function_spec_traverse_helper({:"::", [], [name_var, [name_var]]})
-
-      {_name, _, _} = name_var ->
-        generate_function_spec_traverse_helper({:"::", [], [name_var, name_var]})
-    end
-    ~> ({result, meta} -> {result, meta |> List.flatten()})
-  end
-
-  defp generate_tuple_maker(content) do
+  def generate_tuple_maker(content) do
     ~g<({
       const ERL_NIF_TERM terms[] = {
         #{content |> gen('j(,\n    )iit')}
