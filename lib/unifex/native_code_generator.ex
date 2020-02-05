@@ -23,6 +23,9 @@ defmodule Unifex.NativeCodeGenerator do
   @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
           {code_t(), code_t()}
   def generate_code(name, specs) do
+    IO.puts "\n\n\n generating nif \n\n\n"
+
+
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
     dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
