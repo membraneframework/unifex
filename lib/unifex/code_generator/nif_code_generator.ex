@@ -111,7 +111,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
 
   defp generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
-    {result, _meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
 
     ~g"""
     #{declaration} {
@@ -121,7 +121,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   end
 
   defp generate_result_function_declaration({name, specs}) do
-    {_result, meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -134,7 +134,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
 
   defp generate_send_function(specs) do
     declaration = generate_send_function_declaration(specs)
-    {result, _meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
 
     ~g"""
     #{declaration} {
@@ -145,7 +145,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   end
 
   defp generate_send_function_declaration(specs) do
-    {_result, meta} = CodeGeneratorUtils.generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
