@@ -90,8 +90,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
   @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
           {code_t(), code_t()}
   def generate_code(name, specs) do
-
-    IO.puts "\n\n\n generating cnode \n\n\n"
+    IO.puts("\n\n\n generating cnode \n\n\n")
 
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
@@ -289,17 +288,17 @@ defmodule Unifex.CNodeNativeCodeGenerator do
   end
 
   defp function_declaration_template(return_type, fun_name_prefix, specs) do
-        {_result, meta} = generate_function_spec_traverse_helper(specs)
-        args = meta |> Keyword.get_values(:arg)
-        labels = meta |> Keyword.get_values(:label)
-    
-        args_declarations =
-          ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
-          |> Enum.join(", ")
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    args = meta |> Keyword.get_values(:arg)
+    labels = meta |> Keyword.get_values(:label)
 
-        fun_name = [fun_name_prefix | labels] |> Enum.join("_")
-    
-        ~g<#{return_type} #{fun_name}(#{args_declarations})>
+    args_declarations =
+      ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      |> Enum.join(", ")
+
+    fun_name = [fun_name_prefix | labels] |> Enum.join("_")
+
+    ~g<#{return_type} #{fun_name}(#{args_declarations})>
   end
 
   def generate_handle_message_declaration() do

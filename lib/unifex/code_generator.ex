@@ -1,5 +1,4 @@
 defmodule Unifex.CodeGenerator do
-
   @type code_t :: String.t()
 
   @spec generate_native(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
