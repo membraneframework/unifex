@@ -90,6 +90,9 @@ defmodule Unifex.CNodeNativeCodeGenerator do
   @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
           {code_t(), code_t()}
   def generate_code(name, specs) do
+
+    IO.puts "\n\n\n generating cnode \n\n\n"
+
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
     dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
@@ -165,7 +168,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
       ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
-    ~g<void #{name}(#{args_declarations})>
+    ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
 
   defp generate_functions(results, generator) do
@@ -207,16 +210,16 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
   defp generate_result_encoding({var_name, :int}) do
     ~g<long long casted_#{var_name} = (long long) var_name;
-        ei_x_encode_longlong(&out_buff, casted_#{var_name});>
+        ei_x_encode_longlong(out_buff, casted_#{var_name});>
   end
 
   defp generate_result_encoding({var_name, :string}) do
     ~g<long #{var_name}_len = (long) strlen(#{var_name});
-        ei_x_encode_binary(&out_buff, #{var_name}, #{var_name}_len);>
+        ei_x_encode_binary(out_buff, #{var_name}, #{var_name}_len);>
   end
 
   defp generate_result_encoding({var_name, :atom}) do
-    ~g<ei_x_encode_atom(&out_buff, #{var_name});>
+    ~g<ei_x_encode_atom(out_buff, #{var_name});>
   end
 
   defp generate_label_encoding(label_name) do
@@ -226,11 +229,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         #{encoding}>
   end
 
-  def generate_result_function({name, specs}) do
-    declaration = generate_result_function_declaration({name, specs})
-
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
-
+  defp generate_encoding_block(meta) do
     encoding_labels =
       meta
       |> Keyword.get_values(:label)
@@ -241,31 +240,66 @@ defmodule Unifex.CNodeNativeCodeGenerator do
       |> Keyword.get_values(:arg)
       |> Enum.map(&generate_result_encoding/1)
 
-    encodings = encoding_labels ++ encoding_args
+    encoding_labels ++ encoding_args
+  end
+
+  def generate_result_function({name, specs}) do
+    declaration = generate_result_function_declaration({name, specs})
+
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    encodings = generate_encoding_block(meta)
 
     ~g[#{declaration} {
-        ei_x_buff out_buff;
-        prepare_ei_x_buff(&out_buff, ctx->node_name);
+        ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
+        prepare_ei_x_buff(out_buff, ctx->node_name);
 
-        ei_x_encode_tuple_header(&out_buff, #{length(encodings)});
+        ei_x_encode_tuple_header(out_buff, #{length(encodings)});
 
         #{encodings |> Enum.join("\n    ")}
 
-        ei_send(ctx->ei_fd, ctx->e_pid, out_buff.buff, out_buff.index);
-        ei_x_free(&out_buff);
+        return out_buff;
     }]
   end
 
   def generate_result_function_declaration({name, specs}) do
+    fun_name_prefix = [name, :result] |> Enum.join("_")
+    function_declaration_template("UNIFEX_TERM", fun_name_prefix, specs)
+  end
+
+  def generate_send_function_declaration(specs) do
+    function_declaration_template("void", "send", specs)
+  end
+
+  def generate_send_function(specs) do
+    declaration = generate_send_function_declaration(specs)
+
     {_result, meta} = generate_function_spec_traverse_helper(specs)
-    args = meta |> Keyword.get_values(:arg)
-    labels = meta |> Keyword.get_values(:label)
+    encodings = generate_encoding_block(meta)
 
-    args_declarations =
-      ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
-      |> Enum.join(", ")
+    ~g[#{declaration} {
+      ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
+      prepare_ei_x_buff(out_buff, ctx->node_name);
+      
+      ei_x_encode_tuple_header(out_buff, #{length(encodings)});
 
-    ~g<void #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+      #{encodings |> Enum.join("\n    ")}
+
+      send_and_free(ctx, out_buff);
+    }]
+  end
+
+  defp function_declaration_template(return_type, fun_name_prefix, specs) do
+        {_result, meta} = generate_function_spec_traverse_helper(specs)
+        args = meta |> Keyword.get_values(:arg)
+        labels = meta |> Keyword.get_values(:label)
+    
+        args_declarations =
+          ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+          |> Enum.join(", ")
+
+        fun_name = [fun_name_prefix | labels] |> Enum.join("_")
+    
+        ~g<#{return_type} #{fun_name}(#{args_declarations})>
   end
 
   def generate_handle_message_declaration() do
@@ -493,7 +527,10 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     ~g"""
         #{declaration} {
             #{args_decoding}
-            #{implemented_fun_call}
+            UNIFEX_TERM result = #{implemented_fun_call}
+            if (result != NULL) {
+              send_and_free(ctx, result);
+            }
         }
     """
   end
@@ -506,7 +543,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     ~g"void #{name}_caller(const char * in_buff, int * index, const cnode_context * ctx)"
   end
 
-  def generate_header(name, _module, functions, results, _sends, _callbacks) do
+  def generate_header(name, _module, functions, results, sends, _callbacks) do
     ~g"""
     #pragma once
 
@@ -522,11 +559,11 @@ defmodule Unifex.CNodeNativeCodeGenerator do
 
     #include "#{InterfaceIO.user_header_path(name)}"
 
-
-
     #ifdef __cplusplus
     extern "C" {
     #endif
+
+    typedef ei_x_buff * UNIFEX_TERM;
 
     typedef struct cnode_context {
         const char * node_name;
@@ -534,9 +571,12 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         erlang_pid * e_pid;
     } cnode_context;
 
+    typedef const cnode_context UnifexEnv;
+
     #{generate_functions_declarations(functions, &generate_implemented_function_declaration/1)}
     #{generate_functions_declarations(results, &generate_result_function_declaration/1)}
     #{generate_functions_declarations(functions, &generate_caller_function_declaration/1)}
+    #{generate_functions_declarations(sends, &generate_send_function_declaration/1)}
 
     #ifdef __cplusplus
     }
@@ -544,7 +584,7 @@ defmodule Unifex.CNodeNativeCodeGenerator do
     """r
   end
 
-  defp generate_source(name, _module, functions, results, _dirty_funs, _sends, _callbacks) do
+  defp generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks) do
     ~g"""
     #include "#{name}.h"
 
@@ -554,20 +594,27 @@ defmodule Unifex.CNodeNativeCodeGenerator do
         ei_x_encode_atom(buff, node_name);
     }
 
+    static void send_and_free(const cnode_context * ctx, ei_x_buff * out_buff) {
+      ei_send(ctx->ei_fd, ctx->e_pid, out_buff->buff, out_buff->index);
+      ei_x_free(out_buff);
+    }
+
     static void send_error(const cnode_context * ctx, const char * msg) {
-      ei_x_buff out_buff;
-      prepare_ei_x_buff(&out_buff, ctx->node_name);
+      ei_x_buff buff;
+      ei_x_buff * out_buff = &buff;
+      prepare_ei_x_buff(out_buff, ctx->node_name);
       
-      ei_x_encode_tuple_header(&out_buff, 2);
+      ei_x_encode_tuple_header(out_buff, 2);
       #{generate_label_encoding("error")}
       #{generate_result_encoding({"msg", :string})}
 
-      ei_send(ctx->ei_fd, ctx->e_pid, out_buff.buff, out_buff.index);
-      ei_x_free(&out_buff);
+      send_and_free(ctx, out_buff);
     }
 
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(functions, &generate_caller_function/1)}
+    #{generate_functions(sends, &generate_send_function/1)}
+
     #{generate_handle_message(functions)}
     #{generate_cnode_generic_utilities()}
     """r
