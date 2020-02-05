@@ -5,47 +5,48 @@ defmodule Unifex.BaseType do
   The generators from this module are trying to delegate the calls to the callbacks in modules adequate for the type
   but provide fallback values (all the callbacks are optional)
   """
-  alias Unifex.NativeCodeGenerator
-  use NativeCodeGenerator
+  alias Unifex.CodeGenerator
+  alias Unifex.CodeGenerator.CodeGeneratorUtils
+  use CodeGeneratorUtils
 
   @type t :: atom | {:list, atom}
   @type spec_tuple_t :: {name :: atom(), type :: t}
   @type arg_parse_ctx_t :: %{
-          result_var: NativeCodeGenerator.code_t(),
-          exit_label: NativeCodeGenerator.code_t()
+          result_var: CodeGenerator.code_t(),
+          exit_label: CodeGenerator.code_t()
         }
 
   @doc """
   Provides a way to convert native variable `name` into `UNIFEX_TERM`
   """
-  @callback generate_arg_serialize(name :: atom) :: NativeCodeGenerator.code_t()
+  @callback generate_arg_serialize(name :: atom) :: CodeGenerator.code_t()
 
   @doc """
   Generates an initialization of variable content. Should be paired with `c:generate_destruction/1`
   """
-  @callback generate_initialization(name :: atom) :: NativeCodeGenerator.code_t()
+  @callback generate_initialization(name :: atom) :: CodeGenerator.code_t()
 
   @doc """
   Generates a destruction of variable content. Should be paired with `c:generate_initialization/1`
   """
-  @callback generate_destruction(name :: atom) :: NativeCodeGenerator.code_t()
+  @callback generate_destruction(name :: atom) :: CodeGenerator.code_t()
 
   @doc """
   Generates a native counterpart for the type.
   """
-  @callback generate_native_type() :: NativeCodeGenerator.code_t()
+  @callback generate_native_type() :: CodeGenerator.code_t()
 
   @doc """
   Generates an expression that will return how many bytes should be allocated for this type.
   """
-  @callback generate_sizeof() :: NativeCodeGenerator.code_t()
+  @callback generate_sizeof() :: CodeGenerator.code_t()
 
   @doc """
   Generates function call parsing UNIFEX_TERM `argument` into the native variable with name `variable`. Function should
   return boolean value.
   """
   @callback generate_arg_parse(argument :: String.t(), variable :: String.t()) ::
-              NativeCodeGenerator.code_t()
+              CodeGenerator.code_t()
 
   @doc """
   Generates Elixir post-processing of the value returned from native function.
@@ -66,7 +67,7 @@ defmodule Unifex.BaseType do
   defmacro __using__(_args) do
     quote do
       @behaviour unquote(__MODULE__)
-      use Unifex.NativeCodeGenerator
+      use Unifex.CodeGenerator.CodeGeneratorUtils
     end
   end
 
@@ -75,7 +76,7 @@ defmodule Unifex.BaseType do
 
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
-  @spec generate_arg_serialize(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  @spec generate_arg_serialize(spec_tuple_t()) :: CodeGenerator.code_t()
   def generate_arg_serialize({name, {:list, type}}) do
     ~g"""
     ({
@@ -104,7 +105,7 @@ defmodule Unifex.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_declaration(spec_tuple_t()) :: [NativeCodeGenerator.code_t()]
+  @spec generate_declaration(spec_tuple_t()) :: [CodeGenerator.code_t()]
   def generate_declaration({name, {:list, type}}) do
     do_generate_declaration(name, {:list, type}) ++ [~g<unsigned int #{name}_length>]
   end
@@ -122,7 +123,7 @@ defmodule Unifex.BaseType do
 
   Returns an empty string if the type does not provide initialization
   """
-  @spec generate_initialization(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  @spec generate_initialization(spec_tuple_t()) :: CodeGenerator.code_t()
   def generate_initialization({name, {:list, _type}}) do
     ~g<#{name} = NULL;>
   end
@@ -136,7 +137,7 @@ defmodule Unifex.BaseType do
 
   Returns an empty string if the type does not provide destructor
   """
-  @spec generate_destruction(spec_tuple_t()) :: NativeCodeGenerator.code_t()
+  @spec generate_destruction(spec_tuple_t()) :: CodeGenerator.code_t()
   def generate_destruction({name, {:list, type}}) do
     ~g"""
     if(#{name} != NULL) {
@@ -156,7 +157,7 @@ defmodule Unifex.BaseType do
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
   @spec generate_arg_parse({spec_tuple_t(), i :: non_neg_integer()}, ctx :: arg_parse_ctx_t()) ::
-          NativeCodeGenerator.code_t()
+          CodeGenerator.code_t()
   def generate_arg_parse({{name, {:list, type}}, i}, ctx) do
     elem_name = :"#{name}[i]"
     len_var_name = "#{name}_length"
