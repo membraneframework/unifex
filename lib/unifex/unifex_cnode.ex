@@ -48,6 +48,8 @@ defmodule Unifex.UnifexCNode do
 
   defmacro start_link(native_name) do
     quote do
+      require Bundlex.CNode
+
       unquote(native_name)
       |> Bundlex.CNode.start_link()
       |> unquote(__MODULE__).cast_on_start_t
@@ -56,6 +58,8 @@ defmodule Unifex.UnifexCNode do
 
   defmacro start(native_name) do
     quote do
+      require Bundlex.CNode
+
       unquote(native_name)
       |> Bundlex.CNode.start()
       |> unquote(__MODULE__).cast_on_start_t
@@ -120,7 +124,7 @@ defmodule Unifex.UnifexCNode do
   """
   @spec start_running(t, fun_name :: atom, args :: list) :: :ok
   def start_running(%__MODULE__{} = unifex_cnode, fun_name, args \\ []) do
-    msg = [fun_name, args] |> List.to_tuple()
+    msg = [fun_name | args] |> List.to_tuple()
 
     unifex_cnode
     |> cast_cnode
