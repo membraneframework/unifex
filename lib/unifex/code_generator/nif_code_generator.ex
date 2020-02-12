@@ -8,7 +8,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   use Bunch
   use CodeGeneratorUtils
 
-  @behaviour CodeGeneratorUtils
+  @behaviour CodeGenerator
 
   CodeGeneratorUtils.spec_traverse_helper_generating_macro()
 

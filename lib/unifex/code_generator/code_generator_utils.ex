@@ -148,12 +148,14 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
   def generate_functions(results, generator) do
     results
     |> Enum.map(generator)
+    |> Enum.filter(&(&1 != ""))
     |> Enum.join("\n")
   end
 
   def generate_functions_declarations(results, generator) do
     results
     |> Enum.map(generator)
+    |> Enum.filter(&(&1 != ""))
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
