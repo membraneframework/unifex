@@ -2,6 +2,7 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
   use Bunch
 
   alias Unifex.BaseType
+  alias Unifex.InterfaceIO
 
   defmacro __using__(_args) do
     quote do
@@ -158,5 +159,10 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
     |> Enum.filter(&(&1 != ""))
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
+  end
+
+  def state_definition_exists(dir, name) do
+    header_path = Path.join(dir, name)
+    state_type = BaseType.State.generate_native_type()
   end
 end

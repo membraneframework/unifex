@@ -1,5 +1,5 @@
 defmodule Unifex.CodeGenerator do
-  alias Unifex.CodeGenerator.{CNodeCodeGenerator, NIFCodeGenerator}
+  alias Unifex.CodeGenerator.{CNodeCodeGenerator, NIFCodeGenerator, CodeGenerationMode}
 
   @type code_t :: String.t()
 
@@ -9,7 +9,8 @@ defmodule Unifex.CodeGenerator do
               functions :: any,
               results :: any,
               sends :: any,
-              callbacks :: any
+              callbacks :: any,
+              mode :: CodeGenerationMode.t()
             ) :: code_t()
   @callback generate_source(
               name :: any,
@@ -18,12 +19,17 @@ defmodule Unifex.CodeGenerator do
               results :: any,
               dirty_funs :: any,
               sends :: any,
-              callbacks :: any
+              callbacks :: any,
+              mode :: CodeGenerationMode.t()
             ) :: code_t()
 
-  @spec generate_code(name :: String.t(), specs :: Unifex.SpecsParser.parsed_specs_t()) ::
+  @spec generate_code(
+          name :: String.t(),
+          specs :: Unifex.SpecsParser.parsed_specs_t(),
+          mode :: CodeGenerationMode.t()
+        ) ::
           {code_t(), code_t()}
-  def generate_code(name, specs) do
+  def generate_code(name, specs, mode) do
     implementation = specs |> Keyword.get(:cnode_mode, false) |> choose_implementation()
 
     module = specs |> Keyword.get(:module)
@@ -39,7 +45,8 @@ defmodule Unifex.CodeGenerator do
 
     results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
 
-    header = implementation.generate_header(name, module, functions, results, sends, callbacks)
+    header =
+      implementation.generate_header(name, module, functions, results, sends, callbacks, mode)
 
     source =
       implementation.generate_source(
@@ -49,7 +56,8 @@ defmodule Unifex.CodeGenerator do
         results,
         dirty_funs,
         sends,
-        callbacks
+        callbacks,
+        mode
       )
 
     {header, source}

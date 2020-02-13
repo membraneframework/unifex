@@ -416,7 +416,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   @impl CodeGenerator
-  def generate_header(name, _module, functions, results, sends, _callbacks) do
+  def generate_header(name, _module, functions, results, sends, _callbacks, _mode) do
     ~g"""
     #pragma once
 
@@ -480,7 +480,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   @impl CodeGenerator
-  def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks) do
+  def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks, _mode) do
     ~g"""
     #include "#{name}.h"
 
