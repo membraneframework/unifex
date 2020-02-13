@@ -1,5 +1,5 @@
 defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
-  alias Unifex.{BaseType, InterfaceIO, CodeGenerator}
+  alias Unifex.{BaseType, InterfaceIO, CodeGenerator, CodeGenerationMode}
   alias Unifex.CodeGenerator.CodeGeneratorUtils
 
   use Bunch
@@ -15,7 +15,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
-      ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      ["cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
@@ -43,12 +43,28 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
           ei_decode_binary(in_buff, index, (void *) #{name}, &#{name}_len);
           #{name}[#{name}_len] = 0;
         """
+
+      {_name, :state} ->
+        ~g<>
     end)
     |> Enum.join("\n")
   end
 
   defp generate_result_encoding({_var_name, :void}) do
     ""
+  end
+
+  defp generate_result_encoding({_var_name, :state}) do
+    ~g"""
+    handle_destroy_state(ctx->state);
+    fprintf(stderr, "dupa1\n");
+    fflush(stderr);
+    free(ctx->state);
+
+    fprintf(stderr, "dupa2\n");
+    fflush(stderr);
+    ctx->state = state;
+    """
   end
 
   defp generate_result_encoding({var, :label}) do
@@ -102,6 +118,13 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     {_result, meta} = generate_function_spec_traverse_helper(specs)
     encodings = generate_encoding_block(meta)
 
+    state_encodings_num = meta  
+      |> Keyword.get_values(:arg)
+      |> Enum.count(fn 
+        {_var_name, :state} -> true
+        _ -> false
+      end)
+
     if declaration == "" do
       ""
     else
@@ -110,7 +133,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
         ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
         prepare_result_buff(out_buff, ctx->node_name);
 
-        ei_x_encode_tuple_header(out_buff, #{length(encodings)});
+        ei_x_encode_tuple_header(out_buff, #{length(encodings) - state_encodings_num});
 
         #{encodings |> Enum.join("\n")}
 
@@ -154,7 +177,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      ["const cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      ["cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
       |> Enum.join(", ")
 
     labels =
@@ -163,7 +186,6 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       |> (fn
             labels when labels != [] ->
               labels
-
             _ ->
               [head | _tail] = specs |> Tuple.to_list()
               [head]
@@ -177,12 +199,15 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     end
   end
 
-  defp generate_handle_message_declaration() do
+  defp generate_handle_message_declaration(mode) do
+    opt_arg = optional_state_arg_def(mode)
     "int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,
-            ei_x_buff *in_buff)"
+            ei_x_buff *in_buff#{opt_arg})"
   end
 
-  defp generate_handle_message(functions) do
+  defp generate_handle_message(functions, mode) do
+    opt_arg = optional_state_arg(mode)
+
     if_statements =
       functions
       |> Enum.map(fn
@@ -207,7 +232,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     handling = Enum.concat(if_statements, [last_statement]) |> Enum.join(" else ")
 
     ~g"""
-    #{generate_handle_message_declaration()} {
+    #{generate_handle_message_declaration(mode)} {
       int index = 0;
       int version;
       ei_decode_version(in_buff->buff, &index, &version);
@@ -222,6 +247,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
         .node_name = node_name, 
         .ei_fd = ei_fd,
         .e_pid = &emsg.from
+        #{optional_state_in_ctx_init(mode)}
       };
 
       #{handling}
@@ -229,10 +255,13 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     """r
   end
 
-  defp generate_cnode_generic_utilities() do
-    ~g"""
+  defp generate_cnode_generic_utilities(mode) do
+    opt_state_def = optional_state_def(mode)
+    opt_state_arg_def = optional_state_arg_def(mode)
+    opt_state_arg = optional_state_arg(mode)
 
-    int receive(int ei_fd, const char *node_name) {
+    ~g"""
+    int receive(int ei_fd, const char *node_name#{opt_state_arg_def}) {
       ei_x_buff in_buf;
       ei_x_new(&in_buf);
       erlang_msg emsg;
@@ -245,7 +274,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
         break;
       default:
         if (emsg.msgtype == ERL_REG_SEND &&
-            handle_message(ei_fd, node_name, emsg, &in_buf)) {
+            handle_message(ei_fd, node_name, emsg, &in_buf#{opt_state_arg})) {
           res = -1;
         }
         break;
@@ -308,7 +337,6 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       *listen_fd = fd;
       return 0;
     }
-      
 
     int main(int argc, char **argv) {
       if (validate_args(argc, argv)) {
@@ -362,10 +390,12 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       }
       DEBUG("accepted %s", conn.nodename);
 
+      #{opt_state_def}
+
       int res = 0;
       int cont = 1;
       while (cont) {
-        switch (receive(ei_fd, node_name)) {
+        switch (receive(ei_fd, node_name#{opt_state_arg})) {
         case 0:
           break;
         case 1:
@@ -386,12 +416,15 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     """r
   end
 
-  defp generate_caller_function({name, args}) do
-    declaration = generate_caller_function_declaration(name)
+  defp generate_caller_function({name, args}, mode) do
+    declaration = generate_caller_function_declaration(name, mode)
     args_decoding = generate_args_decoding(args)
 
     implemented_fun_args =
-      ["ctx" | args |> Enum.map(fn {name, _type} -> to_string(name) end)]
+      ["ctx" | args |> Enum.map(fn 
+        {_name, :state} -> "ctx->state"
+        {name, _type} -> to_string(name) 
+      end)]
       |> Enum.join(", ")
 
     implemented_fun_call = ~g<#{name}(#{implemented_fun_args});>
@@ -407,16 +440,60 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     """
   end
 
-  defp generate_caller_function_declaration({name, _args}) do
-    generate_caller_function_declaration(name)
+  defp generate_caller_function_declaration({name, _args}, mode) do
+    generate_caller_function_declaration(name, mode)
   end
 
-  defp generate_caller_function_declaration(name) do
-    ~g"void #{name}_caller(const char * in_buff, int * index, const cnode_context * ctx)"
+  defp generate_caller_function_declaration(name, mode) do
+    opt_state = optional_state_arg_def(mode)
+    ~g"void #{name}_caller(const char * in_buff, int * index, cnode_context * ctx)"
+  end
+
+  defp optional_state_in_ctx_init(%CodeGenerationMode{use_state: true} = _mode) do
+    ", .state = state"
+  end
+
+  defp optional_state_in_ctx_init(_mode) do
+    ""
+  end
+
+  def optional_state_arg_def(%CodeGenerationMode{use_state: true} = _mode) do
+    ", #{BaseType.State.generate_native_type} state"
+  end
+
+  def optional_state_arg_def(_mode) do
+    ~g<>
+  end
+
+  def optional_state_arg(%CodeGenerationMode{use_state: true} = _mode) do
+    ", state"
+  end
+
+  def optional_state_arg(_mode) do
+    ~g<>
+  end
+
+  def optional_state_field(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+    ~g<#{state_type} state;>
+  end
+
+  def optional_state_field(_mode) do
+    ~g<>
+  end
+
+  def optional_state_def(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+    sizeof_state = BaseType.State.generate_sizeof
+    ~g<#{state_type} state = (#{state_type}) malloc(#{sizeof_state});>
+  end
+
+  def optional_state_def(_mode) do
+    ~g<>
   end
 
   @impl CodeGenerator
-  def generate_header(name, _module, functions, results, sends, _callbacks, _mode) do
+  def generate_header(name, _module, functions, results, sends, _callbacks, mode) do
     ~g"""
     #pragma once
 
@@ -439,14 +516,16 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     typedef ei_x_buff * UNIFEX_TERM;
 
     #define EMPTY_UNIFEX_TERM NULL
+    #define UNIFEX_UNUSED(x) (void)(x)
 
     typedef struct cnode_context {
       const char * node_name;
       int ei_fd; 
       erlang_pid * e_pid;
+      #{optional_state_field(mode)}
     } cnode_context;
 
-    typedef const cnode_context UnifexEnv;
+    typedef cnode_context UnifexEnv;
 
     #{
       CodeGeneratorUtils.generate_functions_declarations(
@@ -463,7 +542,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #{
       CodeGeneratorUtils.generate_functions_declarations(
         functions,
-        &generate_caller_function_declaration/1
+        &generate_caller_function_declaration/2,
+        mode
       )
     }
     #{
@@ -480,7 +560,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   @impl CodeGenerator
-  def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks, _mode) do
+  def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks, mode) do
     ~g"""
     #include "#{name}.h"
 
@@ -504,12 +584,12 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       prepare_ei_x_buff(buff, node_name, "error");
     }
 
-    static void send_and_free(const cnode_context * ctx, ei_x_buff * out_buff) {
+    static void send_and_free(cnode_context * ctx, ei_x_buff * out_buff) {
       ei_send(ctx->ei_fd, ctx->e_pid, out_buff->buff, out_buff->index);
       ei_x_free(out_buff);
     }
 
-    static void send_error(const cnode_context * ctx, const char * msg) {
+    static void send_error(cnode_context * ctx, const char * msg) {
       ei_x_buff buff;
       ei_x_buff * out_buff = &buff;
       prepare_error_buff(out_buff, ctx->node_name);
@@ -520,11 +600,11 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     }
 
     #{CodeGeneratorUtils.generate_functions(results, &generate_result_function/1)}
-    #{CodeGeneratorUtils.generate_functions(functions, &generate_caller_function/1)}
+    #{CodeGeneratorUtils.generate_functions(functions, &generate_caller_function/2, mode)}
     #{CodeGeneratorUtils.generate_functions(sends, &generate_send_function/1)}
 
-    #{generate_handle_message(functions)}
-    #{generate_cnode_generic_utilities()}
+    #{generate_handle_message(functions, mode)}
+    #{generate_cnode_generic_utilities(mode)}
     """r
   end
 end

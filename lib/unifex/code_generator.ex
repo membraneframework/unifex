@@ -1,5 +1,6 @@
 defmodule Unifex.CodeGenerator do
-  alias Unifex.CodeGenerator.{CNodeCodeGenerator, NIFCodeGenerator, CodeGenerationMode}
+  alias Unifex.CodeGenerator.{CNodeCodeGenerator, NIFCodeGenerator}
+  alias Unifex.CodeGenerationMode
 
   @type code_t :: String.t()
 
@@ -30,7 +31,7 @@ defmodule Unifex.CodeGenerator do
         ) ::
           {code_t(), code_t()}
   def generate_code(name, specs, mode) do
-    implementation = specs |> Keyword.get(:cnode_mode, false) |> choose_implementation()
+    implementation = mode |> choose_implementation()
 
     module = specs |> Keyword.get(:module)
     fun_specs = specs |> Keyword.get_values(:fun_specs)
@@ -62,12 +63,12 @@ defmodule Unifex.CodeGenerator do
 
     {header, source}
   end
-
-  defp choose_implementation(false = _cnode_mode) do
+ 
+  defp choose_implementation(%CodeGenerationMode{cnode_mode: false} = _mode) do
     NIFCodeGenerator
   end
 
-  defp choose_implementation(true = _cnode_mode) do
+  defp choose_implementation(%CodeGenerationMode{cnode_mode: true} = _mode) do
     CNodeCodeGenerator
   end
 end

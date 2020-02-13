@@ -146,10 +146,25 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
     ~> ({result, meta} -> {result, meta |> List.flatten()})
   end
 
+  def generate_functions(results, generator, mode) do
+    results
+    |> Enum.map(fn res -> res |> generator.(mode) end)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.join("\n")
+  end
+
   def generate_functions(results, generator) do
     results
     |> Enum.map(generator)
     |> Enum.filter(&(&1 != ""))
+    |> Enum.join("\n")
+  end
+
+  def generate_functions_declarations(results, generator, mode) do
+    results
+    |> Enum.map(fn res -> res |> generator.(mode) end)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
 
@@ -159,10 +174,5 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
     |> Enum.filter(&(&1 != ""))
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
-  end
-
-  def state_definition_exists(dir, name) do
-    header_path = Path.join(dir, name)
-    state_type = BaseType.State.generate_native_type()
   end
 end

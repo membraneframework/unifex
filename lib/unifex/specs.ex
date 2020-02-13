@@ -90,6 +90,10 @@ defmodule Unifex.Specs do
     store_config(:cnode_mode, bool)
   end
 
+  defmacro use_state(bool) when bool in [true, false] do
+    store_config(:use_state, bool)
+  end
+
   @doc """
   Macro used for marking functions as dirty, i.e. performing long cpu-bound or
   io-bound operations.

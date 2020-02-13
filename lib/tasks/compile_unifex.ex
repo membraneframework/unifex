@@ -10,8 +10,8 @@ defmodule Mix.Tasks.Compile.Unifex do
     Helper.get_source_dir()
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs} ->
-      mode = CodeGenerationMode.code_generation_mode(name, dir, specs)
       specs = specs |> SpecsParser.parse_specs()
+      mode = CodeGenerationMode.code_generation_mode(name, dir, specs)
       code = CodeGenerator.generate_code(name, specs, mode)
       InterfaceIO.store_interface!(name, dir, code)
     end)

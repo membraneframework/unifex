@@ -211,20 +211,9 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     """
   end
 
-  defp generate_state_related_declarations(nil, _mode) do
-    ~g<>
-  end
-
-  defp generate_state_related_declarations(
-         _module,
-         %CodeGenerationMode{state_exists: false} = _mode
-       ) do
-    ~g<>
-  end
-
   defp generate_state_related_declarations(
          module,
-         %CodeGenerationMode{state_exists: true} = _mode
+         %CodeGenerationMode{use_state: true} = _mode
        ) do
     state_type = BaseType.State.generate_native_type()
 
@@ -258,15 +247,19 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     """
   end
 
+  defp generate_state_related_declarations(nil, _mode) do
+    ~g<>
+  end
+
+  defp generate_state_related_declarations(_module, _mode) do
+    ~g<>
+  end
+
   defp generate_state_related_stuff(nil, _mode) do
     ~g<>
   end
 
-  defp generate_state_related_stuff(_module, %CodeGenerationMode{state_exists: false} = _mode) do
-    ~g<>
-  end
-
-  defp generate_state_related_stuff(_module, %CodeGenerationMode{state_exists: true} = _mode) do
+  defp generate_state_related_stuff(_module, %CodeGenerationMode{use_state: true} = _mode) do
     state_type = BaseType.State.generate_native_type()
 
     ~g"""
@@ -297,6 +290,10 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     """
   end
 
+  defp generate_state_related_stuff(_module, _mode) do
+    ~g<>
+  end
+
   defp generate_nif_lifecycle_callbacks_declarations(callbacks) do
     callbacks
     |> Enum.map_join("\n", fn
@@ -311,15 +308,15 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     end)
   end
 
-  defp state_resource_type_initialization(%CodeGenerationMode{state_exists: false} = _mode) do
-    ~g<>
-  end
-
-  defp state_resource_type_initialization(%CodeGenerationMode{state_exists: true} = _mode) do
+  defp state_resource_type_initialization(%CodeGenerationMode{use_state: true} = _mode) do
     ~g"""
       STATE_RESOURCE_TYPE =
-        enif_open_resource_type(env, NULL, "UnifexNifState", (ErlNifResourceDtor*) destroy_state, flags, NULL);
+        enif_open_resource_type(env, NULL, "UnifexState", (ErlNifResourceDtor*) destroy_state, flags, NULL);
     """
+  end
+
+  defp state_resource_type_initialization(_mode) do
+    ~g<>
   end
 
   defp generate_nif_lifecycle_callbacks(nil, _callbacks, _mode) do

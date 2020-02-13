@@ -1,11 +1,12 @@
 defmodule Unifex.CodeGenerationMode do
-  @enforce_keys [:state_exists]
-  defstruct @enforce_keys
+
+  defstruct [:use_state, :cnode_mode]
 
   alias Unifex.BaseType
 
   @type t :: %__MODULE__{
-          state_exists: boolean()
+          use_state: boolean(),
+          cnode_mode: boolean()
         }
 
   @spec code_generation_mode(
@@ -13,20 +14,29 @@ defmodule Unifex.CodeGenerationMode do
           dir :: any,
           _specs :: Unifex.SpecsParser.parsed_specs_t()
         ) :: t()
-  def code_generation_mode(name, dir, _specs) do
+  def code_generation_mode(name, dir, specs) do
     %__MODULE__{
-      state_exists: state_definition_exists(dir, name)
+      use_state: specs |> Keyword.get(:use_state, false),
+      cnode_mode: specs |> Keyword.get(:cnode_mode, false)
     }
   end
 
   defp state_definition_exists(dir, name) do
-    header_path = Path.join(dir, name <> ".h")
-    state_type = "UnifexNifState"
+    state_type = "UnifexState"
+    contains_word(dir, name, state_type)
+  end
 
-    state_exists =
-      File.stream!(header_path)
-      |> Enum.any?(fn
-        line -> line |> String.contains?(state_type)
-      end)
+  defp old_state_definition_exists(dir, name) do
+    old_state_type = "UnifexNifState"
+    contains_word(dir, name, old_state_type) 
+  end
+
+  defp contains_word(dir, header_name, word) do
+    header_path = Path.join(dir, header_name <> ".h")
+
+    File.stream!(header_path)
+    |> Enum.any?(fn
+      line -> line |> String.contains?(word)
+    end)
   end
 end

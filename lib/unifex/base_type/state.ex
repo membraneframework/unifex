@@ -12,7 +12,7 @@ defmodule Unifex.BaseType.State do
 
   @impl BaseType
   def generate_native_type() do
-    ~g<UnifexNifState*>
+    ~g<UnifexState*>
   end
 
   @impl BaseType
@@ -22,6 +22,6 @@ defmodule Unifex.BaseType.State do
 
   @impl BaseType
   def generate_sizeof() do
-    ~g<sizeof(UnifexNifState)>
+    ~g<sizeof(UnifexState)>
   end
 end
