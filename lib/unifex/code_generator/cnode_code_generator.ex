@@ -111,9 +111,10 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     {_result, meta} = generate_function_spec_traverse_helper(specs)
     encodings = generate_encoding_block(meta)
 
-    state_encodings_num = meta  
+    state_encodings_num =
+      meta
       |> Keyword.get_values(:arg)
-      |> Enum.count(fn 
+      |> Enum.count(fn
         {_var_name, :state} -> true
         _else -> false
       end)
@@ -165,7 +166,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     }
     """
   end
-     
+
   defp function_declaration_template(return_type, fun_name_prefix, specs) do
     {_result, meta} = generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
@@ -180,6 +181,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       |> (fn
             labels when labels != [] ->
               labels
+
             _ ->
               [head | _tail] = specs |> Tuple.to_list()
               [head]
@@ -416,10 +418,14 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     args_decoding = generate_args_decoding(args)
 
     implemented_fun_args =
-      ["ctx" | args |> Enum.map(fn 
-        {_name, :state} -> "*(ctx->state)"
-        {name, _type} -> to_string(name) 
-      end)]
+      [
+        "ctx"
+        | args
+          |> Enum.map(fn
+            {_name, :state} -> "*(ctx->state)"
+            {name, _type} -> to_string(name)
+          end)
+      ]
       |> Enum.join(", ")
 
     implemented_fun_call = ~g<#{name}(#{implemented_fun_args});>
@@ -457,7 +463,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   def optional_state_arg_def(%CodeGenerationMode{use_state: true} = _mode) do
-    ", #{BaseType.State.generate_native_type} state"
+    ", #{BaseType.State.generate_native_type()} state"
   end
 
   def optional_state_arg_def(_mode) do
@@ -465,7 +471,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   def optional_state_ptr_arg_def(%CodeGenerationMode{use_state: true} = _mode) do
-    ", #{BaseType.State.generate_native_type}* state"
+    ", #{BaseType.State.generate_native_type()}* state"
   end
 
   def optional_state_ptr_arg_def(_mode) do
@@ -489,7 +495,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   def optional_state_related_fields(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
+    state_type = BaseType.State.generate_native_type()
+
     ~g"""
     #{state_type}* state;
     state_linked_list * released_states;
@@ -500,28 +507,28 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ~g<>
   end
 
-  def optional_prepare_state_list(%CodeGenerationMode{use_state: true} = _mode) do 
+  def optional_prepare_state_list(%CodeGenerationMode{use_state: true} = _mode) do
     ~g"""
     ctx->released_states = new_state_linked_list();
     """
   end
 
-  def optional_prepare_state_list(_mode) do 
+  def optional_prepare_state_list(_mode) do
     ~g<>
   end
 
-  def optional_state_cleanup(%CodeGenerationMode{use_state: true} = _mode) do 
+  def optional_state_cleanup(%CodeGenerationMode{use_state: true} = _mode) do
     ~g"""
     free_states(ctx, ctx->released_states, *(ctx->state));
     """
   end
 
-  def optional_state_cleanup(_mode) do 
+  def optional_state_cleanup(_mode) do
     ~g<>
   end
 
   def state_aggregating_stuff(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
+    state_type = BaseType.State.generate_native_type()
 
     ~g"""
     typedef struct state_node {
@@ -544,7 +551,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   def state_related_functions_declarations(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
+    state_type = BaseType.State.generate_native_type()
 
     ~g"""
     void add_item(state_linked_list * list, #{state_type} item);
@@ -558,13 +565,13 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     void handle_destroy_state(UnifexEnv * env, UnifexState * state);
     """
   end
-  
+
   def state_related_functions_declarations(_mode) do
     ~g<>
   end
 
   def state_related_functions(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
+    state_type = BaseType.State.generate_native_type()
 
     ~g"""
     void add_item(state_linked_list * list, #{state_type} item) {
@@ -613,7 +620,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   def optional_state_def(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
+    state_type = BaseType.State.generate_native_type()
     ~g<#{state_type} state = NULL;>
   end
 

@@ -1,5 +1,4 @@
 defmodule Unifex.CodeGenerationMode do
-
   defstruct [:use_state, :cnode_mode]
 
   alias Unifex.BaseType
@@ -28,7 +27,7 @@ defmodule Unifex.CodeGenerationMode do
 
   defp old_state_definition_exists(dir, name) do
     old_state_type = "UnifexNifState"
-    contains_word(dir, name, old_state_type) 
+    contains_word(dir, name, old_state_type)
   end
 
   defp contains_word(dir, header_name, word) do

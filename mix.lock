@@ -1,15 +1,63 @@
 %{
-  "bunch": {:hex, :bunch, "1.3.0", "51b4423088b7fb9e21eae6d6bc5e5d219d955ea5556fbd6130bfb6213df4be32", [:mix], [], "hexpm", "9ad233a2bacc0dae8aa6553a9b9057f27446443b1c5903c3479b6f9f3820ce2d"},
-  "bunch_native": {:hex, :bunch_native, "0.2.1", "0227d2a751a32f8c0b77dfec57c8dc7216351720c9c755c467e6d9387467fd1f", [:mix], [{:bundlex, "~> 0.2.7", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm", "f0819b2f9f78086447ac7459a8e7b6e25ad535b9d3a4f9469253c552137de6b4"},
-  "bundlex": {:hex, :bundlex, "0.2.8", "0f4530bf24a2ebb92f2e360111319aae6fc6eb03c6ec5054b529d9ffb78811fa", [:mix], [{:bunch, "~> 1.0", [hex: :bunch, repo: "hexpm", optional: false]}, {:qex, "~> 0.5", [hex: :qex, repo: "hexpm", optional: false]}, {:secure_random, "~> 0.5", [hex: :secure_random, repo: "hexpm", optional: false]}], "hexpm", "d583b04ea679297aa08ad2b31866c4848fd99feea036bf5af59df71e2408b096"},
-  "dialyxir": {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "aeb06588145fac14ca08d8061a142d52753dbc2cf7f0d00fc1013f53f8654654"},
-  "earmark": {:hex, :earmark, "1.4.4", "4821b8d05cda507189d51f2caeef370cf1e18ca5d7dfb7d31e9cafe6688106a4", [:mix], [], "hexpm", "1f93aba7340574847c0f609da787f0d79efcab51b044bb6e242cae5aca9d264d"},
-  "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
-  "ex_doc": {:hex, :ex_doc, "0.22.0", "fb0495cd70849bc4d7bc716d4e740aebfaddb77bb1074addf357912468c831d6", [:mix], [{:earmark, "~> 1.4", [hex: :earmark, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}], "hexpm", "f9b36237b220c8262d561489967b6a604832593f0dc1fb1608662909457e91aa"},
-  "makeup": {:hex, :makeup, "1.0.1", "82f332e461dc6c79dbd82fbe2a9c10d48ed07146f0a478286e590c83c52010b5", [:mix], [{:nimble_parsec, "~> 0.5.0", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "49736fe5b66a08d8575bf5321d716bac5da20c8e6b97714fec2bcd6febcfa1f8"},
-  "makeup_elixir": {:hex, :makeup_elixir, "0.14.0", "cf8b7c66ad1cff4c14679698d532f0b5d45a3968ffbcbfd590339cb57742f1ae", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "d4b316c7222a85bbaa2fd7c6e90e37e953257ad196dc229505137c5e505e9eff"},
-  "nimble_parsec": {:hex, :nimble_parsec, "0.5.3", "def21c10a9ed70ce22754fdeea0810dafd53c2db3219a0cd54cf5526377af1c6", [:mix], [], "hexpm", "589b5af56f4afca65217a1f3eb3fee7e79b09c40c742fddc1c312b3ac0b3399f"},
-  "qex": {:hex, :qex, "0.5.0", "5a3a9becf67d4006377c4c247ffdaaa8ae5b3634a0caadb788dc24d6125068f4", [:mix], [], "hexpm", "4ad6f6421163cd8204509a119a5c9813cbb969cfb8d802a9dc49b968bffbac2a"},
-  "secure_random": {:hex, :secure_random, "0.5.1", "c5532b37c89d175c328f5196a0c2a5680b15ebce3e654da37129a9fe40ebf51b", [:mix], [], "hexpm", "1b9754f15e3940a143baafd19da12293f100044df69ea12db5d72878312ae6ab"},
-  "shmex": {:hex, :shmex, "0.2.1", "f60f4edc85e514d131ceff1acd37a2b3ff8e77c88d7c04a05b8ab2ba454a1a40", [:mix], [{:bunch_native, "~> 0.2.0", [hex: :bunch_native, repo: "hexpm", optional: false]}, {:bundlex, "~> 0.2.8", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm", "8e75c2e2fd5735b57a66384ee4e9adb2888675074eacf01c63b71032387d4c65"},
+  bunch:
+    {:hex, :bunch, "1.3.0", "51b4423088b7fb9e21eae6d6bc5e5d219d955ea5556fbd6130bfb6213df4be32",
+     [:mix], [], "hexpm", "9ad233a2bacc0dae8aa6553a9b9057f27446443b1c5903c3479b6f9f3820ce2d"},
+  bunch_native:
+    {:hex, :bunch_native, "0.2.1",
+     "0227d2a751a32f8c0b77dfec57c8dc7216351720c9c755c467e6d9387467fd1f", [:mix],
+     [{:bundlex, "~> 0.2.7", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm",
+     "f0819b2f9f78086447ac7459a8e7b6e25ad535b9d3a4f9469253c552137de6b4"},
+  bundlex:
+    {:hex, :bundlex, "0.2.8", "0f4530bf24a2ebb92f2e360111319aae6fc6eb03c6ec5054b529d9ffb78811fa",
+     [:mix],
+     [
+       {:bunch, "~> 1.0", [hex: :bunch, repo: "hexpm", optional: false]},
+       {:qex, "~> 0.5", [hex: :qex, repo: "hexpm", optional: false]},
+       {:secure_random, "~> 0.5", [hex: :secure_random, repo: "hexpm", optional: false]}
+     ], "hexpm", "d583b04ea679297aa08ad2b31866c4848fd99feea036bf5af59df71e2408b096"},
+  dialyxir:
+    {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5",
+     [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm",
+     "aeb06588145fac14ca08d8061a142d52753dbc2cf7f0d00fc1013f53f8654654"},
+  earmark:
+    {:hex, :earmark, "1.4.4", "4821b8d05cda507189d51f2caeef370cf1e18ca5d7dfb7d31e9cafe6688106a4",
+     [:mix], [], "hexpm", "1f93aba7340574847c0f609da787f0d79efcab51b044bb6e242cae5aca9d264d"},
+  erlex:
+    {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e",
+     [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
+  ex_doc:
+    {:hex, :ex_doc, "0.22.0", "fb0495cd70849bc4d7bc716d4e740aebfaddb77bb1074addf357912468c831d6",
+     [:mix],
+     [
+       {:earmark, "~> 1.4", [hex: :earmark, repo: "hexpm", optional: false]},
+       {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}
+     ], "hexpm", "f9b36237b220c8262d561489967b6a604832593f0dc1fb1608662909457e91aa"},
+  makeup:
+    {:hex, :makeup, "1.0.1", "82f332e461dc6c79dbd82fbe2a9c10d48ed07146f0a478286e590c83c52010b5",
+     [:mix],
+     [{:nimble_parsec, "~> 0.5.0", [hex: :nimble_parsec, repo: "hexpm", optional: false]}],
+     "hexpm", "49736fe5b66a08d8575bf5321d716bac5da20c8e6b97714fec2bcd6febcfa1f8"},
+  makeup_elixir:
+    {:hex, :makeup_elixir, "0.14.0",
+     "cf8b7c66ad1cff4c14679698d532f0b5d45a3968ffbcbfd590339cb57742f1ae", [:mix],
+     [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm",
+     "d4b316c7222a85bbaa2fd7c6e90e37e953257ad196dc229505137c5e505e9eff"},
+  nimble_parsec:
+    {:hex, :nimble_parsec, "0.5.3",
+     "def21c10a9ed70ce22754fdeea0810dafd53c2db3219a0cd54cf5526377af1c6", [:mix], [], "hexpm",
+     "589b5af56f4afca65217a1f3eb3fee7e79b09c40c742fddc1c312b3ac0b3399f"},
+  qex:
+    {:hex, :qex, "0.5.0", "5a3a9becf67d4006377c4c247ffdaaa8ae5b3634a0caadb788dc24d6125068f4",
+     [:mix], [], "hexpm", "4ad6f6421163cd8204509a119a5c9813cbb969cfb8d802a9dc49b968bffbac2a"},
+  secure_random:
+    {:hex, :secure_random, "0.5.1",
+     "c5532b37c89d175c328f5196a0c2a5680b15ebce3e654da37129a9fe40ebf51b", [:mix], [], "hexpm",
+     "1b9754f15e3940a143baafd19da12293f100044df69ea12db5d72878312ae6ab"},
+  shmex:
+    {:hex, :shmex, "0.2.1", "f60f4edc85e514d131ceff1acd37a2b3ff8e77c88d7c04a05b8ab2ba454a1a40",
+     [:mix],
+     [
+       {:bunch_native, "~> 0.2.0", [hex: :bunch_native, repo: "hexpm", optional: false]},
+       {:bundlex, "~> 0.2.8", [hex: :bundlex, repo: "hexpm", optional: false]}
+     ], "hexpm", "8e75c2e2fd5735b57a66384ee4e9adb2888675074eacf01c63b71032387d4c65"}
 }

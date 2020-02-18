@@ -63,7 +63,7 @@ defmodule Unifex.CodeGenerator do
 
     {header, source}
   end
- 
+
   defp choose_implementation(%CodeGenerationMode{cnode_mode: false} = _mode) do
     NIFCodeGenerator
   end
