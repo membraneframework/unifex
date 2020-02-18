@@ -54,16 +54,9 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ""
   end
 
-  defp generate_result_encoding({_var_name, :state}) do
+  defp generate_result_encoding({var_name, :state}) do
     ~g"""
-    handle_destroy_state(ctx->state);
-    fprintf(stderr, "dupa1\n");
-    fflush(stderr);
-    free(ctx->state);
-
-    fprintf(stderr, "dupa2\n");
-    fflush(stderr);
-    ctx->state = state;
+    *(ctx->state) = #{var_name};
     """
   end
 
@@ -122,7 +115,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       |> Keyword.get_values(:arg)
       |> Enum.count(fn 
         {_var_name, :state} -> true
-        _ -> false
+        _else -> false
       end)
 
     if declaration == "" do
@@ -168,10 +161,11 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       #{encodings |> Enum.join("\n")}
 
       send_and_free(ctx, out_buff);
+      free(out_buff);
     }
     """
   end
-
+     
   defp function_declaration_template(return_type, fun_name_prefix, specs) do
     {_result, meta} = generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
@@ -257,7 +251,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
   defp generate_cnode_generic_utilities(mode) do
     opt_state_def = optional_state_def(mode)
-    opt_state_arg_def = optional_state_arg_def(mode)
+    opt_state_arg_def = optional_state_ptr_arg_def(mode)
+    opt_state_ref_arg = optional_state_arg_ref(mode)
     opt_state_arg = optional_state_arg(mode)
 
     ~g"""
@@ -395,7 +390,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       int res = 0;
       int cont = 1;
       while (cont) {
-        switch (receive(ei_fd, node_name#{opt_state_arg})) {
+        switch (receive(ei_fd, node_name#{opt_state_ref_arg})) {
         case 0:
           break;
         case 1:
@@ -422,7 +417,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
     implemented_fun_args =
       ["ctx" | args |> Enum.map(fn 
-        {_name, :state} -> "ctx->state"
+        {_name, :state} -> "*(ctx->state)"
         {name, _type} -> to_string(name) 
       end)]
       |> Enum.join(", ")
@@ -432,10 +427,14 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ~g"""
     #{declaration} {
       #{args_decoding}
+      #{optional_prepare_state_list(mode)}
+      
       UNIFEX_TERM result = #{implemented_fun_call}
       if (result != EMPTY_UNIFEX_TERM) {
         send_and_free(ctx, result);
       }
+
+      #{optional_state_cleanup(mode)}
     }
     """
   end
@@ -465,6 +464,14 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ~g<>
   end
 
+  def optional_state_ptr_arg_def(%CodeGenerationMode{use_state: true} = _mode) do
+    ", #{BaseType.State.generate_native_type}* state"
+  end
+
+  def optional_state_ptr_arg_def(_mode) do
+    ~g<>
+  end
+
   def optional_state_arg(%CodeGenerationMode{use_state: true} = _mode) do
     ", state"
   end
@@ -473,19 +480,141 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ~g<>
   end
 
-  def optional_state_field(%CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type
-    ~g<#{state_type} state;>
+  def optional_state_arg_ref(%CodeGenerationMode{use_state: true} = _mode) do
+    ", &state"
   end
 
-  def optional_state_field(_mode) do
+  def optional_state_arg_ref(_mode) do
+    ~g<>
+  end
+
+  def optional_state_related_fields(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+    ~g"""
+    #{state_type}* state;
+    state_linked_list * released_states;
+    """
+  end
+
+  def optional_state_related_fields(_mode) do
+    ~g<>
+  end
+
+  def optional_prepare_state_list(%CodeGenerationMode{use_state: true} = _mode) do 
+    ~g"""
+    ctx->released_states = new_state_linked_list();
+    """
+  end
+
+  def optional_prepare_state_list(_mode) do 
+    ~g<>
+  end
+
+  def optional_state_cleanup(%CodeGenerationMode{use_state: true} = _mode) do 
+    ~g"""
+    free_states(ctx, ctx->released_states, *(ctx->state));
+    """
+  end
+
+  def optional_state_cleanup(_mode) do 
+    ~g<>
+  end
+
+  def state_aggregating_stuff(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+
+    ~g"""
+    typedef struct state_node {
+      #{state_type} item;
+    #ifdef __cplusplus
+      state_node * next;
+    #else
+      struct state_node * next;
+    #endif
+    } state_node;
+
+    typedef struct state_linked_list {
+      state_node * head;
+    } state_linked_list;
+    """
+  end
+
+  def state_aggregating_stuff(_mode) do
+    ~g<>
+  end
+
+  def state_related_functions_declarations(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+
+    ~g"""
+    void add_item(state_linked_list * list, #{state_type} item);
+    void rec_free_node(state_node * n);
+    void free_states(UnifexEnv * env, state_linked_list * list, #{state_type} main_state);
+    state_linked_list * new_state_linked_list();
+
+    void unifex_release_state(UnifexEnv* env, UnifexState* state);
+    UnifexState * unifex_alloc_state(UnifexEnv * env);
+
+    void handle_destroy_state(UnifexEnv * env, UnifexState * state);
+    """
+  end
+  
+  def state_related_functions_declarations(_mode) do
+    ~g<>
+  end
+
+  def state_related_functions(%CodeGenerationMode{use_state: true} = _mode) do
+    state_type = BaseType.State.generate_native_type
+
+    ~g"""
+    void add_item(state_linked_list * list, #{state_type} item) {
+      state_node * node = (state_node *) malloc (sizeof(state_node));
+      node->item = item;
+      node->next = list->head;
+      list->head = node;
+    }
+
+    void rec_free_node(state_node * n) {
+      if (n == NULL) return;
+
+      rec_free_node(n->next);
+      free(n);
+    }
+
+    void free_states(UnifexEnv * env, state_linked_list * list, #{state_type} main_state) {
+      for (state_node * curr = list->head; curr != NULL; curr = curr->next) {
+        if (curr->item != main_state) {
+          handle_destroy_state(env, curr->item);
+          free(curr->item);
+        }
+      }
+      rec_free_node(list->head);
+      free(list);
+    }
+
+    state_linked_list * new_state_linked_list() {
+      state_linked_list * res = (state_linked_list *) malloc (sizeof(state_linked_list));
+      res->head = NULL;
+      return res;
+    }
+
+    void unifex_release_state(UnifexEnv* env, UnifexState* state) {
+      add_item(env->released_states, state);
+    }
+
+    UnifexState * unifex_alloc_state(UnifexEnv * env) {
+      return (UnifexState *) malloc (sizeof(UnifexState));
+    }
+    """
+  end
+
+  def tate_related_functions(_mode) do
     ~g<>
   end
 
   def optional_state_def(%CodeGenerationMode{use_state: true} = _mode) do
     state_type = BaseType.State.generate_native_type
-    sizeof_state = BaseType.State.generate_sizeof
-    ~g<#{state_type} state = (#{state_type}) malloc(#{sizeof_state});>
+    ~g<#{state_type} state = NULL;>
   end
 
   def optional_state_def(_mode) do
@@ -518,14 +647,18 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #define EMPTY_UNIFEX_TERM NULL
     #define UNIFEX_UNUSED(x) (void)(x)
 
+    #{state_aggregating_stuff(mode)}
+
     typedef struct cnode_context {
       const char * node_name;
       int ei_fd; 
       erlang_pid * e_pid;
-      #{optional_state_field(mode)}
+      #{optional_state_related_fields(mode)}
     } cnode_context;
 
     typedef cnode_context UnifexEnv;
+
+    #{state_related_functions_declarations(mode)}
 
     #{
       CodeGeneratorUtils.generate_functions_declarations(
@@ -562,6 +695,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   @impl CodeGenerator
   def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks, mode) do
     ~g"""
+    #include <stdio.h>
     #include "#{name}.h"
 
     static void prepare_ei_x_buff(ei_x_buff *buff, const char *node_name, const char * msg_type) {
@@ -586,7 +720,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
     static void send_and_free(cnode_context * ctx, ei_x_buff * out_buff) {
       ei_send(ctx->ei_fd, ctx->e_pid, out_buff->buff, out_buff->index);
-      ei_x_free(out_buff);
+     // ei_x_free(out_buff);
     }
 
     static void send_error(cnode_context * ctx, const char * msg) {
@@ -598,6 +732,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
       send_and_free(ctx, out_buff);
     }
+
+    #{state_related_functions(mode)}
 
     #{CodeGeneratorUtils.generate_functions(results, &generate_result_function/1)}
     #{CodeGeneratorUtils.generate_functions(functions, &generate_caller_function/2, mode)}
