@@ -15,6 +15,11 @@ defmodule Unifex.UnifexCNode do
 
   @type on_start_t :: {:ok, t} | {:error, :spawn_cnode | :connect_to_cnode}
 
+  @doc """
+  Casts specific for Bundlex Api structs returned from 
+  Bundlex.CNode.start/1 or Bundlex.CNode.start_link/1 to the analogous structs 
+  in Unifex.UnifexCNode API or vice versa
+  """
   def cast_on_start_t({:ok, %Bundlex.CNode{} = bundex_cnode}) do
     {:ok, cast_cnode(bundex_cnode)}
   end
@@ -27,6 +32,9 @@ defmodule Unifex.UnifexCNode do
     on_start
   end
 
+  @doc """
+  Casts Bundlex.CNode struct to Unifex.UnifexCNode struct or vice versa
+  """
   def cast_cnode(%Bundlex.CNode{server: server, node: node}) do
     %__MODULE__{
       server: server,
@@ -42,10 +50,8 @@ defmodule Unifex.UnifexCNode do
   end
 
   @doc """
-  Calls Bundlex.CNode functions.
-  Look at Bundlex.CNode docs, to see more.
+  Spawns specific CNode and links to it
   """
-
   defmacro start_link(native_name) do
     quote do
       require Bundlex.CNode
@@ -56,6 +62,9 @@ defmodule Unifex.UnifexCNode do
     end
   end
 
+  @doc """
+  Spawns specific CNode, but without linking.
+  """
   defmacro start(native_name) do
     quote do
       require Bundlex.CNode
@@ -66,6 +75,9 @@ defmodule Unifex.UnifexCNode do
     end
   end
 
+  @doc """
+  Disconnects from CNode.
+  """
   @spec stop(t) :: :ok | {:error, :disconnect_cnode}
   def stop(%__MODULE__{} = unifex_cnode) do
     unifex_cnode
@@ -73,6 +85,9 @@ defmodule Unifex.UnifexCNode do
     |> Bundlex.CNode.stop()
   end
 
+  @doc """
+  Starts monitoring CNode from the calling process.
+  """
   @spec monitor(t) :: reference
   def monitor(%__MODULE__{} = unifex_cnode) do
     unifex_cnode
@@ -80,6 +95,9 @@ defmodule Unifex.UnifexCNode do
     |> Bundlex.CNode.monitor()
   end
 
+  @doc """
+  Sends to CNode serialized 'message'
+  """
   @spec send(t, message :: term) :: :ok
   def send(%__MODULE__{} = unifex_cnode, message) do
     unifex_cnode
@@ -87,43 +105,40 @@ defmodule Unifex.UnifexCNode do
     |> Bundlex.CNode.send(message)
   end
 
-  def unpack_result({:result, content}) do
-    content
-  end
 
-  def unpack_message({:send, content}) do
+  defp unpack_result({:result, content}) do
     content
   end
 
   @doc """
-      Sends to CNode message containing data about which function should be called and with which args,
-      then waits timeout miliseconds to receive and unpack function result
+  Makes a synchronous call to CNode and waits for its reply.
+
+  If the response doesn't come in within `timeout`, error is raised.
+  Messages are exchanged directly (without interacting with CNode's associated
+  server).
   """
-  @spec remote_call(t, fun_name :: atom, args :: list, timeout :: non_neg_integer | :infinity) ::
+  @spec call(t, fun_name :: atom, args :: list, timeout :: non_neg_integer | :infinity) ::
           response :: term
-  def remote_call(%__MODULE__{} = unifex_cnode, fun_name, args \\ [], timeout \\ 5000) do
+  def call(%__MODULE__{} = unifex_cnode, fun_name, args \\ [], timeout \\ 5000) do
     msg = [fun_name | args] |> List.to_tuple()
 
     unifex_cnode
     |> cast_cnode
     |> Bundlex.CNode.call(msg, timeout)
     |> case do
-      {:result, content} = response ->
+      {:result, _content} = response ->
         response |> unpack_result
 
-      {:error, reason} = response ->
+      {:error, _reason} = response ->
         response
     end
   end
 
   @doc """
-      Sends to CNode message containing data about which function should be called and with which args,
-      but don't wait on any message back.
-      
-      Should be used, when called CNode function sends messages (look at .spec.exs), instead of return value
+  Invokes call of given function, but doesn't return result. Call Unifex.UnifexCNode.receive_result/2, to get returned value
   """
-  @spec start_running(t, fun_name :: atom, args :: list) :: :ok
-  def start_running(%__MODULE__{} = unifex_cnode, fun_name, args \\ []) do
+  @spec cast(t, fun_name :: atom, args :: list) :: :ok
+  def cast(%__MODULE__{} = unifex_cnode, fun_name, args \\ []) do
     msg = [fun_name | args] |> List.to_tuple()
 
     unifex_cnode
@@ -132,34 +147,17 @@ defmodule Unifex.UnifexCNode do
   end
 
   @doc """
-      Waits timeout miliseconds on message sent from specific UnifexCNode.
-  """
-  @spec receive_msg(t, timeout :: non_neg_integer | :infinity) ::
-          response :: term | {:error, :time_left}
-  def receive_msg(%__MODULE__{node: node}, timeout \\ 5000) do
-    receive do
-      {^node, {:send, content} = response} ->
-        response |> unpack_message
-
-      {^node, {:error, reason} = response} ->
-        response
-    after
-      timeout -> {:error, :time_left}
-    end
-  end
-
-  @doc """
       Waits timeout miliseconds on result returned from remote call of remote UnifexCNode function.
-      Generally, when function only returns values and don't send any messages, consider use of UnifexCNode.remote_call, instead of this one
+      Generally, when function only returns values and don't send any messages, consider use of UnifexCNode.call/3, instead of this one
   """
   @spec receive_result(t, timeout :: non_neg_integer | :infinity) ::
           response :: term | {:error, :time_left}
   def receive_result(%__MODULE__{node: node}, timeout \\ 5000) do
     receive do
-      {^node, {:result, content} = response} ->
+      {^node, {:result, _content} = response} ->
         response |> unpack_result
 
-      {^node, {:error, reason} = response} ->
+      {^node, {:error, _reason} = response} ->
         response
     after
       timeout -> {:error, :time_left}
