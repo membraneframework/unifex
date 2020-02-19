@@ -249,7 +249,7 @@ defmodule Unifex.BaseType do
   @spec make_ptr_const(declaration :: String.t()) :: String.t()
   def make_ptr_const(declaration) do
     state_type = Unifex.BaseType.State.generate_native_type()
-  
+
     if String.match?(declaration, ~r<\*>) and not String.contains?(declaration, state_type) do
       "const " <> declaration
     else

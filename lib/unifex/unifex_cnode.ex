@@ -105,7 +105,6 @@ defmodule Unifex.UnifexCNode do
     |> Bundlex.CNode.send(message)
   end
 
-
   defp unpack_result({:result, content}) do
     content
   end
