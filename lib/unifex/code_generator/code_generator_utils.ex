@@ -2,7 +2,6 @@ defmodule Unifex.CodeGenerator.CodeGeneratorUtils do
   use Bunch
 
   alias Unifex.BaseType
-  alias Unifex.InterfaceIO
 
   defmacro __using__(_args) do
     quote do

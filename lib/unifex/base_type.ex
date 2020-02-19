@@ -242,4 +242,18 @@ defmodule Unifex.BaseType do
       apply(default_f, [])
     end
   end
+
+  @doc """
+  Adds 'const' keyword to pointer types
+  """
+  @spec make_ptr_const(declaration :: String.t()) :: String.t()
+  def make_ptr_const(declaration) do
+    state_type = Unifex.BaseType.State.generate_native_type()
+
+    if String.match?(declaration, ~r<\*>) and not String.contains?(declaration, state_type) do
+      "const " <> declaration
+    else
+      declaration
+    end
+  end
 end

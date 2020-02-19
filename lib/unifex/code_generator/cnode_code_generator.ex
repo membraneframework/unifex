@@ -162,7 +162,6 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       #{encodings |> Enum.join("\n")}
 
       send_and_free(ctx, out_buff);
-      free(out_buff);
     }
     """
   end
@@ -172,7 +171,12 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      ["cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      [
+        "cnode_context * ctx"
+        | args
+          |> Enum.flat_map(&BaseType.generate_declaration/1)
+          |> Enum.map(&BaseType.make_ptr_const/1)
+      ]
       |> Enum.join(", ")
 
     labels =
@@ -196,14 +200,12 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   defp generate_handle_message_declaration(mode) do
-    opt_arg = optional_state_arg_def(mode)
+    opt_arg = optional_state_ptr_arg_def(mode)
     "int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,
             ei_x_buff *in_buff#{opt_arg})"
   end
 
   defp generate_handle_message(functions, mode) do
-    opt_arg = optional_state_arg(mode)
-
     if_statements =
       functions
       |> Enum.map(fn
@@ -247,6 +249,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       };
 
       #{handling}
+
+      return 0;
     }
     """r
   end
@@ -414,7 +418,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
   end
 
   defp generate_caller_function({name, args}, mode) do
-    declaration = generate_caller_function_declaration(name, mode)
+    declaration = generate_caller_function_declaration(name)
     args_decoding = generate_args_decoding(args)
 
     implemented_fun_args =
@@ -445,12 +449,11 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     """
   end
 
-  defp generate_caller_function_declaration({name, _args}, mode) do
-    generate_caller_function_declaration(name, mode)
+  defp generate_caller_function_declaration({name, _args}) do
+    generate_caller_function_declaration(name)
   end
 
-  defp generate_caller_function_declaration(name, mode) do
-    opt_state = optional_state_arg_def(mode)
+  defp generate_caller_function_declaration(name) do
     ~g"void #{name}_caller(const char * in_buff, int * index, cnode_context * ctx)"
   end
 
@@ -635,6 +638,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
     #include <stdio.h>
     #include <stdint.h>
+    #include <string.h>
+    #include <stdlib.h>
 
     #ifndef _REENTRANT
     #define _REENTRANT 
@@ -682,8 +687,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #{
       CodeGeneratorUtils.generate_functions_declarations(
         functions,
-        &generate_caller_function_declaration/2,
-        mode
+        &generate_caller_function_declaration/1
       )
     }
     #{
@@ -727,7 +731,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
     static void send_and_free(cnode_context * ctx, ei_x_buff * out_buff) {
       ei_send(ctx->ei_fd, ctx->e_pid, out_buff->buff, out_buff->index);
-     // ei_x_free(out_buff);
+      ei_x_free(out_buff);
     }
 
     static void send_error(cnode_context * ctx, const char * msg) {

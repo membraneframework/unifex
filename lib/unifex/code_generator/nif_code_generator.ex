@@ -128,7 +128,12 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      [
+        ~g<UnifexEnv* env>
+        | args
+          |> Enum.flat_map(&BaseType.generate_declaration/1)
+          |> Enum.map(&BaseType.make_ptr_const/1)
+      ]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -155,7 +160,10 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
       [
         ~g<UnifexEnv* env>,
         ~g<UnifexPid pid>,
-        ~g<int flags> | args |> Enum.flat_map(&BaseType.generate_declaration/1)
+        ~g<int flags>
+        | args
+          |> Enum.flat_map(&BaseType.generate_declaration/1)
+          |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
 
