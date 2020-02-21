@@ -22,12 +22,12 @@ void prepare_error_buff(ei_x_buff *buff, const char *node_name) {
   prepare_ei_x_buff(buff, node_name, "error");
 }
 
-void send_and_free(cnode_context *ctx, ei_x_buff *out_buff) {
+void sending_and_freeing(cnode_context *ctx, ei_x_buff *out_buff) {
   ei_send(ctx->ei_fd, ctx->e_pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
 }
 
-void send_error(cnode_context *ctx, const char *msg) {
+void sending_error(cnode_context *ctx, const char *msg) {
   ei_x_buff buff;
   ei_x_buff *out_buff = &buff;
   prepare_error_buff(out_buff, ctx->node_name);
@@ -35,7 +35,7 @@ void send_error(cnode_context *ctx, const char *msg) {
   long msg_len = (long)strlen(msg);
   ei_x_encode_binary(out_buff, msg, msg_len);
 
-  send_and_free(ctx, out_buff);
+  sending_and_freeing(ctx, out_buff);
 }
 
 void add_item(state_linked_list *list, UnifexStateWrapper *item) {

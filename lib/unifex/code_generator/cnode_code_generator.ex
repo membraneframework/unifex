@@ -167,7 +167,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
       #{encodings |> Enum.join("\n")}
 
-      send_and_free(ctx, out_buff);
+      sending_and_freeing(ctx, out_buff);
       free(out_buff);
     }
     """
@@ -247,7 +247,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       strcpy(err_msg, "function ");
       strcat(err_msg, fun_name);
       strcat(err_msg, " not available");
-      send_error(&ctx, err_msg);
+      sending_error(&ctx, err_msg);
     }
     """
 
@@ -303,7 +303,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
         ~g"""
         UNIFEX_TERM result = #{implemented_fun_call}
         if (result != EMPTY_UNIFEX_TERM) {
-          send_and_free(ctx, result);
+          sending_and_freeing(ctx, result);
         }
         """
       end

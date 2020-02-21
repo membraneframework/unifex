@@ -1,8 +1,6 @@
 defmodule Unifex.CodeGenerationMode do
   defstruct [:use_state, :cnode_mode]
 
-  alias Unifex.BaseType
-
   @type t :: %__MODULE__{
           use_state: boolean(),
           cnode_mode: boolean()

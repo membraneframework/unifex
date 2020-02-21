@@ -53,8 +53,8 @@ void prepare_ei_x_buff(ei_x_buff *buff, const char *node_name,
 void prepare_result_buff(ei_x_buff *buff, const char *node_name);
 void prepare_send_buff(ei_x_buff *buff);
 void prepare_error_buff(ei_x_buff *buff, const char *node_name);
-void send_and_free(cnode_context *ctx, ei_x_buff *out_buff);
-void send_error(cnode_context *ctx, const char *msg);
+void sending_and_freeing(cnode_context *ctx, ei_x_buff *out_buff);
+void sending_error(cnode_context *ctx, const char *msg);
 
 void handle_destroy_state_wrapper(UnifexEnv *env, UnifexStateWrapper *state);
 
