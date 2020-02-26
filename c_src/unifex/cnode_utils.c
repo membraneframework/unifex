@@ -149,7 +149,7 @@ int listen_sock(int *listen_fd, int *port) {
   return 0;
 }
 
-int main(int argc, char **argv) {
+int main_function(int argc, char **argv) {
   if (validate_args(argc, argv)) {
     fprintf(stderr,
             "%s <host_name> <alive_name> <node_name> <cookie> <creation>\r\n",

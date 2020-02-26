@@ -71,6 +71,7 @@ int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,
 
 size_t unifex_state_wrapper_sizeof();
 void free_state(UnifexStateWrapper *wrapper);
+int main_function(int argc, char **argv);
 
 #ifdef __cplusplus
 }
