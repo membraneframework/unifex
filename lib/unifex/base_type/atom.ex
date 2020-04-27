@@ -2,7 +2,7 @@ defmodule Unifex.BaseType.Atom do
   @moduledoc """
   Module implementing `Unifex.BaseType` behaviour for atoms.
 
-  Atoms in native code are representec by C-strings (`char *`)
+  Atoms in native code are represented by C-strings (`char *`)
   """
   alias Unifex.BaseType
   use BaseType
