@@ -35,7 +35,7 @@ typedef ErlNifMutex UnifexMutex;
 static inline UnifexMutex *unifex_mutex_create(char *name) {
   return enif_mutex_create(name);
 }
-static inline char * unifex_mutex_name(UnifexMutex * mtx) {
+static inline char *unifex_mutex_name(UnifexMutex *mtx) {
   return enif_mutex_name(mtx);
 }
 static inline void unifex_mutex_destroy(UnifexMutex *mtx) {
@@ -51,22 +51,22 @@ static inline void unifex_mutex_unlock(UnifexMutex *mtx) {
 
 // Condition variables
 typedef ErlNifCond UnifexCond;
-static inline UnifexCond * unifex_cond_create(char * name) {
+static inline UnifexCond *unifex_cond_create(char *name) {
   return enif_cond_create(name);
 }
-static inline char * unifex_cond_name(UnifexCond * cond) {
+static inline char *unifex_cond_name(UnifexCond *cond) {
   return enif_cond_name(cond);
 }
-static inline void unifex_cond_signal(UnifexCond * cond) {
+static inline void unifex_cond_signal(UnifexCond *cond) {
   enif_cond_signal(cond);
 }
-static inline void unifex_cond_wait(UnifexCond * cond, UnifexMutex *mutex) {
+static inline void unifex_cond_wait(UnifexCond *cond, UnifexMutex *mutex) {
   enif_cond_wait(cond, mutex);
 }
-static inline void unifex_cond_broadcast(UnifexCond * cond) {
+static inline void unifex_cond_broadcast(UnifexCond *cond) {
   enif_cond_broadcast(cond);
 }
-static inline void unifex_cond_destroy(UnifexCond * cond) {
+static inline void unifex_cond_destroy(UnifexCond *cond) {
   enif_cond_destroy(cond);
 }
 
@@ -95,6 +95,8 @@ static inline UnifexTime unifex_monotonic_time(UnifexTimeUnit unit) {
   return enif_monotonic_time(unit);
 }
 
+UNIFEX_TERM unifex_raise(ErlNifEnv *env, const char *description);
+
 // args parse helpers
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv *env, const char *field,
                                     const char *description);
@@ -104,14 +106,15 @@ UNIFEX_TERM unifex_make_resource(ErlNifEnv *env, void *resource);
 void unifex_release_resource(void *resource);
 int unifex_string_from_term(ErlNifEnv *env, ERL_NIF_TERM input_term,
                             char **string);
-UNIFEX_TERM unifex_string_to_term(ErlNifEnv *env, char *string);
+UNIFEX_TERM unifex_string_to_term(ErlNifEnv *env, const char *string);
 int unifex_alloc_and_get_atom(ErlNifEnv *env, ERL_NIF_TERM atom_term,
                               char **output);
 int unifex_parse_bool(ErlNifEnv *env, ERL_NIF_TERM atom_term, int *output);
 
 // send & pid helpers
 int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags);
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid);
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags,
+                           UnifexPid *pid);
 static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
   return enif_self(env, pid);
 }

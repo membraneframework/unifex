@@ -3,6 +3,10 @@
 #include <string.h>
 #include <time.h>
 
+UNIFEX_TERM unifex_raise(ErlNifEnv *env, const char *description) {
+  return enif_raise_exception(env, unifex_string_to_term(env, description));
+}
+
 UNIFEX_TERM unifex_raise_args_error(ErlNifEnv *env, const char *field,
                                     const char *description) {
   ERL_NIF_TERM exception_content = enif_make_tuple2(
@@ -69,7 +73,7 @@ int unifex_parse_bool(ErlNifEnv *env, ERL_NIF_TERM atom_term, int *output) {
   return 0;
 }
 
-UNIFEX_TERM unifex_string_to_term(ErlNifEnv *env, char *string) {
+UNIFEX_TERM unifex_string_to_term(ErlNifEnv *env, const char *string) {
   ERL_NIF_TERM output_term;
   int string_length = strlen(string);
   unsigned char *ptr = enif_make_new_binary(env, string_length, &output_term);
@@ -88,8 +92,9 @@ int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags) {
   return res;
 }
 
-int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags, UnifexPid *pid) {
-  UnifexEnv * looking_env = flags & UNIFEX_FROM_CREATED_THREAD ? NULL : env;
+int unifex_get_pid_by_name(UnifexEnv *env, char *name, int flags,
+                           UnifexPid *pid) {
+  UnifexEnv *looking_env = flags & UNIFEX_FROM_CREATED_THREAD ? NULL : env;
 
   int res = enif_whereis_pid(looking_env, enif_make_atom(env, name), pid);
 
