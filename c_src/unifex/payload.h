@@ -17,7 +17,7 @@ struct _UnifexPayload {
 };
 typedef struct _UnifexPayload UnifexPayload;
 
-ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
+extern ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
 
 int unifex_payload_from_term(ErlNifEnv *env, ERL_NIF_TERM binary_term,
                              UnifexPayload *payload);
