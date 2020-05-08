@@ -1,5 +1,7 @@
 #include "payload.h"
 
+ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE = NULL;
+
 int unifex_payload_from_term(ErlNifEnv *env, ERL_NIF_TERM term,
                              UnifexPayload *payload) {
   int res = enif_inspect_binary(env, term, &payload->payload_struct.binary);
