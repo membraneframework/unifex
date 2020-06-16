@@ -7,7 +7,7 @@ defmodule Unifex.NativeCodeGenerator do
 
   defmacro __using__(_args) do
     quote do
-      import unquote(__MODULE__), only: [gen: 2, sigil_g: 2]
+      import unquote(__MODULE__), only: [sigil_g: 2]
     end
   end
 
@@ -42,80 +42,11 @@ defmodule Unifex.NativeCodeGenerator do
   end
 
   @doc """
-  Sigil used for indentation of generated code.
-
-  By itself it does nothing, but has very useful flags:
-  * `r` trims trailing whitespaces of each line and removes subsequent empty
-    lines
-  * `t` trims the string
-  * `i` indents all but the first line. Helpful when used
-    inside string interpolation that already has been indented
-  * `I` indents every line of string
+  Sigil used for code generation.
   """
-  @spec sigil_g(String.t(), charlist()) :: String.t()
-  def sigil_g(content, 'r' ++ flags) do
-    content =
-      content
-      |> String.split("\n")
-      |> Enum.map(&String.trim_trailing/1)
-      |> Enum.reduce([], fn
-        "", ["" | _] = acc -> acc
-        v, acc -> [v | acc]
-      end)
-      |> Enum.reverse()
-      |> Enum.join("\n")
-
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 't' ++ flags) do
-    content = content |> String.trim()
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'i' ++ flags) do
-    [first | rest] = content |> String.split("\n")
-    content = [first | rest |> Enum.map(&indent/1)] |> Enum.join("\n")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, 'I' ++ flags) do
-    lines = content |> String.split("\n")
-    content = lines |> Enum.map(&indent/1) |> Enum.join("\n")
-    sigil_g(content, flags)
-  end
-
-  def sigil_g(content, []) do
+  def sigil_g(content, flags) do
+    if flags != [], do: IO.inspect(flags)
     content
-  end
-
-  @doc """
-  Helper for generating code. Uses `sigil_g/2` underneath.
-
-  It supports all the flags supported by `sigil_g/2` and the following ones:
-  * `j(joiner)` - joins list of strings using `joiner`
-  * n - alias for `j(\\n)`
-
-  If passed a list and flags supported by `sigil_g/2`, each flag will be executed
-  on each element of the list, until the list is joined by using `j` or `n` flag.
-  """
-  @spec gen(String.Chars.t() | [String.Chars.t()], charlist()) :: String.t() | [String.t()]
-  def gen(content, 'j(' ++ flags) when is_list(content) do
-    {joiner, ')' ++ flags} = flags |> Enum.split_while(&([&1] != ')'))
-    content = content |> Enum.join("#{joiner}")
-    gen(content, flags)
-  end
-
-  def gen(content, 'n' ++ flags) when is_list(content) do
-    gen(content, 'j(\n)' ++ flags)
-  end
-
-  def gen(content, flags) when is_list(content) do
-    content |> Enum.map(&gen(&1, flags))
-  end
-
-  def gen(content, flags) do
-    sigil_g(content, flags)
   end
 
   defp generate_header(name, module, functions, results, sends, callbacks) do
@@ -172,7 +103,7 @@ defmodule Unifex.NativeCodeGenerator do
     #ifdef __cplusplus
     }
     #endif
-    """r
+    """
   end
 
   defp generate_source(name, module, functions, results, dirty_funs, sends, callbacks) do
@@ -187,7 +118,7 @@ defmodule Unifex.NativeCodeGenerator do
     #{generate_nif_lifecycle_callbacks(module, callbacks)}
     #{generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions, dirty_funs, callbacks)}
-    """r
+    """
   end
 
   defp generate_implemented_function_declaration({name, args}) do
@@ -217,7 +148,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      return #{result |> gen('it')};
+      return #{result};
     }
     """
   end
@@ -240,7 +171,7 @@ defmodule Unifex.NativeCodeGenerator do
 
     ~g"""
     #{declaration} {
-      ERL_NIF_TERM term = #{result |> gen('it')};
+      ERL_NIF_TERM term = #{result};
       return unifex_send(env, &pid, term, flags);
     }
     """
@@ -269,24 +200,24 @@ defmodule Unifex.NativeCodeGenerator do
       args
       |> Enum.flat_map(&BaseType.generate_declaration/1)
       |> Enum.map(&~g<#{&1};>)
-      |> gen('nIt')
+      |> Enum.join("\n")
 
     args_initialization =
       args
       |> Enum.map(&BaseType.generate_initialization/1)
-      |> gen('nIt')
+      |> Enum.join("\n")
 
     args_parsing =
       args
       |> Enum.with_index()
       |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
-      |> gen('nIt')
+      |> Enum.join("\n")
 
     args_destruction =
       args
       |> Enum.map(&BaseType.generate_destruction/1)
       |> Enum.reject(&("" == &1))
-      |> gen('nIt')
+      |> Enum.join("\n")
 
     args_names = args |> Enum.flat_map(&BaseType.generate_arg_name/1)
 
@@ -472,9 +403,9 @@ defmodule Unifex.NativeCodeGenerator do
             nil -> ~g<0>
           end
 
-        ~g<{"unifex_#{name}", #{arity}, export_#{name}, #{flags}}>ii
+        ~g<{"unifex_#{name}", #{arity}, export_#{name}, #{flags}}>
       end)
-      |> gen('j(,\n)i')
+      |> Enum.join(",\n")
 
     # Erlang used to have reload callback. It is unsupported from OTP 20
     # Its entry in ERL_NIF_INIT parameters is always NULL
@@ -540,7 +471,7 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_tuple_maker(content) do
     ~g<({
       const ERL_NIF_TERM terms[] = {
-        #{content |> gen('j(,\n)iit')}
+        #{content |> Enum.join(",\n")}
       };
       enif_make_tuple_from_array(env, terms, #{length(content)});
     })>
@@ -548,9 +479,5 @@ defmodule Unifex.NativeCodeGenerator do
 
   defp generate_unifex_env() do
     ~g<UnifexEnv *unifex_env = env;>
-  end
-
-  defp indent(line) do
-    "  #{line}"
   end
 end
