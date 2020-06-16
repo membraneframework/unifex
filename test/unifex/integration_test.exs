@@ -2,6 +2,9 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "test project" do
+    # clang-format is required to format the generated code
+    # it won't match the reference files otherwise
+    assert {_output, 0} = System.cmd("clang-format", ~w(--version))
     assert {_output, 0} = System.cmd("bash", ["-c", "mix test 1>&2"], cd: "test_project")
 
     files =
