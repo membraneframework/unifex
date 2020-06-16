@@ -29,7 +29,7 @@ defmodule Unifex.InterfaceIO do
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
 
-    File.write!(Path.join(out_base_path, ".gitignore"), """
+    File.write!(Path.join(out_dir_name, ".gitignore"), """
     *.h
     *.c
     *.cpp
