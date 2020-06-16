@@ -8,6 +8,8 @@ defmodule Example.MixProject do
       elixir: "~> 1.10",
       compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
+      deps_path: "../deps",
+      lockfile: "../mix.lock",
       deps: deps()
     ]
   end
