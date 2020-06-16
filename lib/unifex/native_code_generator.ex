@@ -180,7 +180,7 @@ defmodule Unifex.NativeCodeGenerator do
     #include "#{name}.h"
 
     ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
- 
+
     #{generate_functions(results, &generate_result_function/1)}
     #{generate_functions(sends, &generate_send_function/1)}
     #{generate_state_related_stuff(module)}
@@ -540,7 +540,7 @@ defmodule Unifex.NativeCodeGenerator do
   defp generate_tuple_maker(content) do
     ~g<({
       const ERL_NIF_TERM terms[] = {
-        #{content |> gen('j(,\n    )iit')}
+        #{content |> gen('j(,\n)iit')}
       };
       enif_make_tuple_from_array(env, terms, #{length(content)});
     })>
