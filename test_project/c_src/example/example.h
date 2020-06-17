@@ -1,11 +1,11 @@
 #pragma once
 
-typedef struct MyState UnifexNifState;
+typedef struct MyState UnifexState;
 
 struct MyState {
   int a;
 };
 
-typedef UnifexNifState State;
+typedef UnifexState State;
 
 #include "_generated/example.h"

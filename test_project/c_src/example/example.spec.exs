@@ -2,6 +2,8 @@ module Example
 
 callback :load
 
+use_state(true)
+
 spec init() :: {:ok :: label, was_handle_load_called :: int, state}
 
 spec foo(target :: pid, state) ::

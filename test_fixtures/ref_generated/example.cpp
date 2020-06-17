@@ -1,9 +1,7 @@
 #include "example.h"
 
-ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
-
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
-                           UnifexNifState *state) {
+                           UnifexState *state) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
                                   enif_make_int(env, was_handle_load_called),
@@ -20,7 +18,7 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
   });
 }
 
-UNIFEX_TERM foo_result_error(UnifexEnv *env, char *reason) {
+UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "error"),
                                   enif_make_atom(env, reason)};
@@ -39,24 +37,24 @@ int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
 
 ErlNifResourceType *STATE_RESOURCE_TYPE;
 
-UnifexNifState *unifex_alloc_state(UnifexEnv *env) {
+UnifexState *unifex_alloc_state(UnifexEnv *env) {
   UNIFEX_UNUSED(env);
-  return (UnifexNifState *)enif_alloc_resource(STATE_RESOURCE_TYPE,
-                                               sizeof(UnifexNifState));
+  return (UnifexState *)enif_alloc_resource(STATE_RESOURCE_TYPE,
+                                            sizeof(UnifexState));
 }
 
-void unifex_release_state(UnifexEnv *env, UnifexNifState *state) {
+void unifex_release_state(UnifexEnv *env, UnifexState *state) {
   UNIFEX_UNUSED(env);
   enif_release_resource(state);
 }
 
-void unifex_keep_state(UnifexEnv *env, UnifexNifState *state) {
+void unifex_keep_state(UnifexEnv *env, UnifexState *state) {
   UNIFEX_UNUSED(env);
   enif_keep_resource(state);
 }
 
 static void destroy_state(ErlNifEnv *env, void *value) {
-  UnifexNifState *state = (UnifexNifState *)value;
+  UnifexState *state = (UnifexState *)value;
   UnifexEnv *unifex_env = env;
   handle_destroy_state(unifex_env, state);
 }
@@ -68,8 +66,9 @@ static int unifex_load_nif(ErlNifEnv *env, void **priv_data,
 
   ErlNifResourceFlags flags =
       (ErlNifResourceFlags)(ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
+
   STATE_RESOURCE_TYPE =
-      enif_open_resource_type(env, NULL, "UnifexNifState",
+      enif_open_resource_type(env, NULL, "UnifexState",
                               (ErlNifResourceDtor *)destroy_state, flags, NULL);
 
   UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE = enif_open_resource_type(
@@ -100,7 +99,7 @@ static ERL_NIF_TERM export_foo(ErlNifEnv *env, int argc,
 
   UnifexEnv *unifex_env = env;
   UnifexPid target;
-  UnifexNifState *state;
+  UnifexState *state;
 
   if (!enif_get_local_pid(env, argv[0], &target)) {
     result = unifex_raise_args_error(

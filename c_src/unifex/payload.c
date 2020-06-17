@@ -1,10 +1,6 @@
 #include "payload.h"
 
-<<<<<<< HEAD
 ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE = NULL;
-=======
-ErlNifResourceType *UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE;
->>>>>>> at least unifex can compile CNodes
 
 int unifex_payload_from_term(ErlNifEnv *env, ERL_NIF_TERM term,
                              UnifexPayload *payload) {
