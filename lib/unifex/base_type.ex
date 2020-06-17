@@ -89,7 +89,7 @@ defmodule Unifex.BaseType do
       }
       list;
     })
-    """t
+    """
   end
 
   def generate_arg_serialize({name, type}) do
@@ -145,7 +145,7 @@ defmodule Unifex.BaseType do
       }
       enif_free(#{name});
     }
-    """t
+    """
   end
 
   def generate_destruction({name, type}) do
@@ -177,9 +177,9 @@ defmodule Unifex.BaseType do
     for(unsigned int i = 0; i < #{len_var_name}; i++) {
       ERL_NIF_TERM elem;
       enif_get_list_cell(env, list, &elem, &list);
-      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx) |> gen('i')}
+      #{do_generate_arg_parse(elem_name, type, ~g<elem>, ctx)}
     }
-    """t
+    """
   end
 
   def generate_arg_parse({{name, type}, i}, ctx) do
@@ -197,7 +197,7 @@ defmodule Unifex.BaseType do
       #{ctx.result_var} = unifex_raise_args_error(env, "#{name}", "#{arg_getter}");
       goto #{ctx.exit_label};
     }
-    """t
+    """
   end
 
   def generate_arg_name({name, {:list, _type}}) do

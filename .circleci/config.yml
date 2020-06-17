@@ -2,7 +2,7 @@ version: 2.0
 jobs:
   build:
     docker:
-      - image: membrane/bionic-membrane:latest
+      - image: membrane/membrane:latest
     environment:
       MIX_ENV: test
     working_directory: '~/app'
@@ -11,4 +11,5 @@ jobs:
       - checkout 
       - run: mix deps.get
       - run: mix format --check-formatted
+      - run: mix compile --force --warnings-as-errors
       - run: mix test

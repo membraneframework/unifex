@@ -29,6 +29,11 @@ defmodule Unifex.InterfaceIO do
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
 
+    Mix.shell().cmd(
+      "clang-format -style=\"{BasedOnStyle: llvm, IndentWidth: 2}\" -i " <>
+        "#{out_base_path}.h #{out_base_path}.c #{out_base_path}.cpp"
+    )
+
     File.write!(Path.join(out_dir_name, ".gitignore"), """
     *.h
     *.c
