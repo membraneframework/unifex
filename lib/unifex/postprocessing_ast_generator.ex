@@ -1,5 +1,5 @@
 defmodule Unifex.PostprocessingAstGenerator do
-  alias Unifex.BaseType
+  alias Unifex.CodeGenerator.BaseType
 
   def generate_postprocessing_clauses(result_specs) do
     clauses =

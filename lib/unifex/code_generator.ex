@@ -1,5 +1,4 @@
 defmodule Unifex.CodeGenerator do
-  alias Unifex.CodeGenerator.{CNodeCodeGenerator, NIFCodeGenerator}
   alias Unifex.CodeGenerationMode
 
   @type code_t :: String.t()
@@ -65,10 +64,10 @@ defmodule Unifex.CodeGenerator do
   end
 
   defp choose_implementation(%CodeGenerationMode{cnode_mode: false} = _mode) do
-    NIFCodeGenerator
+    Unifex.CodeGenerators.NIF
   end
 
   defp choose_implementation(%CodeGenerationMode{cnode_mode: true} = _mode) do
-    CNodeCodeGenerator
+    Unifex.CodeGenerators.CNode
   end
 end

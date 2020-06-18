@@ -1,13 +1,13 @@
-defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
-  alias Unifex.{BaseType, InterfaceIO, CodeGenerator, CodeGenerationMode}
-  alias Unifex.CodeGenerator.CodeGeneratorUtils
-
+defmodule Unifex.CodeGenerators.CNode do
   use Bunch
-  use CodeGeneratorUtils
+
+  import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
+  alias Unifex.{CodeGenerationMode, CodeGenerator, InterfaceIO}
+  alias Unifex.CodeGenerator.BaseType
 
   @behaviour CodeGenerator
 
-  CodeGeneratorUtils.spec_traverse_helper_generating_macro()
+  CodeGenerator.Utils.spec_traverse_helper_generating_macro()
 
   def generate_tuple_maker(_content) do
     ""
@@ -162,7 +162,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     ~g"""
     #{declaration} {
       ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
-      ei_x_new_with_version(out_buff);      
+      ei_x_new_with_version(out_buff);
       ei_x_encode_tuple_header(out_buff, #{length(encodings)});
 
       #{encodings |> Enum.join("\n")}
@@ -237,7 +237,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
               #{f_name}_caller(in_buff->buff, &index, &ctx);
-            }   
+            }
           """
       end)
 
@@ -264,9 +264,9 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
       char fun_name[2048];
       ei_decode_atom(in_buff->buff, &index, fun_name);
-                
+
       cnode_context ctx = {
-        .node_name = node_name, 
+        .node_name = node_name,
         .ei_fd = ei_fd,
         .e_pid = &emsg.from,
         .wrapper = state
@@ -276,7 +276,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
 
       return 0;
     }
-    """r
+    """
   end
 
   defp generate_caller_function({name, args, specs}) do
@@ -312,7 +312,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #{declaration} {
       #{args_decoding}
       ctx->released_states = new_state_linked_list();
-      
+
       #{implemented_fun_call_ctx}
 
       free_states(ctx, ctx->released_states, ctx->wrapper);
@@ -372,8 +372,8 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #include <stdlib.h>
 
     #ifndef _REENTRANT
-    #define _REENTRANT 
-                      
+    #define _REENTRANT
+
     #endif
     #include <ei_connect.h>
     #include <erl_interface.h>
@@ -396,7 +396,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         Enum.zip(functions, results)
         |> Enum.map(fn
           {{name, args}, {name, specs}} -> {name, args, specs}
@@ -405,19 +405,19 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       )
     }
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         results,
         &generate_result_function_declaration/1
       )
     }
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         functions,
         &generate_caller_function_declaration/1
       )
     }
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         sends,
         &generate_send_function_declaration/1
       )
@@ -426,7 +426,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     #ifdef __cplusplus
     }
     #endif
-    """r
+    """
   end
 
   @impl CodeGenerator
@@ -442,7 +442,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     }
 
     void unifex_release_state(UnifexEnv *env, UnifexState *state) {
-      UnifexStateWrapper *wrapper = 
+      UnifexStateWrapper *wrapper =
           (UnifexStateWrapper *) malloc(sizeof(UnifexStateWrapper));
       wrapper->state = state;
       add_item(env->released_states, wrapper);
@@ -452,9 +452,9 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
       return (UnifexState *)malloc(sizeof(UnifexState));
     }
 
-    #{CodeGeneratorUtils.generate_functions(results, &generate_result_function/1)}
+    #{CodeGenerator.Utils.generate_functions(results, &generate_result_function/1)}
     #{
-      CodeGeneratorUtils.generate_functions(
+      CodeGenerator.Utils.generate_functions(
         Enum.zip(functions, results)
         |> Enum.map(fn
           {{name, args}, {name, specs}} -> {name, args, specs}
@@ -462,7 +462,7 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
         &generate_caller_function/1
       )
     }
-    #{CodeGeneratorUtils.generate_functions(sends, &generate_send_function/1)}
+    #{CodeGenerator.Utils.generate_functions(sends, &generate_send_function/1)}
 
     #{generate_handle_message(functions)}
 
@@ -481,6 +481,6 @@ defmodule Unifex.CodeGenerator.CNodeCodeGenerator do
     int main(int argc, char ** argv) {
       return main_function(argc, argv);
     }
-    """r
+    """
   end
 end

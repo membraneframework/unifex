@@ -1,16 +1,15 @@
-defmodule Unifex.CodeGenerator.NIFCodeGenerator do
+defmodule Unifex.CodeGenerators.NIF do
   @moduledoc """
   Module responsible for C code genearation based on Unifex specs
   """
-  alias Unifex.{BaseType, InterfaceIO, CodeGenerator, CodeGenerationMode}
-  alias Unifex.CodeGenerator.CodeGeneratorUtils
-
   use Bunch
-  use CodeGeneratorUtils
+  import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
+  alias Unifex.{CodeGenerationMode, CodeGenerator, InterfaceIO}
+  alias Unifex.CodeGenerator.BaseType
 
   @behaviour CodeGenerator
 
-  CodeGeneratorUtils.spec_traverse_helper_generating_macro()
+  CodeGenerator.Utils.spec_traverse_helper_generating_macro()
 
   @type code_t() :: String.t()
 
@@ -36,7 +35,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
      */
 
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         functions,
         &generate_implemented_function_declaration/1
       )
@@ -46,7 +45,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
      * Functions that manage lib and state lifecycle
      * Functions with 'unifex_' prefix are generated automatically,
      * the user have to implement rest of them.
-     * Available only and only if in #{InterfaceIO.user_header_path(name)} 
+     * Available only and only if in #{InterfaceIO.user_header_path(name)}
      * exisis definition of UnifexNigState
      */
 
@@ -65,7 +64,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
      */
 
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         results,
         &generate_result_function_declaration/1
       )
@@ -77,7 +76,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
      */
 
     #{
-      CodeGeneratorUtils.generate_functions_declarations(
+      CodeGenerator.Utils.generate_functions_declarations(
         sends,
         &generate_send_function_declaration/1
       )
@@ -94,18 +93,23 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     ~g"""
     #include "#{name}.h"
 
-    #{CodeGeneratorUtils.generate_functions(results, &generate_result_function/1)}
-    #{CodeGeneratorUtils.generate_functions(sends, &generate_send_function/1)}
+    #{CodeGenerator.Utils.generate_functions(results, &generate_result_function/1)}
+    #{CodeGenerator.Utils.generate_functions(sends, &generate_send_function/1)}
     #{generate_state_related_stuff(module, mode)}
     #{generate_nif_lifecycle_callbacks(module, callbacks, mode)}
-    #{CodeGeneratorUtils.generate_functions(functions, &generate_export_function/1)}
+    #{CodeGenerator.Utils.generate_functions(functions, &generate_export_function/1)}
     #{generate_erlang_boilerplate(module, functions, dirty_funs, callbacks)}
     """
   end
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
-      [~g<UnifexEnv* env> | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      [
+        ~g<UnifexEnv* env>
+        | Enum.flat_map(args, fn {name, type} ->
+            BaseType.generate_declaration(type, name, NIF)
+          end)
+      ]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
@@ -131,7 +135,9 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
       [
         ~g<UnifexEnv* env>
         | args
-          |> Enum.flat_map(&BaseType.generate_declaration/1)
+          |> Enum.flat_map(fn {name, type} ->
+            BaseType.generate_declaration(type, name, NIF)
+          end)
           |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
@@ -162,7 +168,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
         ~g<UnifexPid pid>,
         ~g<int flags>
         | args
-          |> Enum.flat_map(&BaseType.generate_declaration/1)
+          |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
           |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
@@ -171,28 +177,40 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   end
 
   defp generate_export_function({name, args}) do
-    ctx = %{:result_var => "result", :exit_label => "exit_export_#{name}"}
+    result_var = "result"
+    exit_label = "exit_export_#{name}"
 
     args_declaration =
       args
-      |> Enum.flat_map(&BaseType.generate_declaration/1)
+      |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
       |> Enum.map(&~g<#{&1};>)
       |> Enum.join("\n")
 
     args_initialization =
       args
-      |> Enum.map(&BaseType.generate_initialization/1)
+      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, NIF) end)
       |> Enum.join("\n")
 
     args_parsing =
       args
       |> Enum.with_index()
-      |> Enum.map(&BaseType.generate_arg_parse(&1, ctx))
+      |> Enum.map(fn {{name, type}, i} ->
+        postproc_fun = fn arg_getter ->
+          ~g"""
+          if(!#{arg_getter}) {
+            #{result_var} = unifex_raise_args_error(env, "#{name}", "#{arg_getter}");
+            goto #{exit_label};
+          }
+          """
+        end
+
+        BaseType.generate_arg_parse(type, name, "argv[#{i}]", postproc_fun, NIF)
+      end)
       |> Enum.join("\n")
 
     args_destruction =
       args
-      |> Enum.map(&BaseType.generate_destruction/1)
+      |> Enum.map(fn {name, type} -> BaseType.generate_destruction(type, name, NIF) end)
       |> Enum.reject(&("" == &1))
       |> Enum.join("\n")
 
@@ -201,7 +219,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
       UNIFEX_UNUSED(argc);
-      ERL_NIF_TERM #{ctx.result_var};
+      ERL_NIF_TERM #{result_var};
       #{if args |> Enum.empty?(), do: ~g<UNIFEX_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
       #{args_declaration}
@@ -210,9 +228,9 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
 
       #{args_parsing}
 
-      #{ctx.result_var} = #{name}(#{[:unifex_env | args_names] |> Enum.join(", ")});
-      goto #{ctx.exit_label};
-    #{ctx.exit_label}:
+      #{result_var} = #{name}(#{[:unifex_env | args_names] |> Enum.join(", ")});
+      goto #{exit_label};
+    #{exit_label}:
       #{args_destruction}
       return result;
     }
@@ -223,7 +241,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
          module,
          %CodeGenerationMode{use_state: true} = _mode
        ) do
-    state_type = BaseType.State.generate_native_type()
+    state_type = BaseType.generate_native_type(:state, NIF)
 
     ~g"""
     #define UNIFEX_MODULE "#{module}"
@@ -268,16 +286,14 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
   end
 
   defp generate_state_related_stuff(_module, %CodeGenerationMode{use_state: true} = _mode) do
-    state_type = BaseType.State.generate_native_type()
+    state_type = BaseType.generate_native_type(:state, NIF)
 
     ~g"""
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
     #{state_type} unifex_alloc_state(UnifexEnv* env) {
       UNIFEX_UNUSED(env);
-      return (#{state_type}) enif_alloc_resource(STATE_RESOURCE_TYPE, #{
-      BaseType.State.generate_sizeof()
-    });
+      return (#{state_type}) enif_alloc_resource(STATE_RESOURCE_TYPE, sizeof(UnifexState));
     }
 
     void unifex_release_state(UnifexEnv * env, #{state_type} state) {
@@ -346,7 +362,7 @@ defmodule Unifex.CodeGenerator.NIFCodeGenerator do
       ErlNifResourceFlags flags = (ErlNifResourceFlags) (ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
 
       #{state_resource_type_initialization(mode)}
-     
+
       UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE =
         enif_open_resource_type(env, NULL, "UnifexPayloadGuard", (ErlNifResourceDtor*) unifex_payload_guard_destructor, flags, NULL);
 

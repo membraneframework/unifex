@@ -66,8 +66,8 @@ defmodule Unifex.Specs do
   The other form - just a name, like `some_type` - will generate parameter `some_type`
   of type `some_type`.
 
-  Custom types can be added by creating modules `Unifex.BaseType.Type` that implement
-  `Unifex.BaseType` behaviour. Then, they can by used in specs as `type`.
+  Custom types can be added by creating modules `Unifex.CodeGenerator.BaseTypes.Type` that implement
+  `Unifex.CodeGenerator.BaseType` behaviour. Then, they can by used in specs as `type`.
 
   Each generated function gets additional `UnifexEnv* env` as the first parameter implicitly.
 

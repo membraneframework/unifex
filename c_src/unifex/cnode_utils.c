@@ -1,4 +1,6 @@
 #include "cnode_utils.h"
+#include <arpa/inet.h>
+#include <unistd.h>
 
 void prepare_ei_x_buff(ei_x_buff *buff, const char *node_name,
                        const char *msg_type) {
