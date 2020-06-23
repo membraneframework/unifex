@@ -9,7 +9,7 @@ defmodule ExampleTest do
 
   test "foo" do
     {:ok, _, state} = Example.init()
-    assert {:ok, 42} = Example.foo(self(), state)
+    assert {:ok, [1, 2, 3], 42} = Example.foo(self(), [1, 2, 3], state)
     assert_receive {:example_msg, 42}
   end
 end

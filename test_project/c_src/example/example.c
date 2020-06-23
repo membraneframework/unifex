@@ -17,12 +17,13 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, State *state) {
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, int *list, uint list_length,
+                State *state) {
   int res = send_example_msg(env, pid, 0, state->a);
   if (!res) {
     return foo_result_error(env, "send_failed");
   }
-  return foo_result_ok(env, state->a);
+  return foo_result_ok(env, list, list_length, state->a);
 }
 
 void handle_destroy_state(UnifexEnv *env, State *state) {

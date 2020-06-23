@@ -17,7 +17,8 @@ extern "C" {
  */
 
 UNIFEX_TERM init(UnifexEnv *env);
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, UnifexState *state);
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, int *ls,
+                unsigned int ls_length, UnifexState *state);
 
 /*
  * Functions that manage lib and state lifecycle
@@ -69,7 +70,8 @@ int handle_load(UnifexEnv *env, void **priv_data);
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state);
-UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer);
+UNIFEX_TERM foo_result_ok(UnifexEnv *env, const int *ols,
+                          unsigned int ols_length, int answer);
 UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason);
 
 /*
