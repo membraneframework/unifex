@@ -4,8 +4,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
 
   Booleans in native code are converted to int with value either 0 or 1.
   """
+  use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
-  use BaseType
 
   @impl BaseType
   def generate_native_type(_ctx) do

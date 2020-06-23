@@ -10,7 +10,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         for(int i = #{name}_length-1; i >= 0; i--) {
           list = enif_make_list_cell(
             env,
-            #{BaseType.generate_arg_serialize(ctx.type, :"#{name}[i]", ctx.generator)},
+            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator)},
             list
           );
         }
@@ -21,7 +21,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl BaseType
     def generate_native_type(ctx) do
-      {"#{BaseType.generate_native_type(ctx.type, ctx.generator)}*", [{"_length", "int"}]}
+      [
+        "#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}*",
+        {"unsigned int", "_length"}
+      ]
     end
 
     @impl BaseType
@@ -30,32 +33,35 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       len_var_name = "#{var_name}_length"
 
       ~g"""
-      if(!enif_get_list_length(env, #{arg}, &#{len_var_name})){
-        #{ctx.result_var} = unifex_raise_args_error(env, "#{var_name}", "enif_get_list_length");
-        goto #{ctx.exit_label};
-      }
-      #{var_name} = enif_alloc(sizeof(#{BaseType.generate_native_type(ctx.type, ctx.generator)}) * #{
-        len_var_name
-      });
+      ({
+      int get_list_length_result = enif_get_list_length(env, #{arg}, &#{len_var_name});
+      if(get_list_length_result){
+        #{var_name} = enif_alloc(sizeof(#{
+        BaseType.generate_native_type(ctx.subtype, ctx.generator)
+      }) *
+          #{len_var_name});
 
-      for(unsigned int i = 0; i < #{len_var_name}; i++) {
-        #{BaseType.generate_initialization(ctx.type, elem_name, ctx.generator)}
-      }
+        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+          #{BaseType.generate_initialization(ctx.subtype, elem_name, ctx.generator)}
+        }
 
-      ERL_NIF_TERM list = #{arg};
-      for(unsigned int i = 0; i < #{len_var_name}; i++) {
-        ERL_NIF_TERM elem;
-        enif_get_list_cell(env, list, &elem, &list);
-        #{
+        ERL_NIF_TERM list = #{arg};
+        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+          ERL_NIF_TERM elem;
+          enif_get_list_cell(env, list, &elem, &list);
+          #{
         BaseType.generate_arg_parse(
-          ctx.type,
+          ctx.subtype,
           elem_name,
           ~g<elem>,
           ctx.postproc_fun,
           ctx.generator
         )
       }
+        }
       }
+      get_list_length_result;
+      })
       """
     end
 
@@ -69,7 +75,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ~g"""
       if(#{name} != NULL) {
         for(unsigned int i = 0; i < #{name}_length; i++) {
-          #{BaseType.generate_destruction(ctx.type, :"#{name}[i]", ctx.generator)}
+          #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i]", ctx.generator)}
         }
         enif_free(#{name});
       }

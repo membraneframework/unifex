@@ -198,7 +198,7 @@ defmodule Unifex.CodeGenerators.NIF do
         postproc_fun = fn arg_getter ->
           ~g"""
           if(!#{arg_getter}) {
-            #{result_var} = unifex_raise_args_error(env, "#{name}", "#{arg_getter}");
+            #{result_var} = unifex_raise_args_error(env, "#{name}", "#{inspect(type)}");
             goto #{exit_label};
           }
           """
@@ -214,7 +214,8 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.reject(&("" == &1))
       |> Enum.join("\n")
 
-    args_names = args |> Enum.flat_map(&BaseType.generate_arg_name/1)
+    args_names =
+      args |> Enum.flat_map(fn {name, type} -> BaseType.generate_arg_name(type, name, NIF) end)
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){

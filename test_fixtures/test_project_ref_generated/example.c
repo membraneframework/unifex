@@ -10,14 +10,15 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
   });
 }
 
-UNIFEX_TERM foo_result_ok(UnifexEnv *env, const int *ols,
-                          unsigned int ols_length, int answer) {
+UNIFEX_TERM foo_result_ok(UnifexEnv *env, const int *list_out,
+                          unsigned int list_out_length, int answer) {
   return ({
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = ols_length - 1; i >= 0; i--) {
-            list = enif_make_list_cell(env, enif_make_int(env, ols[i]), list);
+          for (int i = list_out_length - 1; i >= 0; i--) {
+            list =
+                enif_make_list_cell(env, enif_make_int(env, list_out[i]), list);
           }
           list;
         }),
@@ -107,52 +108,54 @@ static ERL_NIF_TERM export_foo(ErlNifEnv *env, int argc,
 
   UnifexEnv *unifex_env = env;
   UnifexPid target;
-  int *ls;
-  unsigned int ls_length;
+  int *list_in;
+  unsigned int list_in_length;
   UnifexState *state;
 
-  ls = NULL;
+  list_in = NULL;
 
   if (!enif_get_local_pid(env, argv[0], &target)) {
-    result = unifex_raise_args_error(
-        env, "target", "enif_get_local_pid(env, argv[0], &target)");
+    result = unifex_raise_args_error(env, "target", ":pid");
     goto exit_export_foo;
   }
 
-  if (!enif_get_list_length(env, argv[1], &ls_length)) {
-    result = unifex_raise_args_error(env, "ls", "enif_get_list_length");
+  if (!({
+        int get_list_length_result =
+            enif_get_list_length(env, argv[1], &list_in_length);
+        if (get_list_length_result) {
+          list_in = enif_alloc(sizeof(int) * list_in_length);
+
+          for (unsigned int i = 0; i < list_in_length; i++) {
+          }
+
+          ERL_NIF_TERM list = argv[1];
+          for (unsigned int i = 0; i < list_in_length; i++) {
+            ERL_NIF_TERM elem;
+            enif_get_list_cell(env, list, &elem, &list);
+            if (!enif_get_int(env, elem, &list_in[i])) {
+              result = unifex_raise_args_error(env, "list_in", "{:list, :int}");
+              goto exit_export_foo;
+            }
+          }
+        }
+        get_list_length_result;
+      })) {
+    result = unifex_raise_args_error(env, "list_in", "{:list, :int}");
     goto exit_export_foo;
-  }
-  ls = enif_alloc(sizeof(int) * ls_length);
-
-  for (unsigned int i = 0; i < ls_length; i++) {
-  }
-
-  ERL_NIF_TERM list = argv[1];
-  for (unsigned int i = 0; i < ls_length; i++) {
-    ERL_NIF_TERM elem;
-    enif_get_list_cell(env, list, &elem, &list);
-    if (!enif_get_int(env, elem, &ls[i])) {
-      result = unifex_raise_args_error(env, "ls[i]",
-                                       "enif_get_int(env, elem, &ls[i])");
-      goto exit_export_foo;
-    }
   }
 
   if (!enif_get_resource(env, argv[2], STATE_RESOURCE_TYPE, (void **)&state)) {
-    result = unifex_raise_args_error(env, "state",
-                                     "enif_get_resource(env, argv[2], "
-                                     "STATE_RESOURCE_TYPE, (void **)&state)");
+    result = unifex_raise_args_error(env, "state", ":state");
     goto exit_export_foo;
   }
 
-  result = foo(unifex_env, target, ls, ls_length, state);
+  result = foo(unifex_env, target, list_in, list_in_length, state);
   goto exit_export_foo;
 exit_export_foo:
-  if (ls != NULL) {
-    for (unsigned int i = 0; i < ls_length; i++) {
+  if (list_in != NULL) {
+    for (unsigned int i = 0; i < list_in_length; i++) {
     }
-    enif_free(ls);
+    enif_free(list_in);
   }
 
   return result;

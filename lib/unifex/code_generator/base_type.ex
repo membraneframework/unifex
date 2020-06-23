@@ -52,14 +52,14 @@ defmodule Unifex.CodeGenerator.BaseType do
   Should return quoted code. The value can be referenced using `Macro.var/2` call.
   Useful when some call cannot be made from native code (e.g. call to another NIF from NIF)
   """
-  @callback generate_elixir_postprocessing(name :: atom) :: Macro.t()
+  @callback generate_elixir_postprocessing(name :: atom, ctx :: map) :: Macro.t()
 
   @optional_callbacks generate_arg_serialize: 2,
                       generate_initialization: 2,
                       generate_destruction: 2,
                       generate_native_type: 1,
                       generate_arg_parse: 3,
-                      generate_elixir_postprocessing: 1
+                      generate_elixir_postprocessing: 2
 
   defmacro __using__(_args) do
     quote do
@@ -79,9 +79,6 @@ defmodule Unifex.CodeGenerator.BaseType do
       type,
       :generate_arg_serialize,
       [name],
-      fn ->
-        ~g<enif_make_#{type}(env, #{name})>
-      end,
       code_generator
     )
   end
@@ -94,7 +91,12 @@ defmodule Unifex.CodeGenerator.BaseType do
   """
   # @spec generate_declaration(t, name :: atom) :: [CodeGenerator.code_t()]
   def generate_declaration(type, name, code_generator) do
-    [~g<#{generate_native_type(type, code_generator)} #{name}>]
+    generate_native_type(type, code_generator)
+    |> Bunch.listify()
+    |> Enum.map(fn
+      {type, sufix} -> ~g<#{type} #{name}#{sufix}>
+      type -> ~g<#{type} #{name}>
+    end)
   end
 
   @doc """
@@ -104,7 +106,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   """
   # @spec generate_initialization(t, name :: atom) :: CodeGenerator.code_t()
   def generate_initialization(type, name, code_generator) do
-    call(type, :generate_initialization, [name], fn -> "" end, code_generator)
+    call(type, :generate_initialization, [name], code_generator)
   end
 
   @doc """
@@ -114,7 +116,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   """
   # @spec generate_destruction(t, name :: atom) :: CodeGenerator.code_t()
   def generate_destruction(type, name, code_generator) do
-    call(type, :generate_destruction, [name], fn -> "" end, code_generator)
+    call(type, :generate_destruction, [name], code_generator)
   end
 
   @doc """
@@ -125,21 +127,19 @@ defmodule Unifex.CodeGenerator.BaseType do
       type,
       :generate_arg_parse,
       [argument, name],
-      fn ->
-        ~g<enif_get_#{type}(env, #{argument}, &#{name})>
-      end,
       code_generator,
       %{postproc_fun: postproc_fun}
     )
     |> postproc_fun.()
   end
 
-  def generate_arg_name({name, {:list, _type}}) do
-    [~g<#{name}>, ~g<#{name}_length>]
-  end
-
-  def generate_arg_name({name, _type}) do
-    [~g<#{name}>]
+  def generate_arg_name(type, name, code_generator) do
+    generate_native_type(type, code_generator)
+    |> Bunch.listify()
+    |> Enum.map(fn
+      {_type, sufix} -> ~g<#{name}#{sufix}>
+      _type -> ~g<#{name}>
+    end)
   end
 
   @doc """
@@ -153,35 +153,38 @@ defmodule Unifex.CodeGenerator.BaseType do
       type,
       :generate_elixir_postprocessing,
       [name],
-      fn ->
-        Macro.var(name, nil)
-      end,
       nil
     )
   end
 
   def generate_native_type(type, code_generator) do
-    call(type, :generate_native_type, [], fn -> ~g<#{type}> end, code_generator)
+    call(type, :generate_native_type, [], code_generator)
   end
 
-  defp call(type, callback, args, default_f, code_generator, ctx \\ %{}) do
+  defp call(full_type, callback, args, code_generator, ctx \\ %{}) do
+    {type, subtype} =
+      case full_type do
+        {type, subtype} -> {type, subtype}
+        type -> {type, nil}
+      end
+
     module =
       Module.concat(Unifex.CodeGenerator.BaseTypes, type |> to_string() |> String.capitalize())
 
     gen_aware_module = Module.concat(module, code_generator)
-    args = args ++ [Map.merge(%{generator: code_generator, type: type}, ctx)]
 
-    cond do
-      Code.ensure_loaded?(gen_aware_module) and
-          function_exported?(gen_aware_module, callback, length(args)) ->
-        apply(gen_aware_module, callback, args)
+    default_gen_aware_module =
+      Module.concat(Unifex.CodeGenerator.BaseTypes.Default, code_generator)
 
-      Code.ensure_loaded?(module) and function_exported?(module, callback, length(args)) ->
-        apply(module, callback, args)
+    args =
+      args ++ [Map.merge(%{generator: code_generator, type: full_type, subtype: subtype}, ctx)]
 
-      true ->
-        apply(default_f, [])
-    end
+    [gen_aware_module, module, default_gen_aware_module]
+    |> Enum.find(
+      Unifex.CodeGenerator.BaseTypes.Default,
+      &(Code.ensure_loaded?(&1) and function_exported?(&1, callback, length(args)))
+    )
+    |> apply(callback, args)
   end
 
   @doc """
