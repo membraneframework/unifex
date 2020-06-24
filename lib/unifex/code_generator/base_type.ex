@@ -46,20 +46,11 @@ defmodule Unifex.CodeGenerator.BaseType do
             ) ::
               CodeGenerator.code_t()
 
-  @doc """
-  Generates Elixir post-processing of the value returned from native function.
-
-  Should return quoted code. The value can be referenced using `Macro.var/2` call.
-  Useful when some call cannot be made from native code (e.g. call to another NIF from NIF)
-  """
-  @callback generate_elixir_postprocessing(name :: atom, ctx :: map) :: Macro.t()
-
   @optional_callbacks generate_arg_serialize: 2,
                       generate_initialization: 2,
                       generate_destruction: 2,
                       generate_native_type: 1,
-                      generate_arg_parse: 3,
-                      generate_elixir_postprocessing: 2
+                      generate_arg_parse: 3
 
   defmacro __using__(_args) do
     quote do
@@ -140,21 +131,6 @@ defmodule Unifex.CodeGenerator.BaseType do
       {_type, sufix} -> ~g<#{name}#{sufix}>
       _type -> ~g<#{name}>
     end)
-  end
-
-  @doc """
-  Generates Elixir post-processing of the value returned from native function.
-
-  Fallbacks to simply passing the value (as variable reference)
-  """
-  @spec generate_elixir_postprocessing(spec_tuple_t()) :: Macro.t()
-  def generate_elixir_postprocessing({name, type}) do
-    call(
-      type,
-      :generate_elixir_postprocessing,
-      [name],
-      nil
-    )
   end
 
   def generate_native_type(type, mode \\ :default, code_generator) do

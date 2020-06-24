@@ -17,11 +17,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
     ""
   end
 
-  @impl BaseType
-  def generate_elixir_postprocessing(name, _ctx) do
-    Macro.var(name, nil)
-  end
-
   defmodule NIF do
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
