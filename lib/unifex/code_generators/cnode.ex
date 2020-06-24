@@ -90,9 +90,8 @@ defmodule Unifex.CodeGenerators.CNode do
       [
         "cnode_context * ctx"
         | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, CNode)
+            BaseType.generate_declaration(type, name, :const, CNode)
           end)
-          |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
 

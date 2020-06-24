@@ -90,8 +90,8 @@ defmodule Unifex.CodeGenerator.BaseType do
   Uses `type` as fallback for `c:generate_native_type/1`
   """
   # @spec generate_declaration(t, name :: atom) :: [CodeGenerator.code_t()]
-  def generate_declaration(type, name, code_generator) do
-    generate_native_type(type, code_generator)
+  def generate_declaration(type, name, mode \\ :default, code_generator) do
+    generate_native_type(type, mode, code_generator)
     |> Bunch.listify()
     |> Enum.map(fn
       {type, sufix} -> ~g<#{type} #{name}#{sufix}>
@@ -157,8 +157,8 @@ defmodule Unifex.CodeGenerator.BaseType do
     )
   end
 
-  def generate_native_type(type, code_generator) do
-    call(type, :generate_native_type, [], code_generator)
+  def generate_native_type(type, mode \\ :default, code_generator) do
+    call(type, :generate_native_type, [], code_generator, %{mode: mode})
   end
 
   defp call(full_type, callback, args, code_generator, ctx \\ %{}) do
@@ -185,19 +185,5 @@ defmodule Unifex.CodeGenerator.BaseType do
       &(Code.ensure_loaded?(&1) and function_exported?(&1, callback, length(args)))
     )
     |> apply(callback, args)
-  end
-
-  @doc """
-  Adds 'const' keyword to pointer types, except for state pointer
-  """
-  @spec make_ptr_const(declaration :: String.t()) :: String.t()
-  def make_ptr_const(declaration) do
-    state_type = generate_native_type(:state, NIF)
-
-    if String.match?(declaration, ~r<\*>) and not String.contains?(declaration, state_type) do
-      "const " <> declaration
-    else
-      declaration
-    end
   end
 end

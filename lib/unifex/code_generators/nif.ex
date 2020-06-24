@@ -134,9 +134,8 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexEnv* env>
         | args
           |> Enum.flat_map(fn {name, type} ->
-            BaseType.generate_declaration(type, name, NIF)
+            BaseType.generate_declaration(type, name, :const, NIF)
           end)
-          |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
 
@@ -165,9 +164,9 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexEnv* env>,
         ~g<UnifexPid pid>,
         ~g<int flags>
-        | args
-          |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
-          |> Enum.map(&BaseType.make_ptr_const/1)
+        | Enum.flat_map(args, fn {name, type} ->
+            BaseType.generate_declaration(type, name, :const, NIF)
+          end)
       ]
       |> Enum.join(", ")
 
