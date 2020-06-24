@@ -22,7 +22,7 @@ defmodule Unifex.CodeGenerators.CNode do
     Enum.join(tuple_header ++ results, "\n")
   end
 
-  defp generate_implemented_function_declaration({name, args, specs}) do
+  defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
       [
         "cnode_context * ctx"
@@ -32,14 +32,7 @@ defmodule Unifex.CodeGenerators.CNode do
       ]
       |> Enum.join(", ")
 
-    return_type =
-      if are_void_fun_specs(specs) do
-        ~g<void>
-      else
-        ~g<UNIFEX_TERM>
-      end
-
-    ~g<#{return_type} #{name}(#{args_declarations})>
+    ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
 
   defp generate_result_function({name, specs}) do
@@ -89,24 +82,6 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  defp are_void_fun_specs(specs) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
-    are_void_fun_specs(specs, meta)
-  end
-
-  defp are_void_fun_specs(specs, meta) do
-    :void in (meta
-              |> Keyword.get_values(:label)
-              |> (fn
-                    labels when labels != [] ->
-                      labels
-
-                    _ ->
-                      [head | _tail] = specs |> Tuple.to_list()
-                      [head]
-                  end).())
-  end
-
   defp function_declaration_template(return_type, fun_name_prefix, specs) do
     {_result, meta} = generate_function_spec_traverse_helper(specs)
     args = meta |> Keyword.get_values(:arg)
@@ -121,24 +96,9 @@ defmodule Unifex.CodeGenerators.CNode do
       ]
       |> Enum.join(", ")
 
-    labels =
-      meta
-      |> Keyword.get_values(:label)
-      |> (fn
-            labels when labels != [] ->
-              labels
-
-            _ ->
-              [head | _tail] = specs |> Tuple.to_list()
-              [head]
-          end).()
-
-    if are_void_fun_specs(specs, meta) do
-      ""
-    else
-      fun_name = [fun_name_prefix | labels] |> Enum.join("_")
-      ~g<#{return_type} #{fun_name}(#{args_declarations})>
-    end
+    labels = meta |> Keyword.get_values(:label)
+    fun_name = [fun_name_prefix | labels] |> Enum.join("_")
+    ~g<#{return_type} #{fun_name}(#{args_declarations})>
   end
 
   defp generate_handle_message_declaration() do
@@ -148,8 +108,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_handle_message(functions) do
     if_statements =
-      functions
-      |> Enum.map(fn
+      Enum.map(functions, fn
         {f_name, _args} ->
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
@@ -196,8 +155,8 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  defp generate_caller_function({name, args, specs}) do
-    declaration = generate_caller_function_declaration(name)
+  defp generate_caller_function({name, args}) do
+    declaration = generate_caller_function_declaration({name, args})
 
     args_declaration =
       args
@@ -224,20 +183,6 @@ defmodule Unifex.CodeGenerators.CNode do
       ]
       |> Enum.join(", ")
 
-    implemented_fun_call = ~g<#{name}(#{implemented_fun_args});>
-
-    implemented_fun_call_ctx =
-      if are_void_fun_specs(specs) do
-        implemented_fun_call
-      else
-        ~g"""
-        UNIFEX_TERM result = #{implemented_fun_call}
-        if (result != EMPTY_UNIFEX_TERM) {
-          sending_and_freeing(ctx, result);
-        }
-        """
-      end
-
     ~g"""
     #{declaration} {
       #{args_declaration}
@@ -245,7 +190,8 @@ defmodule Unifex.CodeGenerators.CNode do
       #{args_parsing}
       ctx->released_states = new_state_linked_list();
 
-      #{implemented_fun_call_ctx}
+      UNIFEX_TERM result = #{name}(#{implemented_fun_args});
+      sending_and_freeing(ctx, result);
 
       free_states(ctx, ctx->released_states, ctx->wrapper);
     }
@@ -253,10 +199,6 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_caller_function_declaration({name, _args}) do
-    generate_caller_function_declaration(name)
-  end
-
-  defp generate_caller_function_declaration(name) do
     ~g"void #{name}_caller(const char * in_buff, int * index, cnode_context * ctx)"
   end
 
@@ -329,10 +271,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{
       CodeGenerator.Utils.generate_functions_declarations(
-        Enum.zip(functions, results)
-        |> Enum.map(fn
-          {{name, args}, {name, specs}} -> {name, args, specs}
-        end),
+        functions,
         &generate_implemented_function_declaration/1
       )
     }
@@ -385,15 +324,7 @@ defmodule Unifex.CodeGenerators.CNode do
     }
 
     #{CodeGenerator.Utils.generate_functions(results, &generate_result_function/1)}
-    #{
-      CodeGenerator.Utils.generate_functions(
-        Enum.zip(functions, results)
-        |> Enum.map(fn
-          {{name, args}, {name, specs}} -> {name, args, specs}
-        end),
-        &generate_caller_function/1
-      )
-    }
+    #{CodeGenerator.Utils.generate_functions(functions, &generate_caller_function/1)}
     #{CodeGenerator.Utils.generate_functions(sends, &generate_send_function/1)}
 
     #{generate_handle_message(functions)}

@@ -57,9 +57,7 @@ void init_caller(const char *in_buff, int *index, cnode_context *ctx) {
   ctx->released_states = new_state_linked_list();
 
   UNIFEX_TERM result = init(ctx);
-  if (result != EMPTY_UNIFEX_TERM) {
-    sending_and_freeing(ctx, result);
-  }
+  sending_and_freeing(ctx, result);
 
   free_states(ctx, ctx->released_states, ctx->wrapper);
 }
@@ -73,9 +71,7 @@ void foo_caller(const char *in_buff, int *index, cnode_context *ctx) {
   ctx->released_states = new_state_linked_list();
 
   UNIFEX_TERM result = foo(ctx, target, state);
-  if (result != EMPTY_UNIFEX_TERM) {
-    sending_and_freeing(ctx, result);
-  }
+  sending_and_freeing(ctx, result);
 
   free_states(ctx, ctx->released_states, ctx->wrapper);
 }
