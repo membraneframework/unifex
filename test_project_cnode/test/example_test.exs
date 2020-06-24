@@ -4,6 +4,6 @@ defmodule ExampleTest do
   test "init" do
     require Unifex.UnifexCNode
     assert {:ok, cnode} = Unifex.UnifexCNode.start_link(:example)
-    assert {:ok} = Unifex.UnifexCNode.call(cnode, :init)
+    assert :ok = Unifex.UnifexCNode.call(cnode, :init)
   end
 end

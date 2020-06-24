@@ -122,7 +122,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   @doc """
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
-  def generate_arg_parse(type, name, argument, postproc_fun, code_generator) do
+  def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator) do
     call(
       type,
       :generate_arg_parse,

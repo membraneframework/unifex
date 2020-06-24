@@ -18,6 +18,8 @@ extern "C" {
 
 typedef ei_x_buff *UNIFEX_TERM;
 
+typedef erlang_pid UnifexPid;
+
 #define EMPTY_UNIFEX_TERM NULL
 #define UNIFEX_UNUSED(x) (void)(x)
 

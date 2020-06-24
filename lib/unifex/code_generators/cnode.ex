@@ -3,19 +3,33 @@ defmodule Unifex.CodeGenerators.CNode do
 
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerationMode, CodeGenerator, InterfaceIO}
-  alias Unifex.CodeGenerator.BaseType
+  alias Unifex.CodeGenerator.{BaseType, Utils}
 
   @behaviour CodeGenerator
 
-  CodeGenerator.Utils.spec_traverse_helper_generating_macro()
+  def generate_tuple_maker(content) do
+    {types, results} = Enum.unzip(content)
 
-  def generate_tuple_maker(_content) do
-    ""
+    tuple_header =
+      case {Enum.count(types), Enum.count(types, &(&1 != :state))} do
+        {n, 1} when n > 1 ->
+          []
+
+        {_, tuple_size} ->
+          [~g<ei_x_encode_tuple_header(out_buff, #{tuple_size});>]
+      end
+
+    Enum.join(tuple_header ++ results, "\n")
   end
 
   defp generate_implemented_function_declaration({name, args, specs}) do
     args_declarations =
-      ["cnode_context * ctx" | args |> Enum.flat_map(&BaseType.generate_declaration/1)]
+      [
+        "cnode_context * ctx"
+        | Enum.flat_map(args, fn {name, type} ->
+            BaseType.generate_declaration(type, name, CNode)
+          end)
+      ]
       |> Enum.join(", ")
 
     return_type =
@@ -28,103 +42,9 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g<#{return_type} #{name}(#{args_declarations})>
   end
 
-  defp generate_args_decoding(args) do
-    args
-    |> Enum.map(fn
-      {name, :atom} ->
-        ~g"""
-        char #{name}[2048];
-        ei_decode_atom(in_buff, index, #{name}));
-        """
-
-      {name, :int} ->
-        ~g"""
-        long long #{name};
-        ei_decode_longlong(in_buff, index, &#{name});
-        """
-
-      {name, :string} ->
-        ~g"""
-        char #{name}[2048];
-          long #{name}_len;
-          ei_decode_binary(in_buff, index, (void *) #{name}, &#{name}_len);
-          #{name}[#{name}_len] = 0;
-        """
-
-      {_name, :state} ->
-        ~g<>
-    end)
-    |> Enum.join("\n")
-  end
-
-  defp generate_result_encoding({_var_name, :void}) do
-    ""
-  end
-
-  defp generate_result_encoding({var_name, :state}) do
-    ~g"""
-    ctx->wrapper->state = #{var_name};
-    """
-  end
-
-  defp generate_result_encoding({var, :label}) do
-    generate_result_encoding({var, :atom})
-  end
-
-  defp generate_result_encoding({var_name, :int}) do
-    ~g"""
-    long long casted_#{var_name} = (long long) #{var_name};
-    ei_x_encode_longlong(out_buff, casted_#{var_name});
-    """
-  end
-
-  defp generate_result_encoding({var_name, :string}) do
-    ~g"""
-      long #{var_name}_len = (long) strlen(#{var_name});
-      ei_x_encode_binary(out_buff, #{var_name}, #{var_name}_len);
-    """
-  end
-
-  defp generate_result_encoding({var_name, :atom}) do
-    ~g<  ei_x_encode_atom(out_buff, #{var_name});>
-  end
-
-  defp generate_label_encoding(label_name) do
-    var_name = ~g<label_#{label_name}>
-    encoding = generate_result_encoding({var_name, :atom})
-
-    ~g"""
-    char #{var_name}[] = "#{label_name}";
-    #{encoding}
-    """
-  end
-
-  defp generate_encoding_block(meta) do
-    encoding_labels =
-      meta
-      |> Keyword.get_values(:label)
-      |> Enum.map(&generate_label_encoding/1)
-
-    encoding_args =
-      meta
-      |> Keyword.get_values(:arg)
-      |> Enum.map(&generate_result_encoding/1)
-
-    encoding_labels ++ encoding_args
-  end
-
   defp generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
-    encodings = generate_encoding_block(meta)
-
-    state_encodings_num =
-      meta
-      |> Keyword.get_values(:arg)
-      |> Enum.count(fn
-        {_var_name, :state} -> true
-        _else -> false
-      end)
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
 
     if declaration == "" do
       ""
@@ -134,9 +54,7 @@ defmodule Unifex.CodeGenerators.CNode do
         ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
         prepare_result_buff(out_buff, ctx->node_name);
 
-        ei_x_encode_tuple_header(out_buff, #{length(encodings) - state_encodings_num});
-
-        #{encodings |> Enum.join("\n")}
+        #{result}
 
         return out_buff;
       }
@@ -156,16 +74,14 @@ defmodule Unifex.CodeGenerators.CNode do
   defp generate_send_function(specs) do
     declaration = generate_send_function_declaration(specs)
 
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
-    encodings = generate_encoding_block(meta)
+    {result, _meta} = generate_function_spec_traverse_helper(specs)
 
     ~g"""
     #{declaration} {
       ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
       ei_x_new_with_version(out_buff);
-      ei_x_encode_tuple_header(out_buff, #{length(encodings)});
 
-      #{encodings |> Enum.join("\n")}
+      #{result}
 
       sending_and_freeing(ctx, out_buff);
       free(out_buff);
@@ -198,8 +114,9 @@ defmodule Unifex.CodeGenerators.CNode do
     args_declarations =
       [
         "cnode_context * ctx"
-        | args
-          |> Enum.flat_map(&BaseType.generate_declaration/1)
+        | Enum.flat_map(args, fn {name, type} ->
+            BaseType.generate_declaration(type, name, CNode)
+          end)
           |> Enum.map(&BaseType.make_ptr_const/1)
       ]
       |> Enum.join(", ")
@@ -281,16 +198,29 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_caller_function({name, args, specs}) do
     declaration = generate_caller_function_declaration(name)
-    args_decoding = generate_args_decoding(args)
+
+    args_declaration =
+      args
+      |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
+      |> Enum.map(&~g<#{&1};>)
+      |> Enum.join("\n")
+
+    args_initialization =
+      args
+      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, CNode) end)
+      |> Enum.join("\n")
+
+    args_parsing =
+      args
+      |> Enum.map(fn {name, type} ->
+        BaseType.generate_arg_parse(type, name, nil, CNode)
+      end)
+      |> Enum.join("\n")
 
     implemented_fun_args =
       [
         "ctx"
-        | args
-          |> Enum.map(fn
-            {_name, :state} -> "ctx->wrapper->state"
-            {name, _type} -> to_string(name)
-          end)
+        | Enum.map(args, fn {name, type} -> BaseType.generate_arg_name(type, name, CNode) end)
       ]
       |> Enum.join(", ")
 
@@ -310,7 +240,9 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
-      #{args_decoding}
+      #{args_declaration}
+      #{args_initialization}
+      #{args_parsing}
       ctx->released_states = new_state_linked_list();
 
       #{implemented_fun_call_ctx}
@@ -482,5 +414,18 @@ defmodule Unifex.CodeGenerators.CNode do
       return main_function(argc, argv);
     }
     """
+  end
+
+  defp generate_function_spec_traverse_helper(specs) do
+    specs
+    |> Utils.generate_function_spec_traverse_helper(%{
+      arg_serializer: fn type, name ->
+        {type, BaseType.generate_arg_serialize(type, name, CNode)}
+      end,
+      tuple_serializer: &{:tuple, generate_tuple_maker(&1)}
+    })
+    |> case do
+      {{_type, result}, meta} -> {result, meta}
+    end
   end
 end

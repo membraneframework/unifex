@@ -24,4 +24,19 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
       ~g<enif_get_resource(env, #{arg}, STATE_RESOURCE_TYPE, (void **)&#{var_name})>
     end
   end
+
+  defmodule CNode do
+    use Unifex.CodeGenerator.BaseType
+    alias Unifex.CodeGenerator.BaseType
+
+    @impl BaseType
+    def generate_arg_parse(_argument, variable, _ctx) do
+      ~g<#{variable} = ctx-\>wrapper-\>state;>
+    end
+
+    @impl BaseType
+    def generate_arg_serialize(name, _ctx) do
+      ~g<ctx-\>wrapper-\>state = #{name};>
+    end
+  end
 end

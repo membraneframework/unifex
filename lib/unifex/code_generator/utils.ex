@@ -1,25 +1,6 @@
 defmodule Unifex.CodeGenerator.Utils do
   use Bunch
 
-  alias Unifex.CodeGenerator.BaseType
-
-  defmacro __using__(_args) do
-    quote do
-      import unquote(__MODULE__), only: [sigil_g: 2]
-    end
-  end
-
-  defmacro spec_traverse_helper_generating_macro() do
-    quote do
-      defp generate_function_spec_traverse_helper(node) do
-        Unifex.CodeGenerator.Utils.generate_function_spec_traverse_helper(
-          node,
-          __MODULE__
-        )
-      end
-    end
-  end
-
   @doc """
   Sigil used for templating generated code.
   """
@@ -29,46 +10,46 @@ defmodule Unifex.CodeGenerator.Utils do
     content
   end
 
-  def generate_function_spec_traverse_helper(node, implementation) do
+  def generate_function_spec_traverse_helper(node, serializers) do
     node
     |> case do
       {:__aliases__, [alias: als], atoms} ->
-        generate_function_spec_traverse_helper(als || Module.concat(atoms), implementation)
+        generate_function_spec_traverse_helper(als || Module.concat(atoms), serializers)
 
       atom when is_atom(atom) ->
-        {BaseType.generate_arg_serialize(:atom, :"\"#{atom}\"", NIF), []}
+        {serializers.arg_serializer.(:atom, :"\"#{atom}\""), []}
 
       {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
-        {BaseType.generate_arg_serialize(:atom, :"\"#{name}\"", NIF), label: name}
+        {serializers.arg_serializer.(:atom, :"\"#{name}\""), label: name}
 
       {:"::", _, [{name, _, _}, {type, _, _}]} ->
-        {BaseType.generate_arg_serialize(type, name, NIF), arg: {name, type}}
+        {serializers.arg_serializer.(type, name), arg: {name, type}}
 
       {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]} ->
         generate_function_spec_traverse_helper(
           {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]},
-          implementation
+          serializers
         )
 
       {a, b} ->
-        generate_function_spec_traverse_helper({:{}, [], [a, b]}, implementation)
+        generate_function_spec_traverse_helper({:{}, [], [a, b]}, serializers)
 
       {:{}, _, content} ->
         {results, meta} =
           content
-          |> Enum.map(fn n -> generate_function_spec_traverse_helper(n, implementation) end)
+          |> Enum.map(fn n -> generate_function_spec_traverse_helper(n, serializers) end)
           |> Enum.unzip()
 
-        {implementation.generate_tuple_maker(results), meta}
+        {serializers.tuple_serializer.(results), meta}
 
       [{_name, _, _} = name_var] ->
         generate_function_spec_traverse_helper(
           {:"::", [], [name_var, [name_var]]},
-          implementation
+          serializers
         )
 
       {_name, _, _} = name_var ->
-        generate_function_spec_traverse_helper({:"::", [], [name_var, name_var]}, implementation)
+        generate_function_spec_traverse_helper({:"::", [], [name_var, name_var]}, serializers)
     end
     ~> ({result, meta} -> {result, meta |> List.flatten()})
   end

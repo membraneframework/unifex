@@ -5,11 +5,9 @@ defmodule Unifex.CodeGenerators.NIF do
   use Bunch
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerationMode, CodeGenerator, InterfaceIO}
-  alias Unifex.CodeGenerator.BaseType
+  alias Unifex.CodeGenerator.{BaseType, Utils}
 
   @behaviour CodeGenerator
-
-  CodeGenerator.Utils.spec_traverse_helper_generating_macro()
 
   @type code_t() :: String.t()
 
@@ -455,5 +453,12 @@ defmodule Unifex.CodeGenerators.NIF do
 
   defp generate_unifex_env() do
     ~g<UnifexEnv *unifex_env = env;>
+  end
+
+  defp generate_function_spec_traverse_helper(specs) do
+    Utils.generate_function_spec_traverse_helper(specs, %{
+      arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF) end,
+      tuple_serializer: &generate_tuple_maker/1
+    })
   end
 end

@@ -36,10 +36,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ({
       int get_list_length_result = enif_get_list_length(env, #{arg}, &#{len_var_name});
       if(get_list_length_result){
-        #{var_name} = enif_alloc(sizeof(#{
-        BaseType.generate_native_type(ctx.subtype, ctx.generator)
-      }) *
-          #{len_var_name});
+        #{var_name} = enif_alloc(
+          sizeof(#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           #{BaseType.generate_initialization(ctx.subtype, elem_name, ctx.generator)}

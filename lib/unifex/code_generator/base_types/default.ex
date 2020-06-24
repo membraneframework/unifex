@@ -36,4 +36,19 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
       ~g<enif_get_#{ctx.type}(env, #{argument}, &#{variable})>
     end
   end
+
+  defmodule CNode do
+    use Unifex.CodeGenerator.BaseType
+    alias Unifex.CodeGenerator.BaseType
+
+    @impl BaseType
+    def generate_arg_parse(_argument, name, ctx) do
+      ~g<ei_decode_#{ctx.type}(in_buff, index, &#{name});>
+    end
+
+    @impl BaseType
+    def generate_arg_serialize(name, ctx) do
+      ~g<ei_x_encode_#{ctx.type}(out_buff, #{name});>
+    end
+  end
 end
