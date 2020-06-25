@@ -9,10 +9,10 @@ UNIFEX_TERM init(UnifexEnv *env) {
 }
 
 UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, State *state) {
-  // int res = send_example_msg(env, pid, 0, state->a);
-  // if (!res) {
-  //   return foo_result_error(env, "send_failed");
-  // }
+  int res = send_example_msg(env, pid, 0, state->a);
+  if (!res) {
+    return foo_result_error(env, "send_failed");
+  }
   return foo_result_ok(env, state->a);
 }
 

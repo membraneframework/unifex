@@ -57,7 +57,7 @@ void init_caller(const char *in_buff, int *index, cnode_context *ctx) {
   ctx->released_states = new_state_linked_list();
 
   UNIFEX_TERM result = init(ctx);
-  sending_and_freeing(ctx, result);
+  send_to_server_and_free(ctx, result);
 
   free_states(ctx, ctx->released_states, ctx->wrapper);
 }
@@ -71,12 +71,13 @@ void foo_caller(const char *in_buff, int *index, cnode_context *ctx) {
   ctx->released_states = new_state_linked_list();
 
   UNIFEX_TERM result = foo(ctx, target, state);
-  sending_and_freeing(ctx, result);
+  send_to_server_and_free(ctx, result);
 
   free_states(ctx, ctx->released_states, ctx->wrapper);
 }
 
-void send_example_msg(cnode_context *ctx, int num) {
+int send_example_msg(cnode_context *ctx, UnifexPid pid, int flags, int num) {
+  UNIFEX_UNUSED(flags);
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   ei_x_new_with_version(out_buff);
 
@@ -88,8 +89,9 @@ void send_example_msg(cnode_context *ctx, int num) {
     printf("dupa\n");
   });
 
-  sending_and_freeing(ctx, out_buff);
+  send_and_free(ctx, &pid, out_buff);
   free(out_buff);
+  return 1;
 }
 
 int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,

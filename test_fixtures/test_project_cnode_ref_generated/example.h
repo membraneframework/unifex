@@ -34,7 +34,7 @@ UNIFEX_TERM foo_result_ok(cnode_context *ctx, int answer);
 UNIFEX_TERM foo_result_error(cnode_context *ctx, const char *reason);
 void init_caller(const char *in_buff, int *index, cnode_context *ctx);
 void foo_caller(const char *in_buff, int *index, cnode_context *ctx);
-void send_example_msg(cnode_context *ctx, int num);
+int send_example_msg(cnode_context *ctx, UnifexPid pid, int flags, int num);
 
 #ifdef __cplusplus
 }

@@ -24,44 +24,54 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_implemented_function_declaration({name, args}) do
     args_declarations =
-      [
-        "cnode_context * ctx"
-        | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, CNode)
-          end)
-      ]
-      |> Enum.join(", ")
+      ["cnode_context * ctx" | generate_args_declarations(args)] |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
+  end
+
+  defp generate_result_function_declaration({name, specs}) do
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    args = meta |> Keyword.get_values(:arg)
+
+    args_declarations =
+      ["cnode_context * ctx" | generate_args_declarations(args, :const)] |> Enum.join(", ")
+
+    labels = meta |> Keyword.get_values(:label)
+    fun_name = [name, "result" | labels] |> Enum.join("_")
+    ~g<UNIFEX_TERM #{fun_name}(#{args_declarations})>
   end
 
   defp generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
     {result, _meta} = generate_function_spec_traverse_helper(specs)
 
-    if declaration == "" do
-      ""
-    else
-      ~g"""
-      #{declaration} {
-        ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
-        prepare_result_buff(out_buff, ctx->node_name);
+    ~g"""
+    #{declaration} {
+      ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
+      prepare_result_buff(out_buff, ctx->node_name);
 
-        #{result}
+      #{result}
 
-        return out_buff;
-      }
-      """
-    end
-  end
-
-  defp generate_result_function_declaration({name, specs}) do
-    fun_name_prefix = [name, :result] |> Enum.join("_")
-    function_declaration_template("UNIFEX_TERM", fun_name_prefix, specs)
+      return out_buff;
+    }
+    """
   end
 
   defp generate_send_function_declaration(specs) do
-    function_declaration_template("void", "send", specs)
+    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    args = meta |> Keyword.get_values(:arg)
+
+    args_declarations =
+      [
+        ~g<cnode_context * ctx>,
+        ~g<UnifexPid pid>,
+        ~g<int flags> | generate_args_declarations(args, :const)
+      ]
+      |> Enum.join(", ")
+
+    labels = meta |> Keyword.get_values(:label)
+    fun_name = ["send" | labels] |> Enum.join("_")
+    ~g<int #{fun_name}(#{args_declarations})>
   end
 
   defp generate_send_function(specs) do
@@ -71,33 +81,23 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
+      UNIFEX_UNUSED(flags);
       ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
       ei_x_new_with_version(out_buff);
 
       #{result}
 
-      sending_and_freeing(ctx, out_buff);
+      send_and_free(ctx, &pid, out_buff);
       free(out_buff);
+      return 1;
     }
     """
   end
 
-  defp function_declaration_template(return_type, fun_name_prefix, specs) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
-    args = meta |> Keyword.get_values(:arg)
-
-    args_declarations =
-      [
-        "cnode_context * ctx"
-        | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, :const, CNode)
-          end)
-      ]
-      |> Enum.join(", ")
-
-    labels = meta |> Keyword.get_values(:label)
-    fun_name = [fun_name_prefix | labels] |> Enum.join("_")
-    ~g<#{return_type} #{fun_name}(#{args_declarations})>
+  defp generate_args_declarations(args, mode \\ :default) do
+    Enum.flat_map(args, fn {name, type} ->
+      BaseType.generate_declaration(type, name, mode, CNode)
+    end)
   end
 
   defp generate_handle_message_declaration() do
@@ -158,10 +158,7 @@ defmodule Unifex.CodeGenerators.CNode do
     declaration = generate_caller_function_declaration({name, args})
 
     args_declaration =
-      args
-      |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
-      |> Enum.map(&~g<#{&1};>)
-      |> Enum.join("\n")
+      args |> generate_args_declarations() |> Enum.map(&~g<#{&1};>) |> Enum.join("\n")
 
     args_initialization =
       args
@@ -170,9 +167,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     args_parsing =
       args
-      |> Enum.map(fn {name, type} ->
-        BaseType.generate_arg_parse(type, name, nil, CNode)
-      end)
+      |> Enum.map(fn {name, type} -> BaseType.generate_arg_parse(type, name, nil, CNode) end)
       |> Enum.join("\n")
 
     implemented_fun_args =
@@ -190,7 +185,7 @@ defmodule Unifex.CodeGenerators.CNode do
       ctx->released_states = new_state_linked_list();
 
       UNIFEX_TERM result = #{name}(#{implemented_fun_args});
-      sending_and_freeing(ctx, result);
+      send_to_server_and_free(ctx, result);
 
       free_states(ctx, ctx->released_states, ctx->wrapper);
     }
