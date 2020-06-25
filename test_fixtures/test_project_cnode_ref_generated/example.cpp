@@ -12,7 +12,8 @@ void unifex_release_state(UnifexEnv *env, UnifexState *state) {
   add_item(env->released_states, wrapper);
 }
 
-UnifexState *unifex_alloc_state(UnifexEnv *env) {
+UnifexState *unifex_alloc_state(UnifexEnv *_env) {
+  UNIFEX_UNUSED(_env);
   return (UnifexState *)malloc(sizeof(UnifexState));
 }
 
@@ -53,6 +54,8 @@ UNIFEX_TERM foo_result_error(cnode_context *ctx, const char *reason) {
 }
 
 void init_caller(const char *in_buff, int *index, cnode_context *ctx) {
+  UNIFEX_UNUSED(in_buff);
+  UNIFEX_UNUSED(index);
 
   ctx->released_states = new_state_linked_list();
 
@@ -63,6 +66,7 @@ void init_caller(const char *in_buff, int *index, cnode_context *ctx) {
 }
 
 void foo_caller(const char *in_buff, int *index, cnode_context *ctx) {
+
   UnifexPid target;
   UnifexState *state;
 

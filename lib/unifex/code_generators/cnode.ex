@@ -179,6 +179,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
+      #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff); UNIFEX_UNUSED(index);", else: ""}
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
@@ -313,7 +314,8 @@ defmodule Unifex.CodeGenerators.CNode do
       add_item(env->released_states, wrapper);
     }
 
-    UnifexState *unifex_alloc_state(UnifexEnv *env) {
+    UnifexState *unifex_alloc_state(UnifexEnv *_env) {
+      UNIFEX_UNUSED(_env);
       return (UnifexState *)malloc(sizeof(UnifexState));
     }
 
