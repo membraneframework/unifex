@@ -247,7 +247,7 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <ei_connect.h>
     #include <erl_interface.h>
 
-    #include <unifex/cnode_utils.h>
+    #include <unifex/unifex.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
     #ifdef __cplusplus

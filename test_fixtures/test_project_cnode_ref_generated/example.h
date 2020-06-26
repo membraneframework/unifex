@@ -13,7 +13,7 @@
 #include <erl_interface.h>
 
 #include "../example.h"
-#include <unifex/cnode_utils.h>
+#include <unifex/unifex.h>
 
 #ifdef __cplusplus
 extern "C" {

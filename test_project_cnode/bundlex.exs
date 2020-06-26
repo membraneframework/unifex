@@ -10,7 +10,7 @@ defmodule Example.BundlexProject do
   def cnodes(_platform) do
     [
       example: [
-        deps: [unifex: :cnode_utils],
+        deps: [unifex: :unifex_cnode],
         src_base: "example",
         sources: ["_generated/example.c", "example.c"]
       ]
