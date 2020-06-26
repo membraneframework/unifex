@@ -17,8 +17,8 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, int *list, uint list_length,
-                State *state) {
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, int *list,
+                unsigned int list_length, State *state) {
   int res = send_example_msg(env, pid, 0, state->a);
   if (!res) {
     return foo_result_error(env, "send_failed");
