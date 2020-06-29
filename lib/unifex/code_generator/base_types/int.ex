@@ -14,7 +14,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
       ({
       int #{name}_int = #{name};
       ei_x_encode_longlong(out_buff, (long long)#{name}_int);
-      printf("dupa\n");
       });
       """
     end

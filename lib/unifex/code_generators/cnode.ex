@@ -23,8 +23,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_implemented_function_declaration({name, args}) do
-    args_declarations =
-      ["cnode_context * ctx" | generate_args_declarations(args)] |> Enum.join(", ")
+    args_declarations = ["UnifexEnv * env" | generate_args_declarations(args)] |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
@@ -34,7 +33,7 @@ defmodule Unifex.CodeGenerators.CNode do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      ["cnode_context * ctx" | generate_args_declarations(args, :const)] |> Enum.join(", ")
+      ["UnifexEnv * env" | generate_args_declarations(args, :const)] |> Enum.join(", ")
 
     labels = meta |> Keyword.get_values(:label)
     fun_name = [name, "result" | labels] |> Enum.join("_")
@@ -48,7 +47,7 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g"""
     #{declaration} {
       ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
-      prepare_result_buff(out_buff, ctx->node_name);
+      prepare_ei_x_buff(env, out_buff, "result");
 
       #{result}
 
@@ -63,7 +62,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     args_declarations =
       [
-        ~g<cnode_context * ctx>,
+        ~g<UnifexEnv * env>,
         ~g<UnifexPid pid>,
         ~g<int flags> | generate_args_declarations(args, :const)
       ]
@@ -87,7 +86,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
       #{result}
 
-      send_and_free(ctx, &pid, out_buff);
+      send_and_free(env, &pid, out_buff);
       free(out_buff);
       return 1;
     }
@@ -101,8 +100,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_handle_message_declaration() do
-    "int handle_message(int ei_fd, const char *node_name, erlang_msg emsg,
-            ei_x_buff *in_buff, struct UnifexStateWrapper* state)"
+    "void handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
   end
 
   defp generate_handle_message(functions) do
@@ -111,7 +109,8 @@ defmodule Unifex.CodeGenerators.CNode do
         {f_name, _args} ->
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
-              #{f_name}_caller(in_buff->buff, &index, &ctx);
+              UNIFEX_TERM result = #{f_name}_caller(env, in_buff->buff, index);
+              send_to_server_and_free(env, result);
             }
           """
       end)
@@ -122,7 +121,7 @@ defmodule Unifex.CodeGenerators.CNode do
       strcpy(err_msg, "function ");
       strcat(err_msg, fun_name);
       strcat(err_msg, " not available");
-      sending_error(&ctx, err_msg);
+      sending_error(env, err_msg);
     }
     """
 
@@ -130,26 +129,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{generate_handle_message_declaration()} {
-      int index = 0;
-      int version;
-      ei_decode_version(in_buff->buff, &index, &version);
-
-      int arity;
-      ei_decode_tuple_header(in_buff->buff, &index, &arity);
-
-      char fun_name[2048];
-      ei_decode_atom(in_buff->buff, &index, fun_name);
-
-      cnode_context ctx = {
-        .node_name = node_name,
-        .ei_fd = ei_fd,
-        .e_pid = &emsg.from,
-        .wrapper = state
-      };
-
       #{handling}
-
-      return 0;
     }
     """
   end
@@ -172,7 +152,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     implemented_fun_args =
       [
-        "ctx"
+        "env"
         | Enum.map(args, fn {name, type} -> BaseType.generate_arg_name(type, name, CNode) end)
       ]
       |> Enum.join(", ")
@@ -183,18 +163,14 @@ defmodule Unifex.CodeGenerators.CNode do
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
-      ctx->released_states = new_state_linked_list();
 
-      UNIFEX_TERM result = #{name}(#{implemented_fun_args});
-      send_to_server_and_free(ctx, result);
-
-      free_states(ctx, ctx->released_states, ctx->wrapper);
+      return #{name}(#{implemented_fun_args});
     }
     """
   end
 
   defp generate_caller_function_declaration({name, _args}) do
-    ~g"void #{name}_caller(const char * in_buff, int * index, cnode_context * ctx)"
+    ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, const char *in_buff, int *index)"
   end
 
   def optional_state_def(%CodeGenerationMode{use_state: false} = _mode) do
@@ -256,10 +232,6 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{optional_state_def(mode)}
 
-    struct UnifexStateWrapper {
-      UnifexState *state;
-    };
-
     void unifex_release_state(UnifexEnv *env, UnifexState *state);
     UnifexState *unifex_alloc_state(UnifexEnv *env);
     void handle_destroy_state(UnifexEnv *env, UnifexState *state);
@@ -303,15 +275,8 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{optional_state_related_functions(mode)}
 
-    size_t unifex_state_wrapper_sizeof() {
-      return sizeof(struct UnifexStateWrapper);
-    }
-
     void unifex_release_state(UnifexEnv *env, UnifexState *state) {
-      UnifexStateWrapper *wrapper =
-          (UnifexStateWrapper *) malloc(sizeof(UnifexStateWrapper));
-      wrapper->state = state;
-      add_item(env->released_states, wrapper);
+      add_item(env, state);
     }
 
     UnifexState *unifex_alloc_state(UnifexEnv *_env) {
@@ -325,16 +290,9 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_handle_message(functions)}
 
-    void handle_destroy_state_wrapper(UnifexEnv *env, struct UnifexStateWrapper *wrapper) {
-      handle_destroy_state(env, wrapper->state);
-    }
-
-    int wrappers_cmp(struct UnifexStateWrapper *a, struct UnifexStateWrapper *b) {
-      return a->state == b->state ? 0 : 1;
-    }
-
-    void free_state(UnifexStateWrapper *wrapper) {
-      free(wrapper->state);
+    void unifex_destroy_state(UnifexEnv *env, void *state) {
+      handle_destroy_state(env, (UnifexState*)state);
+      free(state);
     }
 
     int main(int argc, char ** argv) {

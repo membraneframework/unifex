@@ -19,22 +19,18 @@
 extern "C" {
 #endif
 
-struct UnifexStateWrapper {
-  UnifexState *state;
-};
-
 void unifex_release_state(UnifexEnv *env, UnifexState *state);
 UnifexState *unifex_alloc_state(UnifexEnv *env);
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
-UNIFEX_TERM init(cnode_context *ctx);
-UNIFEX_TERM foo(cnode_context *ctx, UnifexPid target, UnifexState *state);
-UNIFEX_TERM init_result_ok(cnode_context *ctx, UnifexState *state);
-UNIFEX_TERM foo_result_ok(cnode_context *ctx, int answer);
-UNIFEX_TERM foo_result_error(cnode_context *ctx, const char *reason);
-void init_caller(const char *in_buff, int *index, cnode_context *ctx);
-void foo_caller(const char *in_buff, int *index, cnode_context *ctx);
-int send_example_msg(cnode_context *ctx, UnifexPid pid, int flags, int num);
+UNIFEX_TERM init(UnifexEnv *env);
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, UnifexState *state);
+UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
+UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer);
+UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason);
+UNIFEX_TERM init_caller(UnifexEnv *env, const char *in_buff, int *index);
+UNIFEX_TERM foo_caller(UnifexEnv *env, const char *in_buff, int *index);
+int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num);
 
 #ifdef __cplusplus
 }

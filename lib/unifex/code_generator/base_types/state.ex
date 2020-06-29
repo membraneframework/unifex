@@ -31,12 +31,19 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
 
     @impl BaseType
     def generate_arg_parse(_argument, variable, _ctx) do
-      ~g<#{variable} = ctx-\>wrapper-\>state;>
+      ~g"""
+      #{variable} = (UnifexState*)env->state;
+      """
     end
 
     @impl BaseType
     def generate_arg_serialize(name, _ctx) do
-      ~g<ctx-\>wrapper-\>state = #{name};>
+      ~g"""
+      env->state = ({
+        UnifexState* unifex_state = #{name};
+        unifex_state;
+      });
+      """
     end
   end
 end

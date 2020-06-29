@@ -2,41 +2,27 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-void prepare_ei_x_buff(ei_x_buff *buff, const char *node_name,
-                       const char *msg_type) {
+void prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff, const char *msg_type) {
   ei_x_new_with_version(buff);
   ei_x_encode_tuple_header(buff, 2);
-  ei_x_encode_atom(buff, node_name);
+  ei_x_encode_atom(buff, env->node_name);
   ei_x_encode_tuple_header(buff, 2);
   ei_x_encode_atom(buff, msg_type);
 }
 
-void prepare_result_buff(ei_x_buff *buff, const char *node_name) {
-  prepare_ei_x_buff(buff, node_name, "result");
-}
-
-void prepare_send_buff(ei_x_buff *buff) {
-  ei_x_new_with_version(buff);
-  ei_x_encode_tuple_header(buff, 1);
-}
-
-void prepare_error_buff(ei_x_buff *buff, const char *node_name) {
-  prepare_ei_x_buff(buff, node_name, "error");
-}
-
-void send_and_free(cnode_context *ctx, erlang_pid *pid, ei_x_buff *out_buff) {
+void send_and_free(UnifexEnv *ctx, erlang_pid *pid, ei_x_buff *out_buff) {
   ei_send(ctx->ei_fd, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
 }
 
-void send_to_server_and_free(cnode_context *ctx, ei_x_buff *out_buff) {
+void send_to_server_and_free(UnifexEnv *ctx, ei_x_buff *out_buff) {
   send_and_free(ctx, ctx->e_pid, out_buff);
 }
 
-void sending_error(cnode_context *ctx, const char *msg) {
+void sending_error(UnifexEnv *ctx, const char *msg) {
   ei_x_buff buff;
   ei_x_buff *out_buff = &buff;
-  prepare_error_buff(out_buff, ctx->node_name);
+  prepare_ei_x_buff(ctx, out_buff, "error");
 
   long msg_len = (long)strlen(msg);
   ei_x_encode_binary(out_buff, msg, msg_len);
@@ -44,61 +30,54 @@ void sending_error(cnode_context *ctx, const char *msg) {
   send_to_server_and_free(ctx, out_buff);
 }
 
-void add_item(state_linked_list *list, UnifexStateWrapper *item) {
-  state_node *node = (state_node *)malloc(sizeof(state_node));
-  node->item = item;
-  node->next = list->head;
-  list->head = node;
+void add_item(UnifexEnv *env, void *state) {
+  UnifexStateNode *node = malloc(sizeof(UnifexStateNode));
+  node->state = state;
+  node->next = env->released_states;
+  env->released_states = node;
 }
 
-void rec_free_node(state_node *n) {
-  if (n == NULL)
-    return;
-
-  rec_free_node(n->next);
-  free(n->item);
-  free(n);
-}
-
-void free_states(UnifexEnv *env, state_linked_list *list,
-                 UnifexStateWrapper *main_state) {
-  for (state_node *curr = list->head; curr != NULL; curr = curr->next) {
-    if (wrappers_cmp(curr->item, main_state)) {
-      handle_destroy_state_wrapper(env, curr->item);
-      free_state(curr->item);
+void free_states(UnifexEnv *env) {
+  while (env->released_states) {
+    if (env->released_states->state != env->state) {
+      unifex_destroy_state(env, env->released_states->state);
     }
+    UnifexStateNode *next = env->released_states->next;
+    free(env->released_states);
+    env->released_states = next;
   }
-  rec_free_node(list->head);
-  free(list);
 }
 
-state_linked_list *new_state_linked_list() {
-  state_linked_list *res =
-      (state_linked_list *)malloc(sizeof(state_linked_list));
-  res->head = NULL;
-  return res;
-}
-
-int receive(int ei_fd, const char *node_name, UnifexStateWrapper *state) {
-  ei_x_buff in_buf;
-  ei_x_new(&in_buf);
+int receive(UnifexEnv *env) {
+  ei_x_buff in_buff;
+  ei_x_new(&in_buff);
   erlang_msg emsg;
   int res = 0;
-  switch (ei_xreceive_msg_tmo(ei_fd, &emsg, &in_buf, 100)) {
+  switch (ei_xreceive_msg_tmo(env->ei_fd, &emsg, &in_buff, 100)) {
   case ERL_TICK:
     break;
   case ERL_ERROR:
     res = erl_errno != ETIMEDOUT;
     break;
   default:
-    if (emsg.msgtype == ERL_REG_SEND &&
-        handle_message(ei_fd, node_name, emsg, &in_buf, state)) {
-      res = -1;
-    }
-    break;
-  }
+    if (emsg.msgtype == ERL_REG_SEND) {
+      env->e_pid = &emsg.from;
+      int index = 0;
+      int version;
+      ei_decode_version(in_buff.buff, &index, &version);
 
-  ei_x_free(&in_buf);
+      int arity;
+      ei_decode_tuple_header(in_buff.buff, &index, &arity);
+
+      char fun_name[2048];
+      ei_decode_atom(in_buff.buff, &index, fun_name);
+
+      handle_message(env, fun_name, &index, &in_buff);
+      free_states(env);
+      break;
+    }
+  }
+  ei_x_free(&in_buff);
   return res;
 }
 
@@ -162,7 +141,6 @@ int main_function(int argc, char **argv) {
             argv[0]);
     return 1;
   }
-
   char host_name[256];
   strcpy(host_name, argv[1]);
   char alive_name[256];
@@ -207,28 +185,15 @@ int main_function(int argc, char **argv) {
   }
   DEBUG("accepted %s", conn.nodename);
 
-  UnifexStateWrapper *state =
-      (UnifexStateWrapper *)malloc(unifex_state_wrapper_sizeof());
-  memset(state, 0, unifex_state_wrapper_sizeof());
+  UnifexEnv env = {.node_name = node_name,
+                   .ei_fd = ei_fd,
+                   .e_pid = NULL,
+                   .state = NULL,
+                   .released_states = NULL};
 
-  int res = 0;
-  int cont = 1;
-  while (cont) {
-    switch (receive(ei_fd, node_name, state)) {
-    case 0:
-      break;
-    case 1:
-      DEBUG("disconnected");
-      cont = 0;
-      break;
-    default:
-      DEBUG("error handling message, disconnecting");
-      cont = 0;
-      res = 1;
-      break;
-    }
-  }
+  while (!receive(&env))
+    ;
   close(listen_fd);
   close(ei_fd);
-  return res;
+  return 0;
 }
