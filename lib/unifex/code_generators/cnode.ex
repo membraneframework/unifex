@@ -47,7 +47,7 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g"""
     #{declaration} {
       ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
-      prepare_ei_x_buff(env, out_buff, "result");
+      unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
       #{result}
 
@@ -86,7 +86,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
       #{result}
 
-      send_and_free(env, &pid, out_buff);
+      unifex_cnode_send_and_free(env, &pid, out_buff);
       return 1;
     }
     """
@@ -99,7 +99,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_handle_message_declaration() do
-    "UNIFEX_TERM handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
+    "UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
   end
 
   defp generate_handle_message(functions) do
@@ -115,7 +115,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     last_statement = """
     {
-      return unifex_undefined_function_error(env, fun_name);
+      return unifex_cnode_undefined_function_error(env, fun_name);
     }
     """
 
@@ -218,6 +218,7 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <erl_interface.h>
 
     #include <unifex/unifex.h>
+    #include <unifex/unifex_cnode.h>
     #include "#{InterfaceIO.user_header_path(name)}"
 
     #ifdef __cplusplus
@@ -270,7 +271,7 @@ defmodule Unifex.CodeGenerators.CNode do
     #{optional_state_related_functions(mode)}
 
     void unifex_release_state(UnifexEnv *env, UnifexState *state) {
-      add_item(env, state);
+      unifex_cnode_add_to_released_states(env, state);
     }
 
     UnifexState *unifex_alloc_state(UnifexEnv *_env) {
@@ -284,13 +285,13 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_handle_message(functions)}
 
-    void unifex_destroy_state(UnifexEnv *env, void *state) {
+    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
       handle_destroy_state(env, (UnifexState*)state);
       free(state);
     }
 
     int main(int argc, char ** argv) {
-      return main_function(argc, argv);
+      return unifex_cnode_main_function(argc, argv);
     }
     """
   end

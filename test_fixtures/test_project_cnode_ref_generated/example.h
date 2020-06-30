@@ -14,6 +14,7 @@
 
 #include "../example.h"
 #include <unifex/unifex.h>
+#include <unifex/unifex_cnode.h>
 
 #ifdef __cplusplus
 extern "C" {

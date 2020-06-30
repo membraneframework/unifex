@@ -22,34 +22,18 @@ typedef erlang_pid UnifexPid;
 
 #define UNIFEX_UNUSED(x) (void)(x)
 
-typedef struct UnifexStateNode {
-  void *state;
-  struct UnifexStateNode *next;
-} UnifexStateNode;
+typedef struct UnifexLinkedList {
+  void *head;
+  struct UnifexLinkedList *tail;
+} UnifexLinkedList;
 
 typedef struct UnifexCNodeContext {
   const char *node_name;
   int ei_fd;
   erlang_pid *e_pid;
   void *state;
-  UnifexStateNode *released_states;
+  UnifexLinkedList *released_states;
 } UnifexEnv;
-
-void prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff, const char *msg_type);
-void send_and_free(UnifexEnv *env, erlang_pid *pid, ei_x_buff *out_buff);
-void send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff);
-UNIFEX_TERM unifex_undefined_function_error(UnifexEnv *env,
-                                            const char *fun_name);
-
-void unifex_destroy_state(UnifexEnv *env, void *state);
-
-void add_item(UnifexEnv *env, void *state);
-void free_states(UnifexEnv *env);
-
-UNIFEX_TERM handle_message(UnifexEnv *env, char *fun_name, int *index,
-                           ei_x_buff *in_buff);
-
-int main_function(int argc, char **argv);
 
 #ifdef __cplusplus
 }

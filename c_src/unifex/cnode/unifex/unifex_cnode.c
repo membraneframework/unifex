@@ -1,8 +1,15 @@
-#include "unifex.h"
+#include "unifex_cnode.h"
 #include <arpa/inet.h>
 #include <unistd.h>
 
-void prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff, const char *msg_type) {
+#ifdef UNIFEX_CNODE_DEBUG
+#define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
+#else
+#define DEBUG(...)
+#endif
+
+void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
+                                    const char *msg_type) {
   ei_x_new_with_version(buff);
   ei_x_encode_tuple_header(buff, 2);
   ei_x_encode_atom(buff, env->node_name);
@@ -10,45 +17,47 @@ void prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff, const char *msg_type) {
   ei_x_encode_atom(buff, msg_type);
 }
 
-void send_and_free(UnifexEnv *env, erlang_pid *pid, ei_x_buff *out_buff) {
+void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
+                                ei_x_buff *out_buff) {
   ei_send(env->ei_fd, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
   free(out_buff);
 }
 
-void send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
-  send_and_free(env, env->e_pid, out_buff);
+void unifex_cnode_send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
+  unifex_cnode_send_and_free(env, env->e_pid, out_buff);
 }
 
-UNIFEX_TERM unifex_undefined_function_error(UnifexEnv *env,
-                                            const char *fun_name) {
+UNIFEX_TERM unifex_cnode_undefined_function_error(UnifexEnv *env,
+                                                  const char *fun_name) {
   ei_x_buff *out_buff = malloc(sizeof(ei_x_buff));
-  prepare_ei_x_buff(env, out_buff, "error");
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "error");
   ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "undefined_function");
   ei_x_encode_atom(out_buff, fun_name);
   return out_buff;
 }
 
-void add_item(UnifexEnv *env, void *state) {
-  UnifexStateNode *node = malloc(sizeof(UnifexStateNode));
-  node->state = state;
-  node->next = env->released_states;
-  env->released_states = node;
+void unifex_cnode_add_to_released_states(UnifexEnv *env, void *state) {
+  UnifexLinkedList *list = malloc(sizeof(UnifexLinkedList));
+  list->head = state;
+  list->tail = env->released_states;
+  env->released_states = list;
 }
 
-void free_states(UnifexEnv *env) {
+static void free_released_states(UnifexEnv *env) {
   while (env->released_states) {
-    if (env->released_states->state != env->state) {
-      unifex_destroy_state(env, env->released_states->state);
+    void *state = env->released_states->head;
+    if (state != env->state) {
+      unifex_cnode_destroy_state(env, state);
     }
-    UnifexStateNode *next = env->released_states->next;
+    UnifexLinkedList *tail = env->released_states->tail;
     free(env->released_states);
-    env->released_states = next;
+    env->released_states = tail;
   }
 }
 
-int receive(UnifexEnv *env) {
+static int receive(UnifexEnv *env) {
   ei_x_buff in_buff;
   ei_x_new(&in_buff);
   erlang_msg emsg;
@@ -72,9 +81,10 @@ int receive(UnifexEnv *env) {
       char fun_name[2048];
       ei_decode_atom(in_buff.buff, &index, fun_name);
 
-      UNIFEX_TERM result = handle_message(env, fun_name, &index, &in_buff);
-      send_to_server_and_free(env, result);
-      free_states(env);
+      UNIFEX_TERM result =
+          unifex_cnode_handle_message(env, fun_name, &index, &in_buff);
+      unifex_cnode_send_to_server_and_free(env, result);
+      free_released_states(env);
       break;
     }
   }
@@ -82,7 +92,7 @@ int receive(UnifexEnv *env) {
   return res;
 }
 
-int validate_args(int argc, char **argv) {
+static int validate_args(int argc, char **argv) {
   if (argc != 6) {
     return 1;
   }
@@ -94,13 +104,7 @@ int validate_args(int argc, char **argv) {
   return 0;
 }
 
-#ifdef CNODE_DEBUG
-#define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
-
-int listen_sock(int *listen_fd, int *port) {
+static int listen_sock(int *listen_fd, int *port) {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
   if (fd < 0) {
     return 1;
@@ -135,7 +139,7 @@ int listen_sock(int *listen_fd, int *port) {
   return 0;
 }
 
-int main_function(int argc, char **argv) {
+int unifex_cnode_main_function(int argc, char **argv) {
   if (validate_args(argc, argv)) {
     fprintf(stderr,
             "%s <host_name> <alive_name> <node_name> <cookie> <creation>\r\n",
