@@ -87,7 +87,6 @@ defmodule Unifex.CodeGenerators.CNode do
       #{result}
 
       send_and_free(env, &pid, out_buff);
-      free(out_buff);
       return 1;
     }
     """
@@ -100,7 +99,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_handle_message_declaration() do
-    "void handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
+    "UNIFEX_TERM handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
   end
 
   defp generate_handle_message(functions) do
@@ -109,19 +108,14 @@ defmodule Unifex.CodeGenerators.CNode do
         {f_name, _args} ->
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
-              UNIFEX_TERM result = #{f_name}_caller(env, in_buff->buff, index);
-              send_to_server_and_free(env, result);
+              return #{f_name}_caller(env, in_buff->buff, index);
             }
           """
       end)
 
     last_statement = """
     {
-      char err_msg[4000];
-      strcpy(err_msg, "function ");
-      strcat(err_msg, fun_name);
-      strcat(err_msg, " not available");
-      sending_error(env, err_msg);
+      return unifex_undefined_function_error(env, fun_name);
     }
     """
 

@@ -10,24 +10,24 @@ void prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff, const char *msg_type) {
   ei_x_encode_atom(buff, msg_type);
 }
 
-void send_and_free(UnifexEnv *ctx, erlang_pid *pid, ei_x_buff *out_buff) {
-  ei_send(ctx->ei_fd, pid, out_buff->buff, out_buff->index);
+void send_and_free(UnifexEnv *env, erlang_pid *pid, ei_x_buff *out_buff) {
+  ei_send(env->ei_fd, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
+  free(out_buff);
 }
 
-void send_to_server_and_free(UnifexEnv *ctx, ei_x_buff *out_buff) {
-  send_and_free(ctx, ctx->e_pid, out_buff);
+void send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
+  send_and_free(env, env->e_pid, out_buff);
 }
 
-void sending_error(UnifexEnv *ctx, const char *msg) {
-  ei_x_buff buff;
-  ei_x_buff *out_buff = &buff;
-  prepare_ei_x_buff(ctx, out_buff, "error");
-
-  long msg_len = (long)strlen(msg);
-  ei_x_encode_binary(out_buff, msg, msg_len);
-
-  send_to_server_and_free(ctx, out_buff);
+UNIFEX_TERM unifex_undefined_function_error(UnifexEnv *env,
+                                            const char *fun_name) {
+  ei_x_buff *out_buff = malloc(sizeof(ei_x_buff));
+  prepare_ei_x_buff(env, out_buff, "error");
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "undefined_function");
+  ei_x_encode_atom(out_buff, fun_name);
+  return out_buff;
 }
 
 void add_item(UnifexEnv *env, void *state) {
@@ -72,7 +72,8 @@ int receive(UnifexEnv *env) {
       char fun_name[2048];
       ei_decode_atom(in_buff.buff, &index, fun_name);
 
-      handle_message(env, fun_name, &index, &in_buff);
+      UNIFEX_TERM result = handle_message(env, fun_name, &index, &in_buff);
+      send_to_server_and_free(env, result);
       free_states(env);
       break;
     }

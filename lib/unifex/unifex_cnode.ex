@@ -16,8 +16,8 @@ defmodule Unifex.UnifexCNode do
   @type on_start_t :: {:ok, t} | {:error, :spawn_cnode | :connect_to_cnode}
 
   @doc """
-  Casts specific for Bundlex Api structs returned from 
-  Bundlex.CNode.start/1 or Bundlex.CNode.start_link/1 to the analogous structs 
+  Casts specific for Bundlex Api structs returned from
+  Bundlex.CNode.start/1 or Bundlex.CNode.start_link/1 to the analogous structs
   in Unifex.UnifexCNode API or vice versa
   """
   def cast_on_start_t({:ok, %Bundlex.CNode{} = bundex_cnode}) do
@@ -105,10 +105,6 @@ defmodule Unifex.UnifexCNode do
     |> Bundlex.CNode.send(message)
   end
 
-  defp unpack_result({:result, content}) do
-    content
-  end
-
   @doc """
   Makes a synchronous call to CNode and waits for its reply.
 
@@ -124,13 +120,7 @@ defmodule Unifex.UnifexCNode do
     unifex_cnode
     |> cast_cnode
     |> Bundlex.CNode.call(msg, timeout)
-    |> case do
-      {:result, _content} = response ->
-        response |> unpack_result
-
-      {:error, _reason} = response ->
-        response
-    end
+    |> handle_response()
   end
 
   @doc """
@@ -149,17 +139,18 @@ defmodule Unifex.UnifexCNode do
       Waits timeout miliseconds on result returned from remote call of remote UnifexCNode function.
       Generally, when function only returns values and don't send any messages, consider use of UnifexCNode.call/3, instead of this one
   """
-  @spec receive_result(t, timeout :: non_neg_integer | :infinity) ::
-          response :: term | {:error, :time_left}
+  @spec receive_result(t, timeout :: non_neg_integer | :infinity) :: response :: term
   def receive_result(%__MODULE__{node: node}, timeout \\ 5000) do
     receive do
-      {^node, {:result, _content} = response} ->
-        response |> unpack_result
-
-      {^node, {:error, _reason} = response} ->
-        response
+      {^node, response} -> handle_response(response)
     after
-      timeout -> {:error, :time_left}
+      timeout -> raise "Unifex CNode receive timeout"
     end
+  end
+
+  defp handle_response({:result, result}), do: result
+
+  defp handle_response({:error, {:undefined_function, fun_name}}) do
+    raise "Undefined Unifex CNode function: #{fun_name}"
   end
 end

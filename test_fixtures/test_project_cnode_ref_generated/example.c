@@ -79,24 +79,17 @@ int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   });
 
   send_and_free(env, &pid, out_buff);
-  free(out_buff);
   return 1;
 }
 
-void handle_message(UnifexEnv *env, char *fun_name, int *index,
-                    ei_x_buff *in_buff) {
+UNIFEX_TERM handle_message(UnifexEnv *env, char *fun_name, int *index,
+                           ei_x_buff *in_buff) {
   if (strcmp(fun_name, "init") == 0) {
-    UNIFEX_TERM result = init_caller(env, in_buff->buff, index);
-    send_to_server_and_free(env, result);
+    return init_caller(env, in_buff->buff, index);
   } else if (strcmp(fun_name, "foo") == 0) {
-    UNIFEX_TERM result = foo_caller(env, in_buff->buff, index);
-    send_to_server_and_free(env, result);
+    return foo_caller(env, in_buff->buff, index);
   } else {
-    char err_msg[4000];
-    strcpy(err_msg, "function ");
-    strcat(err_msg, fun_name);
-    strcat(err_msg, " not available");
-    sending_error(env, err_msg);
+    return unifex_undefined_function_error(env, fun_name);
   }
 }
 
