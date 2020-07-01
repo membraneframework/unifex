@@ -2,7 +2,7 @@ defmodule Unifex.CodeGenerators.CNode do
   use Bunch
 
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
-  alias Unifex.{CodeGenerationMode, CodeGenerator, InterfaceIO}
+  alias Unifex.{CodeGenerator, InterfaceIO, Specs}
   alias Unifex.CodeGenerator.{BaseType, Utils}
 
   @behaviour CodeGenerator
@@ -167,41 +167,40 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, const char *in_buff, int *index)"
   end
 
-  def optional_state_def(%CodeGenerationMode{use_state: false} = _mode) do
+  def optional_state_def(%Specs{use_state: false}) do
     ~g"""
     typedef struct UnifexState {
       void * field;
     } UnifexState;
-    typedef UnifexState State;
     """
   end
 
-  def optional_state_def(_mode) do
+  def optional_state_def(%Specs{}) do
     ~g<>
   end
 
-  def optional_state_related_functions_declaration(%CodeGenerationMode{use_state: false} = _mode) do
+  def optional_state_related_functions_declaration(%Specs{use_state: false}) do
     ~g"""
     void handle_destroy_state(UnifexEnv *env, State *state);
     """
   end
 
-  def optional_state_related_functions_declaration(_mode) do
+  def optional_state_related_functions_declaration(%Specs{}) do
     ~g<>
   end
 
-  def optional_state_related_functions(%CodeGenerationMode{use_state: false} = _mode) do
+  def optional_state_related_functions(%Specs{use_state: false}) do
     ~g"""
     void handle_destroy_state(UnifexEnv *env, State *state) {}
     """
   end
 
-  def optional_state_related_functions(_mode) do
+  def optional_state_related_functions(%Specs{}) do
     ~g<>
   end
 
   @impl CodeGenerator
-  def generate_header(name, _module, functions, results, sends, _callbacks, mode) do
+  def generate_header(specs) do
     ~g"""
     #pragma once
 
@@ -219,13 +218,13 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #include <unifex/unifex.h>
     #include <unifex/unifex_cnode.h>
-    #include "#{InterfaceIO.user_header_path(name)}"
+    #include "#{InterfaceIO.user_header_path(specs.name)}"
 
     #ifdef __cplusplus
     extern "C" {
     #endif
 
-    #{optional_state_def(mode)}
+    #{optional_state_def(specs)}
 
     void unifex_release_state(UnifexEnv *env, UnifexState *state);
     UnifexState *unifex_alloc_state(UnifexEnv *env);
@@ -233,25 +232,25 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{
       CodeGenerator.Utils.generate_functions_declarations(
-        functions,
+        specs.functions_args,
         &generate_implemented_function_declaration/1
       )
     }
     #{
       CodeGenerator.Utils.generate_functions_declarations(
-        results,
+        specs.functions_results,
         &generate_result_function_declaration/1
       )
     }
     #{
       CodeGenerator.Utils.generate_functions_declarations(
-        functions,
+        specs.functions_args,
         &generate_caller_function_declaration/1
       )
     }
     #{
       CodeGenerator.Utils.generate_functions_declarations(
-        sends,
+        specs.sends,
         &generate_send_function_declaration/1
       )
     }
@@ -263,12 +262,12 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   @impl CodeGenerator
-  def generate_source(name, _module, functions, results, _dirty_funs, sends, _callbacks, mode) do
+  def generate_source(specs) do
     ~g"""
     #include <stdio.h>
-    #include "#{name}.h"
+    #include "#{specs.name}.h"
 
-    #{optional_state_related_functions(mode)}
+    #{optional_state_related_functions(specs)}
 
     void unifex_release_state(UnifexEnv *env, UnifexState *state) {
       unifex_cnode_add_to_released_states(env, state);
@@ -279,11 +278,13 @@ defmodule Unifex.CodeGenerators.CNode do
       return (UnifexState *)malloc(sizeof(UnifexState));
     }
 
-    #{CodeGenerator.Utils.generate_functions(results, &generate_result_function/1)}
-    #{CodeGenerator.Utils.generate_functions(functions, &generate_caller_function/1)}
-    #{CodeGenerator.Utils.generate_functions(sends, &generate_send_function/1)}
+    #{
+      CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
+    }
+    #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_caller_function/1)}
+    #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
 
-    #{generate_handle_message(functions)}
+    #{generate_handle_message(specs.functions_args)}
 
     void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
       handle_destroy_state(env, (UnifexState*)state);

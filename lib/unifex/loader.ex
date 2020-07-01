@@ -8,25 +8,18 @@ defmodule Unifex.Loader do
 
   """
 
-  alias Unifex.{Helper, InterfaceIO, SpecsParser}
+  alias Unifex.{Helper, InterfaceIO, Specs}
 
   defmacro __using__(_args) do
-    {name, specs} =
+    specs =
       Helper.get_source_dir()
       |> InterfaceIO.get_interfaces_specs!()
-      |> Enum.map(fn {name, _dir, specs} ->
-        specs = specs |> SpecsParser.parse_specs()
-        {name, specs}
-      end)
-      |> Enum.find(fn {_name, specs} ->
-        specs |> Keyword.fetch!(:module) == __CALLER__.module
-      end)
-
-    fun_specs = specs |> Keyword.get_values(:fun_specs)
+      |> Enum.map(fn {name, _dir, specs} -> Specs.parse(specs, name) end)
+      |> Enum.find(&(&1.module == __CALLER__.module))
 
     funs =
-      fun_specs
-      |> Enum.map(fn {name, args, _results} ->
+      specs.functions_args
+      |> Enum.map(fn {name, args} ->
         wrapped_name = name |> to_string() |> (&"unifex_#{&1}").() |> String.to_atom()
         arg_names = args |> Keyword.keys() |> Enum.map(&Macro.var(&1, nil))
 
@@ -41,13 +34,13 @@ defmodule Unifex.Loader do
       end)
 
     overrides =
-      fun_specs
-      |> Enum.map(fn {name, args, _results} ->
+      specs.functions_args
+      |> Enum.map(fn {name, args} ->
         {name, length(args)}
       end)
 
     quote do
-      use Bundlex.Loader, nif: unquote(name)
+      use Bundlex.Loader, nif: unquote(specs.name)
 
       unquote_splicing(funs)
 

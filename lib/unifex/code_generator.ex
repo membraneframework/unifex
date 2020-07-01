@@ -1,5 +1,5 @@
 defmodule Unifex.CodeGenerator do
-  alias Unifex.CodeGenerationMode
+  alias Unifex.Specs
 
   @type code_t :: String.t()
 
@@ -23,51 +23,19 @@ defmodule Unifex.CodeGenerator do
               mode :: CodeGenerationMode.t()
             ) :: code_t()
 
-  @spec generate_code(
-          name :: String.t(),
-          specs :: Unifex.SpecsParser.parsed_specs_t(),
-          mode :: CodeGenerationMode.t()
-        ) ::
-          {code_t(), code_t()}
-  def generate_code(name, specs, mode) do
-    implementation = mode |> choose_implementation()
-
-    module = specs |> Keyword.get(:module)
-    fun_specs = specs |> Keyword.get_values(:fun_specs)
-    dirty_funs = specs |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new()
-    sends = specs |> Keyword.get_values(:sends)
-    callbacks = specs |> Keyword.get_values(:callbacks)
-
-    {functions, results} =
-      fun_specs
-      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
-      |> Enum.unzip()
-
-    results = results |> Enum.flat_map(fn {name, specs} -> specs |> Enum.map(&{name, &1}) end)
-
-    header =
-      implementation.generate_header(name, module, functions, results, sends, callbacks, mode)
-
-    source =
-      implementation.generate_source(
-        name,
-        module,
-        functions,
-        results,
-        dirty_funs,
-        sends,
-        callbacks,
-        mode
-      )
-
+  @spec generate_code(Specs.t()) :: {code_t(), code_t()}
+  def generate_code(specs) do
+    implementation = choose_implementation(specs)
+    header = implementation.generate_header(specs)
+    source = implementation.generate_source(specs)
     {header, source}
   end
 
-  defp choose_implementation(%CodeGenerationMode{cnode_mode: false} = _mode) do
+  defp choose_implementation(%Specs{cnode_mode: false}) do
     Unifex.CodeGenerators.NIF
   end
 
-  defp choose_implementation(%CodeGenerationMode{cnode_mode: true} = _mode) do
+  defp choose_implementation(%Specs{cnode_mode: true}) do
     Unifex.CodeGenerators.CNode
   end
 end

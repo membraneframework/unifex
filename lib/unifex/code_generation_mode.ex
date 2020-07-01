@@ -9,7 +9,7 @@ defmodule Unifex.CodeGenerationMode do
   @spec code_generation_mode(
           _name :: String.t(),
           _dir :: any,
-          specs :: Unifex.SpecsParser.parsed_specs_t()
+          specs :: Unifex.Specs.t()
         ) :: t()
   def code_generation_mode(_name, _dir, specs) do
     %__MODULE__{
