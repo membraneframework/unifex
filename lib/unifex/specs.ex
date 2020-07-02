@@ -15,7 +15,7 @@ defmodule Unifex.Specs do
             {{function_name :: atom, function_arity :: non_neg_integer}, :cpu | :io}
           ],
           callbacks: [{hook :: :load | :upgrade | :unload, function_name :: String.t()}],
-          cnode_mode: boolean,
+          interface: module,
           use_state: boolean
         }
 
@@ -27,7 +27,7 @@ defmodule Unifex.Specs do
     :sends,
     :dirty_functions,
     :callbacks,
-    :cnode_mode,
+    :interface,
     :use_state
   ]
 
@@ -59,7 +59,7 @@ defmodule Unifex.Specs do
       dirty_functions:
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
       callbacks: Keyword.get_values(config, :callbacks),
-      cnode_mode: Keyword.get(config, :cnode_mode, false),
+      interface: Keyword.get(config, :interface, fn -> raise "No interface specified" end),
       use_state: Keyword.get(config, :use_state, false)
     }
   end

@@ -86,8 +86,8 @@ defmodule Unifex.Specs.DSL do
     store_config(:function, spec |> parse_function() |> enquote())
   end
 
-  defmacro cnode_mode(bool) when bool in [true, false] do
-    store_config(:cnode_mode, bool)
+  defmacro interface(interface) do
+    store_config(:interface, interface)
   end
 
   defmacro use_state(bool) when bool in [true, false] do

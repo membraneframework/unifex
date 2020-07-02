@@ -5,7 +5,8 @@ common = [
     module: 1,
     spec: 1,
     dirty: 2,
-    sends: 1
+    sends: 1,
+    interface: 1
   ]
 ]
 

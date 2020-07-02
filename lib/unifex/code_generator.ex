@@ -6,19 +6,11 @@ defmodule Unifex.CodeGenerator do
   @callback generate_header(Specs.t()) :: code_t
   @callback generate_source(Specs.t()) :: code_t
 
-  @spec generate_code(Specs.t()) :: {header :: code_t, source :: code_t}
+  @spec generate_code(Specs.t()) :: [{header :: code_t, source :: code_t}]
   def generate_code(specs) do
-    implementation = choose_implementation(specs)
-    header = implementation.generate_header(specs)
-    source = implementation.generate_source(specs)
+    generator = Module.concat(Unifex.CodeGenerators, specs.interface)
+    header = generator.generate_header(specs)
+    source = generator.generate_source(specs)
     {header, source}
-  end
-
-  defp choose_implementation(%Specs{cnode_mode: false}) do
-    Unifex.CodeGenerators.NIF
-  end
-
-  defp choose_implementation(%Specs{cnode_mode: true}) do
-    Unifex.CodeGenerators.CNode
   end
 end

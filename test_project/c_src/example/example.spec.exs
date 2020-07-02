@@ -1,3 +1,5 @@
+interface NIF
+
 module Example
 
 callback :load

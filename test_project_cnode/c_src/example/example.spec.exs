@@ -1,10 +1,10 @@
+interface CNode
+
 module Example
 
 callback :load
 
 use_state(true)
-
-cnode_mode(true)
 
 spec init() :: {:ok :: label, state}
 
