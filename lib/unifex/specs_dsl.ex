@@ -107,7 +107,7 @@ defmodule Unifex.Specs.DSL do
   - `:io` - marks function as IO-bound (maps to the `ERL_NIF_DIRTY_JOB_IO_BOUND` erlang flag)
   """
   defmacro dirty(type, funs) when type in [:cpu, :io] and is_list(funs) do
-    store_config(:dirty, funs |> Enum.map(&{&1, type}))
+    store_config(:dirty_functions, funs |> Enum.map(&{&1, type}))
   end
 
   @doc """

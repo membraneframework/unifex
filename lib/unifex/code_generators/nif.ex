@@ -397,7 +397,7 @@ defmodule Unifex.CodeGenerators.NIF do
         arity = length(args)
 
         flags =
-          case specs.dirty_funs[{name, arity}] do
+          case specs.dirty_functions[{name, arity}] do
             :cpu -> ~g<ERL_NIF_DIRTY_JOB_CPU_BOUND>
             :io -> ~g<ERL_NIF_DIRTY_JOB_IO_BOUND>
             nil -> ~g<0>

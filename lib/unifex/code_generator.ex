@@ -3,27 +3,10 @@ defmodule Unifex.CodeGenerator do
 
   @type code_t :: String.t()
 
-  @callback generate_header(
-              name :: any,
-              module :: any,
-              functions :: any,
-              results :: any,
-              sends :: any,
-              callbacks :: any,
-              mode :: CodeGenerationMode.t()
-            ) :: code_t()
-  @callback generate_source(
-              name :: any,
-              module :: any,
-              functions :: any,
-              results :: any,
-              dirty_funs :: any,
-              sends :: any,
-              callbacks :: any,
-              mode :: CodeGenerationMode.t()
-            ) :: code_t()
+  @callback generate_header(Specs.t()) :: code_t
+  @callback generate_source(Specs.t()) :: code_t
 
-  @spec generate_code(Specs.t()) :: {code_t(), code_t()}
+  @spec generate_code(Specs.t()) :: {header :: code_t, source :: code_t}
   def generate_code(specs) do
     implementation = choose_implementation(specs)
     header = implementation.generate_header(specs)

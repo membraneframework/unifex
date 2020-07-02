@@ -5,14 +5,19 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
-  @type t :: [
-          {:module, module()}
-          | {:fun_specs,
-             {fun_name :: atom, [{arg_name :: atom, arg_type :: atom | {:list, atom}}],
-              return_type :: Macro.t()}}
-          | {:sends, sent_term_type :: Macro.t()}
-          | {:dirty, [{{fun_name :: atom, fun_arity :: non_neg_integer}, :cpu | :io}]}
-        ]
+  @type t :: %__MODULE__{
+          name: String.t(),
+          module: module() | nil,
+          functions_args: [{function_name :: atom, [arg_type :: {atom | {:list, atom}}]}],
+          functions_results: [{function_name :: atom, return_type :: Macro.t()}],
+          sends: {send_name :: atom, send_term_type :: Macro.t()},
+          dirty_functions: [
+            {{function_name :: atom, function_arity :: non_neg_integer}, :cpu | :io}
+          ],
+          callbacks: [{hook :: :load | :upgrade | :unload, function_name :: String.t()}],
+          cnode_mode: boolean,
+          use_state: boolean
+        }
 
   @enforce_keys [
     :name,
@@ -20,7 +25,7 @@ defmodule Unifex.Specs do
     :functions_args,
     :functions_results,
     :sends,
-    :dirty_funs,
+    :dirty_functions,
     :callbacks,
     :cnode_mode,
     :use_state
@@ -51,7 +56,8 @@ defmodule Unifex.Specs do
       functions_args: functions_args,
       functions_results: functions_results,
       sends: Keyword.get_values(config, :sends),
-      dirty_funs: config |> Keyword.get_values(:dirty) |> List.flatten() |> Map.new(),
+      dirty_functions:
+        config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
       callbacks: Keyword.get_values(config, :callbacks),
       cnode_mode: Keyword.get(config, :cnode_mode, false),
       use_state: Keyword.get(config, :use_state, false)
