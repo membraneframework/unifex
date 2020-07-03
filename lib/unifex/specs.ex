@@ -36,9 +36,10 @@ defmodule Unifex.Specs do
   @doc """
   Parses Unifex specs of native functions.
   """
-  @spec parse(specs_code :: String.t(), name :: String.t()) :: t()
-  def parse(specs_code, name) do
-    {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env())
+  @spec parse(specs_file :: Path.t(), name :: String.t()) :: t()
+  def parse(specs_file, name) do
+    specs_code = File.read!(specs_file)
+    {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env(specs_file))
     config = binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
 
     {functions_args, functions_results} =
@@ -67,7 +68,7 @@ defmodule Unifex.Specs do
   # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
   # user code without possibly misleading macros and aliases from the current scope,
   # while providing needed functions/macros.
-  defp make_env() do
+  defp make_env(file) do
     {env, _binds} =
       Code.eval_quoted(
         quote do
@@ -76,6 +77,6 @@ defmodule Unifex.Specs do
         end
       )
 
-    env
+    %Macro.Env{env | file: file}
   end
 end

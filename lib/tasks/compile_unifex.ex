@@ -9,8 +9,8 @@ defmodule Mix.Tasks.Compile.Unifex do
   def run(_args) do
     Helper.get_source_dir()
     |> InterfaceIO.get_interfaces_specs!()
-    |> Enum.each(fn {name, dir, specs_code} ->
-      code = specs_code |> Specs.parse(name) |> CodeGenerator.generate_code()
+    |> Enum.each(fn {name, dir, specs_file} ->
+      code = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
       InterfaceIO.store_interface!(name, dir, code)
     end)
   end
