@@ -1,5 +1,3 @@
-interface CNode
-
 module Example
 
 callback :main

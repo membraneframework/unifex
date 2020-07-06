@@ -6,7 +6,7 @@ defmodule Unifex.Specs do
   """
 
   @type t :: %__MODULE__{
-          name: String.t(),
+          name: atom,
           module: module() | nil,
           functions_args: [{function_name :: atom, [arg_type :: {atom | {:list, atom}}]}],
           functions_results: [{function_name :: atom, return_type :: Macro.t()}],
@@ -17,7 +17,7 @@ defmodule Unifex.Specs do
           callbacks: %{
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
-          interface: module,
+          interface: module | nil,
           state_type: String.t()
         }
 
@@ -54,7 +54,7 @@ defmodule Unifex.Specs do
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
     %__MODULE__{
-      name: name,
+      name: String.to_atom(name),
       module: Keyword.get(config, :module),
       functions_args: functions_args,
       functions_results: functions_results,
@@ -62,7 +62,7 @@ defmodule Unifex.Specs do
       dirty_functions:
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
-      interface: Keyword.get(config, :interface, fn -> raise "No interface specified" end),
+      interface: Keyword.get(config, :interface),
       state_type: Keyword.get(config, :state_type, nil)
     }
   end
