@@ -4,7 +4,7 @@ module Example
 
 callback :load
 
-use_state(true)
+state_type "MyState"
 
 spec init() :: {:ok :: label, was_handle_load_called :: int, state}
 

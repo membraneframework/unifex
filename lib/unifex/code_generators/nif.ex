@@ -27,6 +27,16 @@ defmodule Unifex.CodeGenerators.NIF do
     extern "C" {
     #endif
 
+    #define UNIFEX_MODULE "#{specs.module}"
+
+    /*
+     * Functions that manage lib and state lifecycle
+     * Functions with 'unifex_' prefix are generated automatically,
+     * the user have to implement rest of them.
+     */
+
+    #{generate_state_related_declarations(specs)}
+
     /*
      * Declaration of native functions for module #{specs.module}.
      * The implementation have to be provided by the user.
@@ -38,16 +48,6 @@ defmodule Unifex.CodeGenerators.NIF do
         &generate_implemented_function_declaration/1
       )
     }
-
-    /*
-     * Functions that manage lib and state lifecycle
-     * Functions with 'unifex_' prefix are generated automatically,
-     * the user have to implement rest of them.
-     * Available only and only if in #{InterfaceIO.user_header_path(specs.name)}
-     * exisis definition of UnifexNigState
-     */
-
-    #{generate_state_related_declarations(specs)}
 
     /*
      * Callbacks for nif lifecycle hooks.
@@ -95,7 +95,7 @@ defmodule Unifex.CodeGenerators.NIF do
       CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
     }
     #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
-    #{generate_state_related_stuff(specs)}
+    #{generate_state_related_functions(specs)}
     #{generate_nif_lifecycle_callbacks(specs)}
     #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_export_function/1)}
     #{generate_erlang_boilerplate(specs)}
@@ -237,9 +237,13 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp generate_state_related_declarations(%Specs{use_state: true} = specs) do
+  defp generate_state_related_declarations(%Specs{state_type: nil}) do
+    ~g<>
+  end
+
+  defp generate_state_related_declarations(%Specs{state_type: state_type}) do
     ~g"""
-    #define UNIFEX_MODULE "#{specs.module}"
+    typedef #{state_type} UnifexState;
 
     /**
      * Allocates the state struct. Have to be paired with 'unifex_release_state' call
@@ -268,11 +272,11 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp generate_state_related_declarations(%Specs{}) do
+  defp generate_state_related_functions(%Specs{state_type: nil}) do
     ~g<>
   end
 
-  defp generate_state_related_stuff(%Specs{use_state: true}) do
+  defp generate_state_related_functions(%Specs{}) do
     ~g"""
     ErlNifResourceType *STATE_RESOURCE_TYPE;
 
@@ -299,10 +303,6 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp generate_state_related_stuff(%Specs{}) do
-    ~g<>
-  end
-
   defp generate_nif_lifecycle_callbacks_declarations(callbacks) do
     callbacks
     |> Enum.map_join("\n", fn
@@ -317,15 +317,15 @@ defmodule Unifex.CodeGenerators.NIF do
     end)
   end
 
-  defp state_resource_type_initialization(%Specs{use_state: true}) do
+  defp state_resource_type_initialization(%Specs{state_type: nil}) do
+    ~g<>
+  end
+
+  defp state_resource_type_initialization(%Specs{}) do
     ~g"""
       STATE_RESOURCE_TYPE =
         enif_open_resource_type(env, NULL, "UnifexState", (ErlNifResourceDtor*) destroy_state, flags, NULL);
     """
-  end
-
-  defp state_resource_type_initialization(%Specs{}) do
-    ~g<>
   end
 
   defp generate_nif_lifecycle_callbacks(%Specs{module: nil}) do

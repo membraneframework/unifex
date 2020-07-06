@@ -11,24 +11,15 @@
 extern "C" {
 #endif
 
-/*
- * Declaration of native functions for module Elixir.Example.
- * The implementation have to be provided by the user.
- */
-
-UNIFEX_TERM init(UnifexEnv *env);
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, int *list_in,
-                unsigned int list_in_length, UnifexState *state);
+#define UNIFEX_MODULE "Elixir.Example"
 
 /*
  * Functions that manage lib and state lifecycle
  * Functions with 'unifex_' prefix are generated automatically,
  * the user have to implement rest of them.
- * Available only and only if in ../example.h
- * exisis definition of UnifexNigState
  */
 
-#define UNIFEX_MODULE "Elixir.Example"
+typedef MyState UnifexState;
 
 /**
  * Allocates the state struct. Have to be paired with 'unifex_release_state'
@@ -55,6 +46,15 @@ void unifex_keep_state(UnifexEnv *env, UnifexState *state);
  * be responsible for releasing any resources kept inside state.
  */
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
+
+/*
+ * Declaration of native functions for module Elixir.Example.
+ * The implementation have to be provided by the user.
+ */
+
+UNIFEX_TERM init(UnifexEnv *env);
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, int *list_in,
+                unsigned int list_in_length, UnifexState *state);
 
 /*
  * Callbacks for nif lifecycle hooks.

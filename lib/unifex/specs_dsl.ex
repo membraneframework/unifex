@@ -90,8 +90,8 @@ defmodule Unifex.Specs.DSL do
     store_config(:interface, interface)
   end
 
-  defmacro use_state(bool) when bool in [true, false] do
-    store_config(:use_state, bool)
+  defmacro state_type(state_type) do
+    store_config(:state_type, state_type)
   end
 
   @doc """

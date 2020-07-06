@@ -1,13 +1,18 @@
 #include "example.h"
 #include <stdio.h>
 
+UnifexState *unifex_alloc_state(UnifexEnv *_env) {
+  UNIFEX_UNUSED(_env);
+  return (UnifexState *)malloc(sizeof(UnifexState));
+}
+
 void unifex_release_state(UnifexEnv *env, UnifexState *state) {
   unifex_cnode_add_to_released_states(env, state);
 }
 
-UnifexState *unifex_alloc_state(UnifexEnv *_env) {
-  UNIFEX_UNUSED(_env);
-  return (UnifexState *)malloc(sizeof(UnifexState));
+void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
+  handle_destroy_state(env, (UnifexState *)state);
+  free(state);
 }
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
@@ -91,11 +96,6 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
   } else {
     return unifex_cnode_undefined_function_error(env, fun_name);
   }
-}
-
-void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
-  handle_destroy_state(env, (UnifexState *)state);
-  free(state);
 }
 
 int main(int argc, char **argv) {

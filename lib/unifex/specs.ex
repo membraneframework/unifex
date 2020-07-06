@@ -16,7 +16,7 @@ defmodule Unifex.Specs do
           ],
           callbacks: [{hook :: :load | :upgrade | :unload, function_name :: String.t()}],
           interface: module,
-          use_state: boolean
+          state_type: String.t()
         }
 
   @enforce_keys [
@@ -28,7 +28,7 @@ defmodule Unifex.Specs do
     :dirty_functions,
     :callbacks,
     :interface,
-    :use_state
+    :state_type
   ]
 
   defstruct @enforce_keys
@@ -61,7 +61,7 @@ defmodule Unifex.Specs do
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
       callbacks: Keyword.get_values(config, :callbacks),
       interface: Keyword.get(config, :interface, fn -> raise "No interface specified" end),
-      use_state: Keyword.get(config, :use_state, false)
+      state_type: Keyword.get(config, :state_type, nil)
     }
   end
 

@@ -167,36 +167,42 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, const char *in_buff, int *index)"
   end
 
-  def optional_state_def(%Specs{use_state: false}) do
-    ~g"""
-    typedef struct UnifexState {
-      void * field;
-    } UnifexState;
-    """
-  end
-
-  def optional_state_def(%Specs{}) do
+  def generate_state_related_declarations(%Specs{state_type: nil}) do
     ~g<>
   end
 
-  def optional_state_related_functions_declaration(%Specs{use_state: false}) do
+  def generate_state_related_declarations(%Specs{state_type: state_type}) do
     ~g"""
-    void handle_destroy_state(UnifexEnv *env, State *state);
+    typedef #{state_type} UnifexState;
+
+    UnifexState *unifex_alloc_state(UnifexEnv *env);
+    void unifex_release_state(UnifexEnv *env, UnifexState *state);
+    void handle_destroy_state(UnifexEnv *env, UnifexState *state);
     """
   end
 
-  def optional_state_related_functions_declaration(%Specs{}) do
-    ~g<>
-  end
-
-  def optional_state_related_functions(%Specs{use_state: false}) do
+  def generate_state_related_functions(%Specs{state_type: nil}) do
     ~g"""
-    void handle_destroy_state(UnifexEnv *env, State *state) {}
+    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {}
     """
   end
 
-  def optional_state_related_functions(%Specs{}) do
-    ~g<>
+  def generate_state_related_functions(%Specs{}) do
+    ~g"""
+    UnifexState *unifex_alloc_state(UnifexEnv *_env) {
+      UNIFEX_UNUSED(_env);
+      return (UnifexState *)malloc(sizeof(UnifexState));
+    }
+
+    void unifex_release_state(UnifexEnv *env, UnifexState *state) {
+      unifex_cnode_add_to_released_states(env, state);
+    }
+
+    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
+      handle_destroy_state(env, (UnifexState*)state);
+      free(state);
+    }
+    """
   end
 
   @impl CodeGenerator
@@ -224,11 +230,7 @@ defmodule Unifex.CodeGenerators.CNode do
     extern "C" {
     #endif
 
-    #{optional_state_def(specs)}
-
-    void unifex_release_state(UnifexEnv *env, UnifexState *state);
-    UnifexState *unifex_alloc_state(UnifexEnv *env);
-    void handle_destroy_state(UnifexEnv *env, UnifexState *state);
+    #{generate_state_related_declarations(specs)}
 
     #{
       CodeGenerator.Utils.generate_functions_declarations(
@@ -267,16 +269,7 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <stdio.h>
     #include "#{specs.name}.h"
 
-    #{optional_state_related_functions(specs)}
-
-    void unifex_release_state(UnifexEnv *env, UnifexState *state) {
-      unifex_cnode_add_to_released_states(env, state);
-    }
-
-    UnifexState *unifex_alloc_state(UnifexEnv *_env) {
-      UNIFEX_UNUSED(_env);
-      return (UnifexState *)malloc(sizeof(UnifexState));
-    }
+    #{generate_state_related_functions(specs)}
 
     #{
       CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
@@ -285,11 +278,6 @@ defmodule Unifex.CodeGenerators.CNode do
     #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
 
     #{generate_handle_message(specs.functions_args)}
-
-    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
-      handle_destroy_state(env, (UnifexState*)state);
-      free(state);
-    }
 
     int main(int argc, char ** argv) {
       return unifex_cnode_main_function(argc, argv);

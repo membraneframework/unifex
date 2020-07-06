@@ -20,8 +20,10 @@
 extern "C" {
 #endif
 
-void unifex_release_state(UnifexEnv *env, UnifexState *state);
+typedef MyState UnifexState;
+
 UnifexState *unifex_alloc_state(UnifexEnv *env);
+void unifex_release_state(UnifexEnv *env, UnifexState *state);
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
 UNIFEX_TERM init(UnifexEnv *env);
