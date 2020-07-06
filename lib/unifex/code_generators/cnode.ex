@@ -7,19 +7,98 @@ defmodule Unifex.CodeGenerators.CNode do
 
   @behaviour CodeGenerator
 
-  def generate_tuple_maker(content) do
-    {types, results} = Enum.unzip(content)
+  @impl CodeGenerator
+  def generate_header(specs) do
+    ~g"""
+    #pragma once
 
-    tuple_header =
-      case {Enum.count(types), Enum.count(types, &(&1 != :state))} do
-        {n, 1} when n > 1 ->
-          []
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <string.h>
+    #include <stdlib.h>
 
-        {_, tuple_size} ->
-          [~g<ei_x_encode_tuple_header(out_buff, #{tuple_size});>]
-      end
+    #ifndef _REENTRANT
+    #define _REENTRANT
 
-    Enum.join(tuple_header ++ results, "\n")
+    #endif
+    #include <ei_connect.h>
+    #include <erl_interface.h>
+
+    #include <unifex/unifex.h>
+    #include <unifex/unifex_cnode.h>
+    #include "#{InterfaceIO.user_header_path(specs.name)}"
+
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
+    #{generate_state_related_declarations(specs)}
+
+    #{
+      CodeGenerator.Utils.generate_functions_declarations(
+        specs.functions_args,
+        &generate_implemented_function_declaration/1
+      )
+    }
+    #{
+      CodeGenerator.Utils.generate_functions_declarations(
+        specs.functions_results,
+        &generate_result_function_declaration/1
+      )
+    }
+    #{
+      CodeGenerator.Utils.generate_functions_declarations(
+        specs.functions_args,
+        &generate_caller_function_declaration/1
+      )
+    }
+    #{
+      CodeGenerator.Utils.generate_functions_declarations(
+        specs.sends,
+        &generate_send_function_declaration/1
+      )
+    }
+    #{generate_main_function_declaration(specs.callbacks)}
+
+    #ifdef __cplusplus
+    }
+    #endif
+    """
+  end
+
+  @impl CodeGenerator
+  def generate_source(specs) do
+    ~g"""
+    #include <stdio.h>
+    #include "#{specs.name}.h"
+
+    #{generate_state_related_functions(specs)}
+
+    #{
+      CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
+    }
+    #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_caller_function/1)}
+    #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
+
+    #{generate_handle_message(specs.functions_args)}
+
+    #{generate_main_function(specs.callbacks)}
+    """
+  end
+
+  defp generate_main_function_declaration(callbacks) do
+    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
+    ~g<int #{main}(int argc, char** argv);>
+  end
+
+  defp generate_main_function(callbacks) do
+    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
+
+    ~g"""
+    int main(int argc, char **argv) {
+      return #{main}(argc, argv);
+    }
+    """
   end
 
   defp generate_implemented_function_declaration({name, args}) do
@@ -205,100 +284,6 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  @impl CodeGenerator
-  def generate_header(specs) do
-    ~g"""
-    #pragma once
-
-    #include <stdio.h>
-    #include <stdint.h>
-    #include <string.h>
-    #include <stdlib.h>
-
-    #ifndef _REENTRANT
-    #define _REENTRANT
-
-    #endif
-    #include <ei_connect.h>
-    #include <erl_interface.h>
-
-    #include <unifex/unifex.h>
-    #include <unifex/unifex_cnode.h>
-    #include "#{InterfaceIO.user_header_path(specs.name)}"
-
-    #ifdef __cplusplus
-    extern "C" {
-    #endif
-
-    #{generate_state_related_declarations(specs)}
-
-    #{
-      CodeGenerator.Utils.generate_functions_declarations(
-        specs.functions_args,
-        &generate_implemented_function_declaration/1
-      )
-    }
-    #{
-      CodeGenerator.Utils.generate_functions_declarations(
-        specs.functions_results,
-        &generate_result_function_declaration/1
-      )
-    }
-    #{
-      CodeGenerator.Utils.generate_functions_declarations(
-        specs.functions_args,
-        &generate_caller_function_declaration/1
-      )
-    }
-    #{
-      CodeGenerator.Utils.generate_functions_declarations(
-        specs.sends,
-        &generate_send_function_declaration/1
-      )
-    }
-    #{generate_main_function_declaration(specs.callbacks)}
-
-    #ifdef __cplusplus
-    }
-    #endif
-    """
-  end
-
-  @impl CodeGenerator
-  def generate_source(specs) do
-    ~g"""
-    #include <stdio.h>
-    #include "#{specs.name}.h"
-
-    #{generate_state_related_functions(specs)}
-
-    #{
-      CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
-    }
-    #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_caller_function/1)}
-    #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
-
-    #{generate_handle_message(specs.functions_args)}
-
-    #{generate_main_function(specs.callbacks)}
-    """
-  end
-
-  defp generate_main_function_declaration(callbacks) do
-    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
-    ~g<int #{main}(int argc, char** argv);>
-  end
-
-  defp generate_main_function(callbacks) do
-    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
-
-    ~g"""
-    int main(int argc, char **argv) {
-      return #{main}(argc, argv);
-    }
-    """
-  end
-
   defp generate_function_spec_traverse_helper(specs) do
     specs
     |> Utils.generate_function_spec_traverse_helper(%{
@@ -310,5 +295,20 @@ defmodule Unifex.CodeGenerators.CNode do
     |> case do
       {{_type, result}, meta} -> {result, meta}
     end
+  end
+
+  defp generate_tuple_maker(content) do
+    {types, results} = Enum.unzip(content)
+
+    tuple_header =
+      case {Enum.count(types), Enum.count(types, &(&1 != :state))} do
+        {n, 1} when n > 1 ->
+          []
+
+        {_, tuple_size} ->
+          [~g<ei_x_encode_tuple_header(out_buff, #{tuple_size});>]
+      end
+
+    Enum.join(tuple_header ++ results, "\n")
   end
 end
