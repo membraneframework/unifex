@@ -19,7 +19,9 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
 
 void unifex_cnode_destroy_state(UnifexEnv *env, void *state);
 
-int unifex_cnode_main_function(int argc, char **argv);
+int unifex_cnode_init(int argc, char **argv, UnifexEnv *env);
+int unifex_cnode_receive(UnifexEnv *env);
+void unifex_cnode_destroy(UnifexEnv *env);
 
 #ifdef __cplusplus
 }

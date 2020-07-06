@@ -14,7 +14,9 @@ defmodule Unifex.Specs do
           dirty_functions: [
             {{function_name :: atom, function_arity :: non_neg_integer}, :cpu | :io}
           ],
-          callbacks: [{hook :: :load | :upgrade | :unload, function_name :: String.t()}],
+          callbacks: %{
+            (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
+          },
           interface: module,
           state_type: String.t()
         }
@@ -59,7 +61,7 @@ defmodule Unifex.Specs do
       sends: Keyword.get_values(config, :sends),
       dirty_functions:
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
-      callbacks: Keyword.get_values(config, :callbacks),
+      callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface, fn -> raise "No interface specified" end),
       state_type: Keyword.get(config, :state_type, nil)
     }

@@ -98,6 +98,4 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
   }
 }
 
-int main(int argc, char **argv) {
-  return unifex_cnode_main_function(argc, argv);
-}
+int main(int argc, char **argv) { return handle_main(argc, argv); }

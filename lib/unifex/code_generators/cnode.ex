@@ -256,6 +256,7 @@ defmodule Unifex.CodeGenerators.CNode do
         &generate_send_function_declaration/1
       )
     }
+    #{generate_main_function_declaration(specs.callbacks)}
 
     #ifdef __cplusplus
     }
@@ -279,8 +280,21 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_handle_message(specs.functions_args)}
 
-    int main(int argc, char ** argv) {
-      return unifex_cnode_main_function(argc, argv);
+    #{generate_main_function(specs.callbacks)}
+    """
+  end
+
+  defp generate_main_function_declaration(callbacks) do
+    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
+    ~g<int #{main}(int argc, char** argv);>
+  end
+
+  defp generate_main_function(callbacks) do
+    main = Map.get(callbacks, :main, "unifex_cnode_main_function")
+
+    ~g"""
+    int main(int argc, char **argv) {
+      return #{main}(argc, argv);
     }
     """
   end

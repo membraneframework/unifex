@@ -34,6 +34,7 @@ UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason);
 UNIFEX_TERM init_caller(UnifexEnv *env, const char *in_buff, int *index);
 UNIFEX_TERM foo_caller(UnifexEnv *env, const char *in_buff, int *index);
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num);
+int handle_main(int argc, char **argv);
 
 #ifdef __cplusplus
 }

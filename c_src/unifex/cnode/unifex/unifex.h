@@ -28,8 +28,9 @@ typedef struct UnifexLinkedList {
 } UnifexLinkedList;
 
 typedef struct UnifexCNodeContext {
-  const char *node_name;
+  char *node_name;
   int ei_fd;
+  int listen_fd;
   erlang_pid *e_pid;
   void *state;
   UnifexLinkedList *released_states;

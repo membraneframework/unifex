@@ -2,7 +2,7 @@ interface CNode
 
 module Example
 
-callback :load
+callback :main
 
 state_type "MyState"
 

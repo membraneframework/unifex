@@ -57,7 +57,7 @@ static void free_released_states(UnifexEnv *env) {
   }
 }
 
-static int receive(UnifexEnv *env) {
+int unifex_cnode_receive(UnifexEnv *env) {
   ei_x_buff in_buff;
   ei_x_new(&in_buff);
   erlang_msg emsg;
@@ -139,66 +139,90 @@ static int listen_sock(int *listen_fd, int *port) {
   return 0;
 }
 
-int unifex_cnode_main_function(int argc, char **argv) {
+int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
+  *env = (UnifexEnv){.node_name = calloc(sizeof(char), 256),
+                     .ei_fd = ERL_ERROR,
+                     .listen_fd = -1,
+                     .e_pid = NULL,
+                     .state = NULL,
+                     .released_states = NULL};
+
   if (validate_args(argc, argv)) {
     fprintf(stderr,
             "%s <host_name> <alive_name> <node_name> <cookie> <creation>\r\n",
             argv[0]);
-    return 1;
+    goto unifex_cnode_init_error;
   }
   char host_name[256];
   strcpy(host_name, argv[1]);
   char alive_name[256];
   strcpy(alive_name, argv[2]);
-  char node_name[256];
-  strcpy(node_name, argv[3]);
+  strcpy(env->node_name, argv[3]);
   char cookie[256];
   strcpy(cookie, argv[4]);
   short creation = (short)atoi(argv[5]);
 
-  int listen_fd;
   int port;
-  if (listen_sock(&listen_fd, &port)) {
+  if (listen_sock(&env->listen_fd, &port)) {
     DEBUG("listen error");
-    return 1;
+    goto unifex_cnode_init_error;
   }
   DEBUG("listening at %d", port);
 
   ei_cnode ec;
   struct in_addr addr;
   addr.s_addr = inet_addr("127.0.0.1");
-  if (ei_connect_xinit(&ec, host_name, alive_name, node_name, &addr, cookie,
-                       creation) < 0) {
+  if (ei_connect_xinit(&ec, host_name, alive_name, env->node_name, &addr,
+                       cookie, creation) < 0) {
     DEBUG("init error: %d", erl_errno);
-    return 1;
+    goto unifex_cnode_init_error;
   }
   DEBUG("initialized %s (%s)", ei_thisnodename(&ec), inet_ntoa(addr));
 
   if (ei_publish(&ec, port) == -1) {
     DEBUG("publish error: %d", erl_errno);
-    return 1;
+    goto unifex_cnode_init_error;
   }
   DEBUG("published");
   printf("ready\r\n");
   fflush(stdout);
 
   ErlConnect conn;
-  int ei_fd = ei_accept_tmo(&ec, listen_fd, &conn, 5000);
-  if (ei_fd == ERL_ERROR) {
+  env->ei_fd = ei_accept_tmo(&ec, env->listen_fd, &conn, 5000);
+  if (env->ei_fd == ERL_ERROR) {
     DEBUG("accept error: %d", erl_errno);
-    return 1;
+    goto unifex_cnode_init_error;
   }
   DEBUG("accepted %s", conn.nodename);
 
-  UnifexEnv env = {.node_name = node_name,
-                   .ei_fd = ei_fd,
-                   .e_pid = NULL,
-                   .state = NULL,
-                   .released_states = NULL};
+  return 0;
 
-  while (!receive(&env))
+unifex_cnode_init_error:
+  unifex_cnode_destroy(env);
+  return 1;
+}
+
+void unifex_cnode_destroy(UnifexEnv *env) {
+  if (env->listen_fd != -1) {
+    close(env->listen_fd);
+  }
+  if (env->ei_fd != ERL_ERROR) {
+    close(env->ei_fd);
+  }
+  if (env->node_name) {
+    free(env->node_name);
+  }
+}
+
+int unifex_cnode_main_function(int argc, char **argv) {
+  UnifexEnv env;
+  if (unifex_cnode_init(argc, argv, &env)) {
+    return 1;
+  }
+
+  while (!unifex_cnode_receive(&env))
     ;
-  close(listen_fd);
-  close(ei_fd);
+
+  unifex_cnode_destroy(&env);
   return 0;
 }

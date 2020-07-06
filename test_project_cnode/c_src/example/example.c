@@ -20,3 +20,16 @@ void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
   state->a = 0;
 }
+
+int handle_main(int argc, char **argv) {
+  UnifexEnv env;
+  if (unifex_cnode_init(argc, argv, &env)) {
+    return 1;
+  }
+
+  while (!unifex_cnode_receive(&env))
+    ;
+
+  unifex_cnode_destroy(&env);
+  return 0;
+}
