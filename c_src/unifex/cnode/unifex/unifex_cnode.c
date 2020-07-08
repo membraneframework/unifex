@@ -81,8 +81,8 @@ int unifex_cnode_receive(UnifexEnv *env) {
       char fun_name[2048];
       ei_decode_atom(in_buff.buff, &index, fun_name);
 
-      UNIFEX_TERM result =
-          unifex_cnode_handle_message(env, fun_name, &index, &in_buff);
+      UnifexCNodeInBuff buff = {.buff = in_buff.buff, .index = &index};
+      UNIFEX_TERM result = unifex_cnode_handle_message(env, fun_name, &buff);
       unifex_cnode_send_to_server_and_free(env, result);
       free_released_states(env);
       break;

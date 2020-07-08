@@ -53,19 +53,18 @@ UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
   return out_buff;
 }
 
-UNIFEX_TERM init_caller(UnifexEnv *env, const char *in_buff, int *index) {
+UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_UNUSED(in_buff);
-  UNIFEX_UNUSED(index);
 
   return init(env);
 }
 
-UNIFEX_TERM foo_caller(UnifexEnv *env, const char *in_buff, int *index) {
+UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
 
   UnifexPid target;
   UnifexState *state;
 
-  ei_decode_pid(in_buff, index, &target);
+  ei_decode_pid(in_buff->buff, in_buff->index, &target);
   state = (UnifexState *)env->state;
 
   return foo(env, target, state);
@@ -88,11 +87,11 @@ int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
 }
 
 UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
-                                        int *index, ei_x_buff *in_buff) {
+                                        UnifexCNodeInBuff *in_buff) {
   if (strcmp(fun_name, "init") == 0) {
-    return init_caller(env, in_buff->buff, index);
+    return init_caller(env, in_buff);
   } else if (strcmp(fun_name, "foo") == 0) {
-    return foo_caller(env, in_buff->buff, index);
+    return foo_caller(env, in_buff);
   } else {
     return unifex_cnode_undefined_function_error(env, fun_name);
   }

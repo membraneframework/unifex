@@ -38,10 +38,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.Atom do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
-    def generate_arg_parse(_argument, name, _ctx) do
+    def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       #{name} = unifex_alloc(MAXATOMLEN);
-      ei_decode_atom(in_buff, index, #{name});
+      ei_decode_atom(#{argument}->buff, #{argument}->index, #{name});
       """
     end
   end

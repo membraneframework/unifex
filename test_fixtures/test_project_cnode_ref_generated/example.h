@@ -31,8 +31,8 @@ UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, UnifexState *state);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer);
 UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason);
-UNIFEX_TERM init_caller(UnifexEnv *env, const char *in_buff, int *index);
-UNIFEX_TERM foo_caller(UnifexEnv *env, const char *in_buff, int *index);
+UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num);
 int handle_main(int argc, char **argv);
 

@@ -177,17 +177,13 @@ defmodule Unifex.CodeGenerators.CNode do
     end)
   end
 
-  defp generate_handle_message_declaration() do
-    "UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char* fun_name, int *index, ei_x_buff *in_buff)"
-  end
-
   defp generate_handle_message(functions) do
     if_statements =
       Enum.map(functions, fn
         {f_name, _args} ->
           ~g"""
           if (strcmp(fun_name, "#{f_name}") == 0) {
-              return #{f_name}_caller(env, in_buff->buff, index);
+              return #{f_name}_caller(env, in_buff);
             }
           """
       end)
@@ -201,7 +197,7 @@ defmodule Unifex.CodeGenerators.CNode do
     handling = Enum.concat(if_statements, [last_statement]) |> Enum.join(" else ")
 
     ~g"""
-    #{generate_handle_message_declaration()} {
+    UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char* fun_name, UnifexCNodeInBuff *in_buff) {
       #{handling}
     }
     """
@@ -220,7 +216,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     args_parsing =
       args
-      |> Enum.map(fn {name, type} -> BaseType.generate_arg_parse(type, name, nil, CNode) end)
+      |> Enum.map(fn {name, type} -> BaseType.generate_arg_parse(type, name, "in_buff", CNode) end)
       |> Enum.join("\n")
 
     implemented_fun_args =
@@ -232,7 +228,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
-      #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff); UNIFEX_UNUSED(index);", else: ""}
+      #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff);", else: ""}
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
@@ -243,7 +239,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_caller_function_declaration({name, _args}) do
-    ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, const char *in_buff, int *index)"
+    ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff)"
   end
 
   def generate_state_related_declarations(%Specs{state_type: nil}) do

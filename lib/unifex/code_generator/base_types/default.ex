@@ -37,8 +37,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
-    def generate_arg_parse(_argument, name, ctx) do
-      ~g<ei_decode_#{ctx.type}(in_buff, index, &#{name});>
+    def generate_arg_parse(argument, name, ctx) do
+      ~g<ei_decode_#{ctx.type}(#{argument}-\>buff, #{argument}-\>index, &#{name});>
     end
 
     @impl BaseType

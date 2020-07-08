@@ -4,6 +4,11 @@
 extern "C" {
 #endif
 
+typedef struct UnifexCNodeInBuff {
+  const char *buff;
+  int *index;
+} UnifexCNodeInBuff;
+
 void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
                                     const char *msg_type);
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
@@ -15,7 +20,7 @@ UNIFEX_TERM unifex_cnode_undefined_function_error(UnifexEnv *env,
 void unifex_cnode_add_to_released_states(UnifexEnv *env, void *state);
 
 UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
-                                        int *index, ei_x_buff *in_buff);
+                                        UnifexCNodeInBuff *in_buff);
 
 void unifex_cnode_destroy_state(UnifexEnv *env, void *state);
 
