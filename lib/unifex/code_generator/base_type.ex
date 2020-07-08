@@ -128,7 +128,7 @@ defmodule Unifex.CodeGenerator.BaseType do
     generate_native_type(type, code_generator)
     |> Bunch.listify()
     |> Enum.map(fn
-      {_type, sufix} -> ~g<#{name}#{sufix}>
+      {_type, suffix} -> ~g<#{name}#{suffix}>
       _type -> ~g<#{name}>
     end)
   end
