@@ -1,4 +1,4 @@
-defmodule Unifex.UnifexCNode do
+defmodule Unifex.CNode do
   @doc """
   Wraps Bundlex.CNode functionalities to support Unifex-specific CNode behaviours
   """
@@ -78,14 +78,6 @@ defmodule Unifex.UnifexCNode do
   @spec monitor(t) :: reference
   def monitor(%__MODULE__{bundlex_cnode: cnode}) do
     Bundlex.CNode.monitor(cnode)
-  end
-
-  @doc """
-  Sends to CNode serialized 'message'
-  """
-  @spec send(t, message :: term) :: :ok
-  def send(%__MODULE__{bundlex_cnode: cnode}, message) do
-    Bundlex.CNode.send(cnode, message)
   end
 
   @doc """
