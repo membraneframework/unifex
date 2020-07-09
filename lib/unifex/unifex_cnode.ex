@@ -153,4 +153,8 @@ defmodule Unifex.UnifexCNode do
   defp handle_response({:error, {:undefined_function, fun_name}}) do
     raise "Undefined Unifex CNode function: #{fun_name}"
   end
+
+  defp handle_response({:raise, message}) do
+    raise message
+  end
 end

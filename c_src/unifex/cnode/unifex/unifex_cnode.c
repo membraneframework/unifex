@@ -24,8 +24,15 @@ void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
   free(out_buff);
 }
 
-void unifex_cnode_send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
-  unifex_cnode_send_and_free(env, env->e_pid, out_buff);
+void unifex_cnode_reply_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
+  ei_x_buff *buff;
+  if (env->error) {
+    buff = env->error;
+    env->error = NULL;
+  } else {
+    buff = out_buff;
+  }
+  unifex_cnode_send_and_free(env, env->reply_to, buff);
 }
 
 UNIFEX_TERM unifex_cnode_undefined_function_error(UnifexEnv *env,
@@ -70,7 +77,7 @@ int unifex_cnode_receive(UnifexEnv *env) {
     break;
   default:
     if (emsg.msgtype == ERL_REG_SEND) {
-      env->e_pid = &emsg.from;
+      env->reply_to = &emsg.from;
       int index = 0;
       int version;
       ei_decode_version(in_buff.buff, &index, &version);
@@ -83,7 +90,7 @@ int unifex_cnode_receive(UnifexEnv *env) {
 
       UnifexCNodeInBuff buff = {.buff = in_buff.buff, .index = &index};
       UNIFEX_TERM result = unifex_cnode_handle_message(env, fun_name, &buff);
-      unifex_cnode_send_to_server_and_free(env, result);
+      unifex_cnode_reply_and_free(env, result);
       free_released_states(env);
       break;
     }
@@ -143,9 +150,10 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   *env = (UnifexEnv){.node_name = calloc(sizeof(char), 256),
                      .ei_fd = ERL_ERROR,
                      .listen_fd = -1,
-                     .e_pid = NULL,
+                     .reply_to = NULL,
                      .state = NULL,
-                     .released_states = NULL};
+                     .released_states = NULL,
+                     .error = NULL};
 
   if (validate_args(argc, argv)) {
     fprintf(stderr,

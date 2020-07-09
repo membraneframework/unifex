@@ -1,3 +1,5 @@
+#pragma once
+
 #include "unifex.h"
 
 #ifdef __cplusplus
@@ -13,7 +15,7 @@ void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
                                     const char *msg_type);
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
                                 ei_x_buff *out_buff);
-void unifex_cnode_send_to_server_and_free(UnifexEnv *env, ei_x_buff *out_buff);
+void unifex_cnode_reply_and_free(UnifexEnv *env, ei_x_buff *out_buff);
 UNIFEX_TERM unifex_cnode_undefined_function_error(UnifexEnv *env,
                                                   const char *fun_name);
 

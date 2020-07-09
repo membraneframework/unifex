@@ -28,16 +28,19 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   return out_buff;
 }
 
-UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
+UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer,
+                          UnifexPayload *out_payload) {
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
-  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_tuple_header(out_buff, 3);
   ei_x_encode_atom(out_buff, "ok");
   ({
     int answer_int = answer;
     ei_x_encode_longlong(out_buff, (long long)answer_int);
   });
+
+  unifex_payload_encode(env, out_buff, out_payload);
 
   return out_buff;
 }
@@ -56,18 +59,29 @@ UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_UNUSED(in_buff);
 
-  return init(env);
+  UNIFEX_TERM result = init(env);
+
+  return result;
 }
 
 UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
 
   UnifexPid target;
+  UnifexPayload *in_payload;
   UnifexState *state;
 
+  in_payload = (UnifexPayload *)unifex_alloc(sizeof(UnifexPayload));
+
   ei_decode_pid(in_buff->buff, in_buff->index, &target);
+  unifex_payload_decode(env, in_buff, in_payload);
   state = (UnifexState *)env->state;
 
-  return foo(env, target, state);
+  UNIFEX_TERM result = foo(env, target, in_payload, state);
+  if (!in_payload->owned) {
+    unifex_payload_release(in_payload);
+  }
+
+  return result;
 }
 
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {

@@ -31,10 +31,15 @@ typedef struct UnifexCNodeContext {
   char *node_name;
   int ei_fd;
   int listen_fd;
-  erlang_pid *e_pid;
+  erlang_pid *reply_to;
   void *state;
   UnifexLinkedList *released_states;
+  UNIFEX_TERM error;
 } UnifexEnv;
+
+void *unifex_alloc(size_t size);
+void unifex_free(void *pointer);
+UNIFEX_TERM unifex_raise(UnifexEnv *env, const char *message);
 
 #ifdef __cplusplus
 }

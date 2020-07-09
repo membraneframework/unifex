@@ -26,6 +26,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #include <unifex/unifex.h>
     #include <unifex/unifex_cnode.h>
+    #include <unifex/payload.h>
     #include "#{InterfaceIO.user_header_path(specs.name)}"
 
     #ifdef __cplusplus
@@ -226,14 +227,21 @@ defmodule Unifex.CodeGenerators.CNode do
       ]
       |> Enum.join(", ")
 
+    args_destruction =
+      args
+      |> Enum.map(fn {name, type} -> BaseType.generate_destruction(type, name, CNode) end)
+      |> Enum.reject(&("" == &1))
+      |> Enum.join("\n")
+
     ~g"""
     #{declaration} {
       #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff);", else: ""}
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
-
-      return #{name}(#{implemented_fun_args});
+      UNIFEX_TERM result = #{name}(#{implemented_fun_args});
+      #{args_destruction}
+      return result;
     }
     """
   end

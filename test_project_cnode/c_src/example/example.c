@@ -8,12 +8,19 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, MyState *state) {
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, UnifexPayload *in_payload,
+                MyState *state) {
   int res = send_example_msg(env, pid, 0, state->a);
   if (!res) {
     return foo_result_error(env, "send_failed");
   }
-  return foo_result_ok(env, state->a);
+  UnifexPayload *out_payload =
+      unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
+  memcpy(out_payload->data, in_payload->data, out_payload->size);
+  out_payload->data[0]++;
+  UNIFEX_TERM result = foo_result_ok(env, state->a, out_payload);
+  unifex_payload_release(out_payload);
+  return result;
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {

@@ -16,7 +16,7 @@ defmodule Unifex.BundlexProject do
       ],
       unifex_cnode: [
         src_base: "unifex/cnode/unifex",
-        sources: ["unifex_cnode.c"]
+        sources: ["unifex.c", "unifex_cnode.c", "payload.c"]
       ]
     ]
   end
