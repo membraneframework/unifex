@@ -1,6 +1,6 @@
 defmodule Unifex.UnifexCNode do
   @doc """
-  Wraps Bundlex.CNode functionalities, in due to support specific Unifex's CNode behaviours
+  Wraps Bundlex.CNode functionalities to support Unifex-specific CNode behaviours
   """
 
   require Bundlex.CNode
