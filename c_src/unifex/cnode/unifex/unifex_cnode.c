@@ -18,13 +18,13 @@ void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
 }
 
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
-                                ei_x_buff *out_buff) {
-  ei_send(env->ei_fd, pid, out_buff->buff, out_buff->index);
+                                UNIFEX_TERM out_buff) {
+  ei_send(env->ei_socket_fd, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
   free(out_buff);
 }
 
-void unifex_cnode_reply_and_free(UnifexEnv *env, ei_x_buff *out_buff) {
+void unifex_cnode_reply_and_free(UnifexEnv *env, UNIFEX_TERM out_buff) {
   ei_x_buff *buff;
   if (env->error) {
     buff = env->error;
@@ -69,7 +69,7 @@ int unifex_cnode_receive(UnifexEnv *env) {
   ei_x_new(&in_buff);
   erlang_msg emsg;
   int res = 0;
-  switch (ei_xreceive_msg_tmo(env->ei_fd, &emsg, &in_buff, 100)) {
+  switch (ei_xreceive_msg_tmo(env->ei_socket_fd, &emsg, &in_buff, 100)) {
   case ERL_TICK:
     break;
   case ERL_ERROR:
@@ -148,7 +148,7 @@ static int listen_sock(int *listen_fd, int *port) {
 
 int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   *env = (UnifexEnv){.node_name = calloc(sizeof(char), 256),
-                     .ei_fd = ERL_ERROR,
+                     .ei_socket_fd = ERL_ERROR,
                      .listen_fd = -1,
                      .reply_to = NULL,
                      .state = NULL,
@@ -196,8 +196,8 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   fflush(stdout);
 
   ErlConnect conn;
-  env->ei_fd = ei_accept_tmo(&ec, env->listen_fd, &conn, 5000);
-  if (env->ei_fd == ERL_ERROR) {
+  env->ei_socket_fd = ei_accept_tmo(&ec, env->listen_fd, &conn, 5000);
+  if (env->ei_socket_fd == ERL_ERROR) {
     DEBUG("accept error: %d", erl_errno);
     goto unifex_cnode_init_error;
   }
@@ -214,8 +214,8 @@ void unifex_cnode_destroy(UnifexEnv *env) {
   if (env->listen_fd != -1) {
     close(env->listen_fd);
   }
-  if (env->ei_fd != ERL_ERROR) {
-    close(env->ei_fd);
+  if (env->ei_socket_fd != ERL_ERROR) {
+    close(env->ei_socket_fd);
   }
   if (env->node_name) {
     free(env->node_name);

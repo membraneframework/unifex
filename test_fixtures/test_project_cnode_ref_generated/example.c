@@ -16,7 +16,7 @@ void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
 }
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
-  ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
   ei_x_encode_atom(out_buff, "ok");
@@ -30,7 +30,7 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
 
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer,
                           UnifexPayload *out_payload) {
-  ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
   ei_x_encode_tuple_header(out_buff, 3);
@@ -46,7 +46,7 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer,
 }
 
 UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
-  ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
   ei_x_encode_tuple_header(out_buff, 2);

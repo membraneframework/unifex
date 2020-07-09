@@ -13,11 +13,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
   end
 
   @impl BaseType
-  def generate_arg_serialize(name, _ctx) do
-    ~g<enif_make_atom(env, #{name} ? "true" : "false")>
-  end
-
-  @impl BaseType
   def generate_arg_parse(arg_term, var_name, _ctx) do
     ~g<unifex_parse_bool(env, #{arg_term}, &#{var_name})>
   end

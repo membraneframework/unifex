@@ -5,10 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// required for erl_interface.h to work
 #ifndef _REENTRANT
 #define _REENTRANT
-
 #endif
+
 #include <ei_connect.h>
 #include <erl_interface.h>
 

@@ -64,7 +64,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
-  # @spec generate_arg_serialize(t, name :: atom) :: CodeGenerator.code_t()
+  @spec generate_arg_serialize(t, name :: atom, module) :: CodeGenerator.code_t()
   def generate_arg_serialize(type, name, code_generator) do
     call(
       type,
@@ -80,7 +80,8 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  # @spec generate_declaration(t, name :: atom) :: [CodeGenerator.code_t()]
+  @spec generate_declaration(t, name :: atom, mode :: :default | :const, module) ::
+          [CodeGenerator.code_t()]
   def generate_declaration(type, name, mode \\ :default, code_generator) do
     generate_native_type(type, mode, code_generator)
     |> Bunch.listify()
@@ -95,7 +96,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide initialization
   """
-  # @spec generate_initialization(t, name :: atom) :: CodeGenerator.code_t()
+  @spec generate_initialization(t, name :: atom, module) :: CodeGenerator.code_t()
   def generate_initialization(type, name, code_generator) do
     call(type, :generate_initialization, [name], code_generator)
   end
@@ -105,7 +106,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide destructor
   """
-  # @spec generate_destruction(t, name :: atom) :: CodeGenerator.code_t()
+  @spec generate_destruction(t, name :: atom, module) :: CodeGenerator.code_t()
   def generate_destruction(type, name, code_generator) do
     call(type, :generate_destruction, [name], code_generator)
   end

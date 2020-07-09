@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// required for erl_interface.h to work
 #ifndef _REENTRANT
 #define _REENTRANT
 #endif
@@ -29,9 +30,9 @@ typedef struct UnifexLinkedList {
 
 typedef struct UnifexCNodeContext {
   char *node_name;
-  int ei_fd;
+  int ei_socket_fd;
   int listen_fd;
-  erlang_pid *reply_to;
+  UnifexPid *reply_to;
   void *state;
   UnifexLinkedList *released_states;
   UNIFEX_TERM error;

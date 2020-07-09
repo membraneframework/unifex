@@ -17,10 +17,11 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <string.h>
     #include <stdlib.h>
 
+    // required for erl_interface.h to work
     #ifndef _REENTRANT
     #define _REENTRANT
-
     #endif
+
     #include <ei_connect.h>
     #include <erl_interface.h>
 
@@ -126,7 +127,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
-      ei_x_buff * out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
+      UNIFEX_TERM out_buff = (ei_x_buff *) malloc(sizeof(ei_x_buff));
       unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
       #{result}
