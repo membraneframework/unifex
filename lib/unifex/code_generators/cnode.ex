@@ -207,6 +207,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_caller_function({name, args}) do
     declaration = generate_caller_function_declaration({name, args})
+    exit_label = "exit_#{name}_caller"
 
     args_declaration =
       args |> generate_args_declarations() |> Enum.map(&~g<#{&1};>) |> Enum.join("\n")
@@ -218,7 +219,19 @@ defmodule Unifex.CodeGenerators.CNode do
 
     args_parsing =
       args
-      |> Enum.map(fn {name, type} -> BaseType.generate_arg_parse(type, name, "in_buff", CNode) end)
+      |> Enum.map(fn {name, type} ->
+        postproc_fun = fn arg_getter ->
+          ~g"""
+          if(#{arg_getter}) {
+            result = unifex_raise(env,
+              "Unifex CNode: cannot parse argument '#{name}' of type '#{inspect(type)}'");
+            goto #{exit_label};
+          }
+          """
+        end
+
+        BaseType.generate_arg_parse(type, name, "in_buff", postproc_fun, CNode)
+      end)
       |> Enum.join("\n")
 
     implemented_fun_args =
@@ -236,11 +249,14 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
+      UNIFEX_TERM result;
       #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff);", else: ""}
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
-      UNIFEX_TERM result = #{name}(#{implemented_fun_args});
+      result = #{name}(#{implemented_fun_args});
+      goto #{exit_label};
+      #{exit_label}:
       #{args_destruction}
       return result;
     }

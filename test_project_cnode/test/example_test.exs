@@ -11,5 +11,9 @@ defmodule ExampleTest do
     assert_raise RuntimeError, ~r/undefined.*function.*abc/i, fn ->
       Unifex.CNode.call(cnode, :abc)
     end
+
+    assert_raise RuntimeError, ~r/argument.*target.*pid/i, fn ->
+      Unifex.CNode.call(cnode, :foo, [:abc])
+    end
   end
 end

@@ -57,14 +57,18 @@ UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
 }
 
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
   UNIFEX_UNUSED(in_buff);
 
-  UNIFEX_TERM result = init(env);
+  result = init(env);
+  goto exit_init_caller;
+exit_init_caller:
 
   return result;
 }
 
 UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
 
   UnifexPid target;
   UnifexPayload *in_payload;
@@ -72,11 +76,31 @@ UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
 
   in_payload = (UnifexPayload *)unifex_alloc(sizeof(UnifexPayload));
 
-  ei_decode_pid(in_buff->buff, in_buff->index, &target);
-  unifex_payload_decode(env, in_buff, in_payload);
-  state = (UnifexState *)env->state;
+  if (ei_decode_pid(in_buff->buff, in_buff->index, &target)) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'target' of type ':pid'");
+    goto exit_foo_caller;
+  }
 
-  UNIFEX_TERM result = foo(env, target, in_payload, state);
+  if (unifex_payload_decode(env, in_buff, in_payload)) {
+    result = unifex_raise(
+        env,
+        "Unifex CNode: cannot parse argument 'in_payload' of type ':payload'");
+    goto exit_foo_caller;
+  }
+
+  if (({
+        state = (UnifexState *)env->state;
+        0;
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'state' of type ':state'");
+    goto exit_foo_caller;
+  }
+
+  result = foo(env, target, in_payload, state);
+  goto exit_foo_caller;
+exit_foo_caller:
   if (!in_payload->owned) {
     unifex_payload_release(in_payload);
   }

@@ -32,7 +32,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
     @impl BaseType
     def generate_arg_parse(_argument, variable, _ctx) do
       ~g"""
-      #{variable} = (UnifexState*)env->state;
+      ({
+        #{variable} = (UnifexState*)env->state;
+        0;
+      })
       """
     end
 

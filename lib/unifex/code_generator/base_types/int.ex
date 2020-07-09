@@ -5,7 +5,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
 
     @impl BaseType
     def generate_arg_parse(argument, name, _ctx) do
-      ~g<ei_decode_longlong(#{argument}-\>buff, #{argument}-\>index, &((long long)#{name}));>
+      ~g<ei_decode_longlong(#{argument}-\>buff, #{argument}-\>index, &((long long)#{name}))>
     end
 
     @impl BaseType

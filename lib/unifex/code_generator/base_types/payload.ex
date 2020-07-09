@@ -46,7 +46,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
 
     @impl BaseType
     def generate_arg_parse(arg, var_name, _ctx) do
-      ~g<unifex_payload_decode(env, #{arg}, #{var_name});>
+      ~g<unifex_payload_decode(env, #{arg}, #{var_name})>
     end
 
     @impl BaseType
