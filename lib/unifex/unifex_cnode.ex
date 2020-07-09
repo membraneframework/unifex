@@ -5,52 +5,21 @@ defmodule Unifex.UnifexCNode do
 
   require Bundlex.CNode
 
-  @enforce_keys [:server, :node]
+  @enforce_keys [:server, :node, :bundlex_cnode]
   defstruct @enforce_keys
 
   @type t :: %__MODULE__{
           server: pid,
-          node: node
+          node: node,
+          bundlex_cnode: Bundlex.CNode.t()
         }
 
   @type on_start_t :: {:ok, t} | {:error, :spawn_cnode | :connect_to_cnode}
 
   @doc """
-  Casts specific for Bundlex Api structs returned from
-  Bundlex.CNode.start/1 or Bundlex.CNode.start_link/1 to the analogous structs
-  in Unifex.UnifexCNode API or vice versa
-  """
-  def cast_on_start_t({:ok, %Bundlex.CNode{} = bundex_cnode}) do
-    {:ok, cast_cnode(bundex_cnode)}
-  end
+  Spawns and connects to CNode `cnode_name`.
 
-  def cast_on_start_t({:ok, %__MODULE__{} = unifex_cnode}) do
-    {:ok, cast_cnode(unifex_cnode)}
-  end
-
-  def cast_on_start_t(on_start) do
-    on_start
-  end
-
-  @doc """
-  Casts Bundlex.CNode struct to Unifex.UnifexCNode struct or vice versa
-  """
-  def cast_cnode(%Bundlex.CNode{server: server, node: node}) do
-    %__MODULE__{
-      server: server,
-      node: node
-    }
-  end
-
-  def cast_cnode(%__MODULE__{server: server, node: node}) do
-    %Bundlex.CNode{
-      server: server,
-      node: node
-    }
-  end
-
-  @doc """
-  Spawns specific CNode and links to it
+  For details, see `Bundlex.CNode.start_link/2`.
   """
   defmacro start_link(native_name) do
     quote do
@@ -58,12 +27,13 @@ defmodule Unifex.UnifexCNode do
 
       unquote(native_name)
       |> Bundlex.CNode.start_link()
-      |> unquote(__MODULE__).cast_on_start_t
+      |> unquote(__MODULE__).wrap_start_result()
     end
   end
 
   @doc """
-  Spawns specific CNode, but without linking.
+  Works the same way as `start_link/1`, but does not link to CNode's associated
+  server.
   """
   defmacro start(native_name) do
     quote do
@@ -71,38 +41,51 @@ defmodule Unifex.UnifexCNode do
 
       unquote(native_name)
       |> Bundlex.CNode.start()
-      |> unquote(__MODULE__).cast_on_start_t
+      |> unquote(__MODULE__).wrap_start_result()
     end
+  end
+
+  @doc """
+  Spawns and connects to CNode `cnode_name` from application `app`.
+
+  For details, see `Bundlex.CNode.start_link/2`.
+  """
+  @spec start_link(app :: atom, native_name :: atom) :: on_start_t
+  def start_link(app, native_name) do
+    Bundlex.CNode.start_link(app, native_name) |> wrap_start_result()
+  end
+
+  @doc """
+  Works the same way as `start_link/2`, but does not link to CNode's associated
+  server.
+  """
+  @spec start(app :: atom, native_name :: atom) :: on_start_t
+  def start(app, native_name) do
+    Bundlex.CNode.start(app, native_name) |> wrap_start_result()
   end
 
   @doc """
   Disconnects from CNode.
   """
   @spec stop(t) :: :ok | {:error, :disconnect_cnode}
-  def stop(%__MODULE__{} = unifex_cnode) do
-    unifex_cnode
-    |> cast_cnode
-    |> Bundlex.CNode.stop()
+  def stop(%__MODULE__{bundlex_cnode: cnode}) do
+    Bundlex.CNode.stop(cnode)
   end
 
   @doc """
   Starts monitoring CNode from the calling process.
   """
   @spec monitor(t) :: reference
-  def monitor(%__MODULE__{} = unifex_cnode) do
-    unifex_cnode
-    |> cast_cnode
-    |> Bundlex.CNode.monitor()
+  def monitor(%__MODULE__{bundlex_cnode: cnode}) do
+    Bundlex.CNode.monitor(cnode)
   end
 
   @doc """
   Sends to CNode serialized 'message'
   """
   @spec send(t, message :: term) :: :ok
-  def send(%__MODULE__{} = unifex_cnode, message) do
-    unifex_cnode
-    |> cast_cnode
-    |> Bundlex.CNode.send(message)
+  def send(%__MODULE__{bundlex_cnode: cnode}, message) do
+    Bundlex.CNode.send(cnode, message)
   end
 
   @doc """
@@ -114,38 +97,26 @@ defmodule Unifex.UnifexCNode do
   """
   @spec call(t, fun_name :: atom, args :: list, timeout :: non_neg_integer | :infinity) ::
           response :: term
-  def call(%__MODULE__{} = unifex_cnode, fun_name, args \\ [], timeout \\ 5000) do
+  def call(%__MODULE__{bundlex_cnode: cnode}, fun_name, args \\ [], timeout \\ 5000) do
     msg = [fun_name | args] |> List.to_tuple()
 
-    unifex_cnode
-    |> cast_cnode
+    cnode
     |> Bundlex.CNode.call(msg, timeout)
     |> handle_response()
   end
 
-  @doc """
-  Invokes call of given function, but doesn't return result. Call Unifex.UnifexCNode.receive_result/2, to get returned value
-  """
-  @spec cast(t, fun_name :: atom, args :: list) :: :ok
-  def cast(%__MODULE__{} = unifex_cnode, fun_name, args \\ []) do
-    msg = [fun_name | args] |> List.to_tuple()
-
-    unifex_cnode
-    |> cast_cnode
-    |> Bundlex.CNode.send(msg)
+  @doc false
+  def wrap_start_result({:ok, %Bundlex.CNode{} = bundlex_cnode}) do
+    {:ok,
+     %__MODULE__{
+       server: bundlex_cnode.server,
+       node: bundlex_cnode.node,
+       bundlex_cnode: bundlex_cnode
+     }}
   end
 
-  @doc """
-      Waits timeout miliseconds on result returned from remote call of remote UnifexCNode function.
-      Generally, when function only returns values and don't send any messages, consider use of UnifexCNode.call/3, instead of this one
-  """
-  @spec receive_result(t, timeout :: non_neg_integer | :infinity) :: response :: term
-  def receive_result(%__MODULE__{node: node}, timeout \\ 5000) do
-    receive do
-      {^node, response} -> handle_response(response)
-    after
-      timeout -> raise "Unifex CNode receive timeout"
-    end
+  def wrap_start_result(start_result) do
+    start_result
   end
 
   defp handle_response({:result, result}), do: result
