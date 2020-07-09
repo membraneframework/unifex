@@ -26,7 +26,7 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <erl_interface.h>
 
     #include <unifex/unifex.h>
-    #include <unifex/unifex_cnode.h>
+    #include <unifex/cnode.h>
     #include <unifex/payload.h>
     #include "#{InterfaceIO.user_header_path(specs.name)}"
 

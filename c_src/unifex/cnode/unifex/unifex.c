@@ -1,5 +1,5 @@
-#import "unifex.h"
-#import "unifex_cnode.h"
+#include "unifex.h"
+#include "cnode.h"
 
 void *unifex_alloc(size_t size) { return malloc(size); }
 

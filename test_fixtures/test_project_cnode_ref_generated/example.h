@@ -14,9 +14,9 @@
 #include <erl_interface.h>
 
 #include "../example.h"
+#include <unifex/cnode.h>
 #include <unifex/payload.h>
 #include <unifex/unifex.h>
-#include <unifex/unifex_cnode.h>
 
 #ifdef __cplusplus
 extern "C" {

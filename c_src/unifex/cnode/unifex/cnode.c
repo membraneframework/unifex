@@ -1,4 +1,4 @@
-#include "unifex_cnode.h"
+#include "cnode.h"
 #include <arpa/inet.h>
 #include <unistd.h>
 

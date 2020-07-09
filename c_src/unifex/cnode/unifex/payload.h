@@ -1,7 +1,7 @@
 #pragma once
 
+#include "cnode.h"
 #include "unifex.h"
-#include "unifex_cnode.h"
 
 #ifdef __cplusplus
 extern "C" {
