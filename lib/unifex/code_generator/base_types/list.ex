@@ -2,7 +2,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for lists.
 
-  They are represented in the native code as arrays.
+  They are represented in the native code as arrays with sizes passed
+  via separate arguments.
   """
 
   defmodule NIF do

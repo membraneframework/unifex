@@ -1,6 +1,8 @@
 defmodule Unifex.CodeGenerator.BaseTypes.String do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for strings.
+
+  They are represented by NULL-terminated char arrays.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
