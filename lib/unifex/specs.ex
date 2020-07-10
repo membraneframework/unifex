@@ -10,15 +10,15 @@ defmodule Unifex.Specs do
           module: module() | nil,
           functions_args: [{function_name :: atom, [arg_type :: {atom | {:list, atom}}]}],
           functions_results: [{function_name :: atom, return_type :: Macro.t()}],
-          sends: {send_name :: atom, send_term_type :: Macro.t()},
-          dirty_functions: [
-            {{function_name :: atom, function_arity :: non_neg_integer}, :cpu | :io}
-          ],
+          sends: [{send_name :: atom, send_term_type :: Macro.t()}],
+          dirty_functions: %{
+            {function_name :: atom, function_arity :: non_neg_integer} => :cpu | :io
+          },
           callbacks: %{
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
           interface: module | nil,
-          state_type: String.t()
+          state_type: String.t() | nil
         }
 
   @enforce_keys [
@@ -75,10 +75,10 @@ defmodule Unifex.Specs do
       Code.eval_quoted(
         quote do
           import Unifex.Specs.DSL
-          __ENV__
+          %Macro.Env{__ENV__ | file: unquote(file)}
         end
       )
 
-    %Macro.Env{env | file: file}
+    env
   end
 end

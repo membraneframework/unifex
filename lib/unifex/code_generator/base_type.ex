@@ -33,7 +33,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   @doc """
   Generates a native counterpart for the type.
   """
-  @callback generate_native_type(ctx :: map) :: CodeGenerator.code_t()
+  @callback generate_native_type(ctx :: map) :: CodeGenerator.code_t() | [CodeGenerator.code_t()]
 
   @doc """
   Generates function call parsing UNIFEX_TERM `argument` into the native variable with name `variable`. Function should

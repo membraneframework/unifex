@@ -16,7 +16,8 @@ defmodule Unifex.MixProject do
       source_url: @github_link,
       package: package(),
       docs: docs(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 

@@ -6,7 +6,7 @@ defmodule Unifex.CodeGenerator do
   @callback generate_header(Specs.t()) :: code_t
   @callback generate_source(Specs.t()) :: code_t
 
-  @spec generate_code(Specs.t()) :: [{header :: code_t, source :: code_t}]
+  @spec generate_code(Specs.t()) :: {header :: code_t, source :: code_t}
   def generate_code(specs) do
     generator = get_generator(specs)
     header = generator.generate_header(specs)
