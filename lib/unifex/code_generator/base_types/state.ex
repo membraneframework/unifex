@@ -46,10 +46,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
     @impl BaseType
     def generate_arg_serialize(name, _ctx) do
       ~g"""
-      env->state = ({
+      {
         UnifexState* unifex_state = #{name};
-        unifex_state;
-      });
+        env->state = unifex_state;
+      };
       """
     end
   end
