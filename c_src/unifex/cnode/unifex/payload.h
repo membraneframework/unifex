@@ -22,7 +22,7 @@ typedef struct _UnifexPayload UnifexPayload;
 UnifexPayload *unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
                                     unsigned int size);
 int unifex_payload_decode(UnifexEnv *env, UnifexCNodeInBuff *buff,
-                          UnifexPayload *payload);
+                          UnifexPayload **payload);
 void unifex_payload_encode(UnifexEnv *env, UNIFEX_TERM buff,
                            UnifexPayload *payload);
 void unifex_payload_release(UnifexPayload *payload);

@@ -10,14 +10,14 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
     ~g<UnifexPayload *>
   end
 
-  @impl BaseType
-  def generate_initialization(name, _ctx) do
-    ~g<#{name} = (UnifexPayload *) unifex_alloc(sizeof (UnifexPayload));>
-  end
-
   defmodule NIF do
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
+
+    @impl BaseType
+    def generate_initialization(name, _ctx) do
+      ~g<#{name} = (UnifexPayload *) unifex_alloc(sizeof (UnifexPayload));>
+    end
 
     @impl BaseType
     def generate_arg_serialize(name, _ctx) do
@@ -40,19 +40,24 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
+    def generate_initialization(name, _ctx) do
+      ~g<#{name} = NULL;>
+    end
+
+    @impl BaseType
     def generate_arg_serialize(name, _ctx) do
       ~g<unifex_payload_encode(env, out_buff, #{name});>
     end
 
     @impl BaseType
     def generate_arg_parse(arg, var_name, _ctx) do
-      ~g<unifex_payload_decode(env, #{arg}, #{var_name})>
+      ~g<unifex_payload_decode(env, #{arg}, &#{var_name})>
     end
 
     @impl BaseType
     def generate_destruction(name, _ctx) do
       ~g"""
-      if(!#{name}->owned) {
+      if(#{name} && !#{name}->owned) {
         unifex_payload_release(#{name});
       }
       """

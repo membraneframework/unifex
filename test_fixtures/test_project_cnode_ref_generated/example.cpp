@@ -74,7 +74,7 @@ UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UnifexPayload *in_payload;
   UnifexState *state;
 
-  in_payload = (UnifexPayload *)unifex_alloc(sizeof(UnifexPayload));
+  in_payload = NULL;
 
   if (ei_decode_pid(in_buff->buff, in_buff->index, &target)) {
     result = unifex_raise(
@@ -82,7 +82,7 @@ UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
     goto exit_foo_caller;
   }
 
-  if (unifex_payload_decode(env, in_buff, in_payload)) {
+  if (unifex_payload_decode(env, in_buff, &in_payload)) {
     result = unifex_raise(
         env,
         "Unifex CNode: cannot parse argument 'in_payload' of type ':payload'");
@@ -101,7 +101,7 @@ UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   result = foo(env, target, in_payload, state);
   goto exit_foo_caller;
 exit_foo_caller:
-  if (!in_payload->owned) {
+  if (in_payload && !in_payload->owned) {
     unifex_payload_release(in_payload);
   }
 

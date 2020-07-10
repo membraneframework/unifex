@@ -1,18 +1,19 @@
 #include "payload.h"
 
 int unifex_payload_decode(UnifexEnv *_env, UnifexCNodeInBuff *buff,
-                          UnifexPayload *payload) {
+                          UnifexPayload **payload) {
   UNIFEX_UNUSED(_env);
   int type, size;
   if (ei_get_type(buff->buff, buff->index, &type, &size)) {
     return 1;
   }
-  payload->data = unifex_alloc(size);
-  payload->size = (unsigned int)size;
-  payload->type = UNIFEX_PAYLOAD_BINARY;
-  payload->owned = 0;
+  *payload = unifex_alloc(sizeof(UnifexPayload));
+  **payload = (UnifexPayload){.data = unifex_alloc(size),
+                              .size = (unsigned int)size,
+                              .type = UNIFEX_PAYLOAD_BINARY,
+                              .owned = 0};
   long len;
-  if (ei_decode_binary(buff->buff, buff->index, payload->data, &len)) {
+  if (ei_decode_binary(buff->buff, buff->index, (*payload)->data, &len)) {
     return 1;
   }
   return 0;
