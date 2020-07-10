@@ -15,8 +15,7 @@ defmodule Unifex.InterfaceIO do
     |> Enum.map(fn file ->
       name = file |> Path.basename() |> String.replace_suffix(@spec_name_sufix, "")
       dir = file |> Path.dirname()
-      specs = File.read!(file)
-      {name, dir, specs}
+      {name, dir, file}
     end)
   end
 

@@ -145,7 +145,7 @@ int send_example_msg(UnifexEnv* env, UnifexPid pid, int flags, int num);
 ```
 
 More information on how `.spec.exs` files should be created can be found in docs for
-`Unifex.Specs` module.
+`Unifex.Specs.DSL` module.
 
 Along with the header, `_generated/example.c` file will be created, providing definitions for some of the functions
 you see in the header.
