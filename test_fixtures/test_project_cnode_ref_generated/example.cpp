@@ -20,10 +20,10 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
   ei_x_encode_atom(out_buff, "ok");
-  env->state = ({
+  {
     UnifexState *unifex_state = state;
-    unifex_state;
-  });
+    env->state = unifex_state;
+  };
 
   return out_buff;
 }
