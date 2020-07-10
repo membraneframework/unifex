@@ -8,8 +8,8 @@ defmodule Example.MixProject do
       elixir: "~> 1.10",
       compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      deps_path: "../deps",
-      lockfile: "../mix.lock",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       deps: deps()
     ]
   end
@@ -24,7 +24,7 @@ defmodule Example.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:unifex, path: ".."}
+      {:unifex, path: "../.."}
     ]
   end
 end
