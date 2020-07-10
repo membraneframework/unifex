@@ -67,7 +67,7 @@ defmodule Unifex.Specs do
     }
   end
 
-  # Returns clear __ENV__ with proper functions/macros imported. Useful for invoking
+  # Returns a clean __ENV__ with proper functions/macros imported. Useful for invoking
   # user code without possibly misleading macros and aliases from the current scope,
   # while providing needed functions/macros.
   defp make_env(file) do
