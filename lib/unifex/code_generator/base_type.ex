@@ -1,9 +1,12 @@
 defmodule Unifex.CodeGenerator.BaseType do
   @moduledoc """
-  This module provides different generators allowing to map the types from Unifex specs into proper native types
+  Behaviour and abstraction over type-specific code generation.
 
-  The generators from this module are trying to delegate the calls to the callbacks in modules adequate for the type
-  but provide fallback values (all the callbacks are optional)
+  When invoking callbacks for type `:type` and interface `Interface` it searches for
+  a module that implements given callback in the following order:
+  - `Unifex.CodeGenerator.BaseTypes.Type.Interface`
+  - `Unifex.CodeGenerator.BaseTypes.Type`
+  - `Unifex.CodeGenerator.BaseTypes.Default.Interface`
   """
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator

@@ -1,11 +1,17 @@
 defmodule Unifex.CodeGenerator do
+  @moduledoc """
+  Behaviour for code generation.
+  """
   alias Unifex.Specs
 
   @type code_t :: String.t()
 
-  @callback generate_header(Specs.t()) :: code_t
-  @callback generate_source(Specs.t()) :: code_t
+  @callback generate_header(specs :: Specs.t()) :: code_t
+  @callback generate_source(specs :: Specs.t()) :: code_t
 
+  @doc """
+  Generates boilerplate code using generator implementation from `Unifex.CodeGenerators`.
+  """
   @spec generate_code(Specs.t()) :: {header :: code_t, source :: code_t}
   def generate_code(specs) do
     generator = get_generator(specs)

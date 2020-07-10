@@ -43,7 +43,15 @@ defmodule Unifex.MixProject do
     [
       main: "readme",
       extras: ["README.md", "pages/creating_unifex_nif.md"],
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      nest_modules_by_prefix: [
+        Unifex.CodeGenerators,
+        Unifex.CodeGenerator.BaseTypes
+      ],
+      groups_for_modules: [
+        CodeGenerators: [~r/Unifex\.CodeGenerators\.*/],
+        BaseTypes: [~r/Unifex\.CodeGenerator.BaseTypes\.*/]
+      ]
     ]
   end
 

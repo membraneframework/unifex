@@ -1,6 +1,6 @@
 defmodule Unifex.CodeGenerator.BaseTypes.String do
   @moduledoc """
-  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for Unifex state.
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for strings.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
@@ -17,6 +17,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

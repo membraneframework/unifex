@@ -1,5 +1,10 @@
 defmodule Unifex.CodeGenerator.Utils do
+  @moduledoc """
+  Utilities for code generation.
+  """
   use Bunch
+  alias Unifex.CodeGenerator
+  alias Unifex.CodeGenerator.BaseType
 
   @doc """
   Sigil used for templating generated code.
@@ -10,11 +15,24 @@ defmodule Unifex.CodeGenerator.Utils do
     content
   end
 
-  def generate_function_spec_traverse_helper(node, serializers) do
-    node
+  @doc """
+  Traverses Elixir specification AST and creates C data types serialization
+  with `serializers`.
+  """
+  @spec generate_serialization(
+          ast :: Macro.t(),
+          serializers :: %{
+            arg_serializer: (type :: BaseType.t(), name :: atom -> output),
+            tuple_serializer: ([output] -> output)
+          }
+        ) ::
+          {output, [{:label, atom} | {:arg, {name :: atom, type :: BaseType.t()}}]}
+        when output: term
+  def generate_serialization(ast, serializers) do
+    ast
     |> case do
       {:__aliases__, [alias: als], atoms} ->
-        generate_function_spec_traverse_helper(als || Module.concat(atoms), serializers)
+        generate_serialization(als || Module.concat(atoms), serializers)
 
       atom when is_atom(atom) ->
         {serializers.arg_serializer.(:atom, :"\"#{atom}\""), []}
@@ -26,58 +44,53 @@ defmodule Unifex.CodeGenerator.Utils do
         {serializers.arg_serializer.(type, name), arg: {name, type}}
 
       {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]} ->
-        generate_function_spec_traverse_helper(
+        generate_serialization(
           {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]},
           serializers
         )
 
       {a, b} ->
-        generate_function_spec_traverse_helper({:{}, [], [a, b]}, serializers)
+        generate_serialization({:{}, [], [a, b]}, serializers)
 
       {:{}, _, content} ->
         {results, meta} =
           content
-          |> Enum.map(fn n -> generate_function_spec_traverse_helper(n, serializers) end)
+          |> Enum.map(fn ast -> generate_serialization(ast, serializers) end)
           |> Enum.unzip()
 
         {serializers.tuple_serializer.(results), meta}
 
       [{_name, _, _} = name_var] ->
-        generate_function_spec_traverse_helper(
+        generate_serialization(
           {:"::", [], [name_var, [name_var]]},
           serializers
         )
 
       {_name, _, _} = name_var ->
-        generate_function_spec_traverse_helper({:"::", [], [name_var, name_var]}, serializers)
+        generate_serialization({:"::", [], [name_var, name_var]}, serializers)
     end
-    ~> ({result, meta} -> {result, meta |> List.flatten()})
+    |> case do
+      {result, meta} -> {result, List.flatten(meta)}
+    end
   end
 
-  def generate_functions(results, generator, mode) do
-    results
-    |> Enum.map(fn res -> res |> generator.(mode) end)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.join("\n")
-  end
-
-  def generate_functions(results, generator) do
-    results
+  @spec generate_functions(
+          config :: Enumerable.t(),
+          generator :: (term -> CodeGenerator.code_t())
+        ) :: CodeGenerator.code_t()
+  def generate_functions(config, generator) do
+    config
     |> Enum.map(generator)
     |> Enum.filter(&(&1 != ""))
     |> Enum.join("\n")
   end
 
-  def generate_functions_declarations(results, generator, mode) do
-    results
-    |> Enum.map(fn res -> res |> generator.(mode) end)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map(&(&1 <> ";"))
-    |> Enum.join("\n")
-  end
-
-  def generate_functions_declarations(results, generator) do
-    results
+  @spec generate_functions_declarations(
+          config :: Enumerable.t(),
+          generator :: (term -> CodeGenerator.code_t())
+        ) :: CodeGenerator.code_t()
+  def generate_functions_declarations(config, generator) do
+    config
     |> Enum.map(generator)
     |> Enum.filter(&(&1 != ""))
     |> Enum.map(&(&1 <> ";"))

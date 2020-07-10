@@ -1,6 +1,8 @@
 defmodule Unifex.CodeGenerator.BaseTypes.State do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for Unifex state.
+
+  To use it, specify the state type with `Unifex.Specs.DSL.state_type/1`.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
@@ -11,6 +13,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
@@ -26,6 +29,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
   end
 
   defmodule CNode do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

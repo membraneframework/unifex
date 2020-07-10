@@ -4,8 +4,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Uint64 do
 
   Maps `uint64` Unifex type to a `uint64_t` native type.
   """
+  use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
-  use BaseType
 
   @impl BaseType
   def generate_native_type(_ctx) do

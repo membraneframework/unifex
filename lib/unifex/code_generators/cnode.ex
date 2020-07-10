@@ -1,5 +1,7 @@
 defmodule Unifex.CodeGenerators.CNode do
-  use Bunch
+  @moduledoc """
+  Generates NIF boilerplate based on `Unifex.Specs`.
+  """
 
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerator, InterfaceIO, Specs}
@@ -37,25 +39,25 @@ defmodule Unifex.CodeGenerators.CNode do
     #{generate_state_related_declarations(specs)}
 
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.functions_args,
         &generate_implemented_function_declaration/1
       )
     }
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.functions_results,
         &generate_result_function_declaration/1
       )
     }
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.functions_args,
         &generate_caller_function_declaration/1
       )
     }
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.sends,
         &generate_send_function_declaration/1
       )
@@ -76,11 +78,9 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_state_related_functions(specs)}
 
-    #{
-      CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
-    }
-    #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_caller_function/1)}
-    #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
+    #{Utils.generate_functions(specs.functions_results, &generate_result_function/1)}
+    #{Utils.generate_functions(specs.functions_args, &generate_caller_function/1)}
+    #{Utils.generate_functions(specs.sends, &generate_send_function/1)}
 
     #{generate_handle_message(specs.functions_args)}
 
@@ -110,7 +110,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_result_function_declaration({name, specs}) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_serialization(specs)
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
@@ -123,7 +123,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_result_function({name, specs}) do
     declaration = generate_result_function_declaration({name, specs})
-    {result, _meta} = generate_function_spec_traverse_helper(specs)
+    {result, _meta} = generate_serialization(specs)
 
     ~g"""
     #{declaration} {
@@ -138,7 +138,7 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_send_function_declaration(specs) do
-    {_result, meta} = generate_function_spec_traverse_helper(specs)
+    {_result, meta} = generate_serialization(specs)
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
@@ -157,7 +157,7 @@ defmodule Unifex.CodeGenerators.CNode do
   defp generate_send_function(specs) do
     declaration = generate_send_function_declaration(specs)
 
-    {result, _meta} = generate_function_spec_traverse_helper(specs)
+    {result, _meta} = generate_serialization(specs)
 
     ~g"""
     #{declaration} {
@@ -267,11 +267,11 @@ defmodule Unifex.CodeGenerators.CNode do
     ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff)"
   end
 
-  def generate_state_related_declarations(%Specs{state_type: nil}) do
+  defp generate_state_related_declarations(%Specs{state_type: nil}) do
     ~g<>
   end
 
-  def generate_state_related_declarations(%Specs{state_type: state_type}) do
+  defp generate_state_related_declarations(%Specs{state_type: state_type}) do
     ~g"""
     typedef #{state_type} UnifexState;
 
@@ -281,13 +281,13 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  def generate_state_related_functions(%Specs{state_type: nil}) do
+  defp generate_state_related_functions(%Specs{state_type: nil}) do
     ~g"""
     void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {}
     """
   end
 
-  def generate_state_related_functions(%Specs{}) do
+  defp generate_state_related_functions(%Specs{}) do
     ~g"""
     UnifexState *unifex_alloc_state(UnifexEnv *_env) {
       UNIFEX_UNUSED(_env);
@@ -305,9 +305,9 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  defp generate_function_spec_traverse_helper(specs) do
+  defp generate_serialization(specs) do
     specs
-    |> Utils.generate_function_spec_traverse_helper(%{
+    |> Utils.generate_serialization(%{
       arg_serializer: fn type, name ->
         {type, BaseType.generate_arg_serialize(type, name, CNode)}
       end,

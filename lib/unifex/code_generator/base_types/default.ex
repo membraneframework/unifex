@@ -1,4 +1,10 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Default do
+  @moduledoc """
+  Default `Unifex.CodeGenerator.BaseType` implementation for all types.
+
+  If a callback is not implemented in a type-specific implementation,
+  it defaults to this one.
+  """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
 
@@ -18,6 +24,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
@@ -33,6 +40,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
   end
 
   defmodule CNode do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

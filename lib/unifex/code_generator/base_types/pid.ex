@@ -1,6 +1,6 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Pid do
   @moduledoc """
-  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for Erlang PIDs
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for Erlang PIDs.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
@@ -11,6 +11,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Pid do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

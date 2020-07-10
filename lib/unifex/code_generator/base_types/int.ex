@@ -1,5 +1,10 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Int do
+  @moduledoc """
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for integers.
+  """
+
   defmodule CNode do
+    @moduledoc false
     alias Unifex.CodeGenerator.BaseType
     use BaseType
 

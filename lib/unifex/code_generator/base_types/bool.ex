@@ -18,6 +18,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

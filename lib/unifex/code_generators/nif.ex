@@ -1,15 +1,13 @@
 defmodule Unifex.CodeGenerators.NIF do
   @moduledoc """
-  Module responsible for C code genearation based on Unifex specs
+  Generates NIF boilerplate based on `Unifex.Specs`.
   """
-  use Bunch
+
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerator, InterfaceIO, Specs}
   alias Unifex.CodeGenerator.{BaseType, Utils}
 
   @behaviour CodeGenerator
-
-  @type code_t() :: String.t()
 
   @impl CodeGenerator
   def generate_header(specs) do
@@ -43,7 +41,7 @@ defmodule Unifex.CodeGenerators.NIF do
      */
 
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.functions_args,
         &generate_implemented_function_declaration/1
       )
@@ -62,7 +60,7 @@ defmodule Unifex.CodeGenerators.NIF do
      */
 
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.functions_results,
         &generate_result_function_declaration/1
       )
@@ -74,7 +72,7 @@ defmodule Unifex.CodeGenerators.NIF do
      */
 
     #{
-      CodeGenerator.Utils.generate_functions_declarations(
+      Utils.generate_functions_declarations(
         specs.sends,
         &generate_send_function_declaration/1
       )
@@ -91,13 +89,11 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g"""
     #include "#{specs.name}.h"
 
-    #{
-      CodeGenerator.Utils.generate_functions(specs.functions_results, &generate_result_function/1)
-    }
-    #{CodeGenerator.Utils.generate_functions(specs.sends, &generate_send_function/1)}
+    #{Utils.generate_functions(specs.functions_results, &generate_result_function/1)}
+    #{Utils.generate_functions(specs.sends, &generate_send_function/1)}
     #{generate_state_related_functions(specs)}
     #{generate_nif_lifecycle_callbacks(specs)}
-    #{CodeGenerator.Utils.generate_functions(specs.functions_args, &generate_export_function/1)}
+    #{Utils.generate_functions(specs.functions_args, &generate_export_function/1)}
     #{generate_erlang_boilerplate(specs)}
     """
   end
@@ -117,7 +113,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
   defp generate_result_function({name, result}) do
     declaration = generate_result_function_declaration({name, result})
-    {result, _meta} = generate_function_spec_traverse_helper(result)
+    {result, _meta} = generate_serialization(result)
 
     ~g"""
     #{declaration} {
@@ -127,7 +123,7 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_result_function_declaration({name, result}) do
-    {_result, meta} = generate_function_spec_traverse_helper(result)
+    {_result, meta} = generate_serialization(result)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -146,7 +142,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
   defp generate_send_function(sends) do
     declaration = generate_send_function_declaration(sends)
-    {result, _meta} = generate_function_spec_traverse_helper(sends)
+    {result, _meta} = generate_serialization(sends)
 
     ~g"""
     #{declaration} {
@@ -157,7 +153,7 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_send_function_declaration(sends) do
-    {_result, meta} = generate_function_spec_traverse_helper(sends)
+    {_result, meta} = generate_serialization(sends)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -428,7 +424,7 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  def generate_tuple_maker(content) do
+  defp generate_tuple_maker(content) do
     ~g<({
       const ERL_NIF_TERM terms[] = {
         #{content |> Enum.join(",\n")}
@@ -441,8 +437,8 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g<UnifexEnv *unifex_env = env;>
   end
 
-  defp generate_function_spec_traverse_helper(specs) do
-    Utils.generate_function_spec_traverse_helper(specs, %{
+  defp generate_serialization(specs) do
+    Utils.generate_serialization(specs, %{
       arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF) end,
       tuple_serializer: &generate_tuple_maker/1
     })

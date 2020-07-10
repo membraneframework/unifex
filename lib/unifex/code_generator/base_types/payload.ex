@@ -11,6 +11,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
   end
 
   defmodule NIF do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
@@ -36,6 +37,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
   end
 
   defmodule CNode do
+    @moduledoc false
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 

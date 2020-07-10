@@ -86,10 +86,20 @@ defmodule Unifex.Specs.DSL do
     store_config(:function, spec |> parse_function() |> enquote())
   end
 
+  @doc """
+  Specifies interface, for example NIF or CNode.
+
+  It should be a module name that will be prepended to `Unifex.CodeGenerators`.
+  If no interface is specified, it is automatically detected basing on `Bundlex.Project`
+  specification.
+  """
   defmacro interface(interface) do
     store_config(:interface, interface)
   end
 
+  @doc """
+  Defines the state type, required for using `Unifex.CodeGenerator.BaseTypes.State`.
+  """
   defmacro state_type(state_type) do
     store_config(:state_type, state_type)
   end
