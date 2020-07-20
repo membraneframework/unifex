@@ -8,13 +8,8 @@
      [{:bundlex, "~> 0.2.7", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm",
      "f0819b2f9f78086447ac7459a8e7b6e25ad535b9d3a4f9469253c552137de6b4"},
   bundlex:
-    {:hex, :bundlex, "0.2.8", "0f4530bf24a2ebb92f2e360111319aae6fc6eb03c6ec5054b529d9ffb78811fa",
-     [:mix],
-     [
-       {:bunch, "~> 1.0", [hex: :bunch, repo: "hexpm", optional: false]},
-       {:qex, "~> 0.5", [hex: :qex, repo: "hexpm", optional: false]},
-       {:secure_random, "~> 0.5", [hex: :secure_random, repo: "hexpm", optional: false]}
-     ], "hexpm", "d583b04ea679297aa08ad2b31866c4848fd99feea036bf5af59df71e2408b096"},
+    {:git, "https://github.com/membraneframework/bundlex.git",
+     "e607b933f10e48ffc508e9517e331820a0d16753", [branch: "natives-spec"]},
   dialyxir:
     {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5",
      [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm",
