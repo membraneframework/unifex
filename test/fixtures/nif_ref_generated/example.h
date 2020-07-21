@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../example.h"
+#include "../../example.h"
 #include <erl_nif.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -12,7 +12,7 @@ defmodule Example.BundlexProject do
       example: [
         deps: [unifex: :unifex],
         src_base: "example",
-        sources: ["_generated/example.c", "example.c"]
+        sources: ["_generated/cnode/example.c", "example.c"]
       ]
     ]
   end

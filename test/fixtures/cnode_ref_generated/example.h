@@ -13,7 +13,7 @@
 #include <ei_connect.h>
 #include <erl_interface.h>
 
-#include "../example.h"
+#include "../../example.h"
 #include <unifex/cnode.h>
 #include <unifex/payload.h>
 #include <unifex/unifex.h>

@@ -1,5 +1,7 @@
 module Example
 
+interface :nif
+
 callback :load
 
 state_type "MyState"

@@ -17,12 +17,26 @@ defmodule Unifex.IntegrationTest do
     # it won't match the reference files otherwise
     assert {_output, 0} = System.cmd("clang-format", ~w(--version))
 
-    "test/fixtures/#{project}_ref_generated"
+    test_common(project)
+    test_particular(project)
+  end
+
+  defp test_common(project) do
+    "test/fixtures/common_ref_generated"
     |> File.ls!()
     |> Enum.each(fn ref ->
       f = if ref == "ref_gitignore", do: ".gitignore", else: ref
 
       assert File.read!("test_projects/#{project}/c_src/example/_generated/#{f}") ==
+               File.read!("test/fixtures/common_ref_generated/#{ref}")
+    end)
+  end
+
+  defp test_particular(project) do
+    "test/fixtures/#{project}_ref_generated"
+    |> File.ls!()
+    |> Enum.each(fn ref ->
+      assert File.read!("test_projects/#{project}/c_src/example/_generated/#{project}/#{ref}") ==
                File.read!("test/fixtures/#{project}_ref_generated/#{ref}")
     end)
   end

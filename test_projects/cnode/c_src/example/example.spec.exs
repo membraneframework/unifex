@@ -1,5 +1,7 @@
 module Example
 
+interface :cnode
+
 callback :main
 
 state_type "MyState"

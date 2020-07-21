@@ -12,15 +12,19 @@ defmodule Unifex.CodeGenerator do
   @doc """
   Generates boilerplate code using generator implementation from `Unifex.CodeGenerators`.
   """
-  @spec generate_code(Specs.t()) :: {header :: code_t, source :: code_t}
+  @spec generate_code(Specs.t()) :: [{header :: code_t, source :: code_t}]
   def generate_code(specs) do
-    generator = get_generator(specs)
-    header = generator.generate_header(specs)
-    source = generator.generate_source(specs)
-    {header, source}
+    generators = get_generators(specs)
+
+    generators
+    |> Enum.map(fn {interface, generator} ->
+      header = generator.generate_header(specs)
+      source = generator.generate_source(specs)
+      {header, source, interface}
+    end)
   end
 
-  defp get_generator(%Specs{name: name, interface: nil}) do
+  defp get_generators(%Specs{name: name, interface: nil}) do
     {:ok, bundlex_project} = Bundlex.Project.get()
     config = bundlex_project.config
 
@@ -29,12 +33,12 @@ defmodule Unifex.CodeGenerator do
     case interfaces do
       [] -> raise "Interface for native #{name} is not specified.
         Please specify it in your *.spec.exs or bundlex.exs file."
-      _ -> get_generator_module_name(List.first(interfaces))
+      _ -> interfaces |> Enum.map(&get_generator_module_name(&1))
     end
   end
 
-  defp get_generator(%Specs{interface: interface}) do
-    get_generator_module_name(interface)
+  defp get_generators(%Specs{interface: interfaces}) do
+    interfaces |> Bunch.listify() |> Enum.map(&get_generator_module_name(&1))
   end
 
   defp get_generator_module_name(interface) do
@@ -42,9 +46,10 @@ defmodule Unifex.CodeGenerator do
       case interface do
         :nif -> :NIF
         :cnode -> :CNode
-        other -> other
+        other -> raise "Valid interfaces are :nif and :cnode. Passed #{other}"
       end
 
-    Module.concat(Unifex.CodeGenerators, module_name)
+    module = Module.concat(Unifex.CodeGenerators, module_name)
+    {interface, module}
   end
 end
