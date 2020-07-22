@@ -22,37 +22,32 @@ defmodule Unifex.CodeGenerator do
 
   defp get_generator(%Specs{name: name, interface: nil}) do
     {:ok, bundlex_project} = Bundlex.Project.get()
+    config = bundlex_project.config
 
-    [:nifs, :cnodes, :natives, :libs]
-    |> Enum.find(&(bundlex_project.config |> Keyword.get(&1, []) |> Keyword.has_key?(name)))
-    |> case do
-      :nifs ->
-        Unifex.CodeGenerators.NIF
+    type =
+      [:natives, :libs]
+      |> Enum.find(&(config |> Keyword.get(&1, []) |> Keyword.has_key?(name)))
 
-      :cnodes ->
-        Unifex.CodeGenerators.CNode
+    interfaces = Keyword.get(config[type][name], :interface, [])
 
-      :natives ->
-        interfaces = bundlex_project.config[:natives][name][:interfaces]
-        get_generator(get_generator_module_name(List.first(interfaces)))
-
-      _ ->
-        Unifex.CodeGenerators.NIF
+    case interfaces do
+      [] -> Unifex.CodeGenerators.NIF
+      _ -> get_generator_module_name(List.first(interfaces))
     end
   end
 
   defp get_generator(%Specs{interface: interface}) do
-    get_generator(interface)
-  end
-
-  defp get_generator(interface) do
-    Module.concat(Unifex.CodeGenerators, interface)
+    get_generator_module_name(interface)
   end
 
   defp get_generator_module_name(interface) do
-    case interface do
-      :nif -> :NIF
-      :cnode -> :CNode
-    end
+    module_name =
+      case interface do
+        :nif -> :NIF
+        :cnode -> :CNode
+        other -> other
+      end
+
+    Module.concat(Unifex.CodeGenerators, module_name)
   end
 end

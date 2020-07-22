@@ -13,12 +13,12 @@ defmodule Unifex.BundlexProject do
         deps: [shmex: :lib_nif],
         src_base: "unifex/nif/unifex",
         sources: ["unifex.c", "payload.c"],
-        interfaces: [:nif]
+        interface: :nif
       ],
       unifex: [
         src_base: "unifex/cnode/unifex",
         sources: ["unifex.c", "cnode.c", "payload.c"],
-        interfaces: [:cnode]
+        interface: :cnode
       ]
     ]
   end
