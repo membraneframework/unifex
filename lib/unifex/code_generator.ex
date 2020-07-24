@@ -24,11 +24,7 @@ defmodule Unifex.CodeGenerator do
     {:ok, bundlex_project} = Bundlex.Project.get()
     config = bundlex_project.config
 
-    type =
-      [:natives, :libs]
-      |> Enum.find(&(config |> Keyword.get(&1, []) |> Keyword.has_key?(name)))
-
-    interfaces = Keyword.get(config[type][name], :interface, [])
+    interfaces = [:natives, :libs] |> Enum.find_value(&get_in(config, [&1, name, :interface]))
 
     case interfaces do
       [] -> Unifex.CodeGenerators.NIF

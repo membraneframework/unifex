@@ -24,7 +24,7 @@ defmodule Unifex.Loader do
         arg_names = args |> Keyword.keys() |> Enum.map(&Macro.var(&1, nil))
 
         quote do
-          defnifp(unquote(wrapped_name)(unquote_splicing(arg_names)))
+          defnifp unquote(wrapped_name)(unquote_splicing(arg_names))
 
           @compile {:inline, [unquote({name, length(args)})]}
           def unquote(name)(unquote_splicing(arg_names)) do
