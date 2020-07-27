@@ -9,14 +9,16 @@ defmodule Unifex.BundlexProject do
 
   defp libs do
     [
-      unifex_nif: [
+      unifex: [
         deps: [shmex: :lib_nif],
         src_base: "unifex/nif/unifex",
-        sources: ["unifex.c", "payload.c"]
+        sources: ["unifex.c", "payload.c"],
+        interface: :nif
       ],
-      unifex_cnode: [
+      unifex: [
         src_base: "unifex/cnode/unifex",
-        sources: ["unifex.c", "cnode.c", "payload.c"]
+        sources: ["unifex.c", "cnode.c", "payload.c"],
+        interface: :cnode
       ]
     ]
   end

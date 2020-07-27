@@ -22,16 +22,29 @@ defmodule Unifex.CodeGenerator do
 
   defp get_generator(%Specs{name: name, interface: nil}) do
     {:ok, bundlex_project} = Bundlex.Project.get()
+    config = bundlex_project.config
 
-    [:nifs, :cnodes]
-    |> Enum.find(&(bundlex_project.config |> Keyword.get(&1, []) |> Keyword.has_key?(name)))
-    |> case do
-      :nifs -> Unifex.CodeGenerators.NIF
-      :cnodes -> Unifex.CodeGenerators.CNode
+    interfaces = [:natives, :libs] |> Enum.find_value(&get_in(config, [&1, name, :interface]))
+
+    case interfaces do
+      [] -> raise "Interface for native #{name} is not specified.
+        Please specify it in your *.spec.exs or bundlex.exs file."
+      _ -> get_generator_module_name(List.first(interfaces))
     end
   end
 
   defp get_generator(%Specs{interface: interface}) do
-    Module.concat(Unifex.CodeGenerators, interface)
+    get_generator_module_name(interface)
+  end
+
+  defp get_generator_module_name(interface) do
+    module_name =
+      case interface do
+        :nif -> :NIF
+        :cnode -> :CNode
+        other -> other
+      end
+
+    Module.concat(Unifex.CodeGenerators, module_name)
   end
 end
