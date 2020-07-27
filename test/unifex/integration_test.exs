@@ -2,14 +2,22 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "NIF test project" do
-    test_project("nif")
+    test_project("nif", :nif)
   end
 
   test "CNode test project" do
-    test_project("cnode")
+    test_project("cnode", :cnode)
   end
 
-  defp test_project(project) do
+  test "unified (NIF) test project" do
+    test_project("unified", :nif)
+  end
+
+  test "unified (CNode) test project" do
+    test_project("unified", :cnode)
+  end
+
+  defp test_project(project, interface) do
     assert {_output, 0} =
              System.cmd("bash", ["-c", "mix test 1>&2"], cd: "test_projects/#{project}")
 
@@ -18,7 +26,7 @@ defmodule Unifex.IntegrationTest do
     assert {_output, 0} = System.cmd("clang-format", ~w(--version))
 
     test_common(project)
-    test_particular(project)
+    test_particular(project, interface)
   end
 
   defp test_common(project) do
@@ -32,12 +40,12 @@ defmodule Unifex.IntegrationTest do
     end)
   end
 
-  defp test_particular(project) do
-    "test/fixtures/#{project}_ref_generated"
+  defp test_particular(project, interface) do
+    "test/fixtures/#{project}_ref_generated/#{interface}"
     |> File.ls!()
     |> Enum.each(fn ref ->
-      assert File.read!("test_projects/#{project}/c_src/example/_generated/#{project}/#{ref}") ==
-               File.read!("test/fixtures/#{project}_ref_generated/#{ref}")
+      assert File.read!("test_projects/#{project}/c_src/example/_generated/#{interface}/#{ref}") ==
+               File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
     end)
   end
 end
