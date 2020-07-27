@@ -27,7 +27,8 @@ defmodule Unifex.CodeGenerator do
     interfaces = [:natives, :libs] |> Enum.find_value(&get_in(config, [&1, name, :interface]))
 
     case interfaces do
-      [] -> Unifex.CodeGenerators.NIF
+      [] -> raise "Interface for native #{name} is not specified.
+        Please specify it in your *.spec.exs or bundlex.exs file."
       _ -> get_generator_module_name(List.first(interfaces))
     end
   end
