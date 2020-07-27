@@ -1,10 +1,10 @@
 defmodule Unifex.CodeGenerators.TieHeader do
   @moduledoc """
+  Generates connective header file that includes proper header based
+  on selected interface.
   """
 
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
-
-  # TODO
 
   def generate_header(name) do
     ~g"""

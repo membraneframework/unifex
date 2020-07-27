@@ -9,7 +9,7 @@
      "f0819b2f9f78086447ac7459a8e7b6e25ad535b9d3a4f9469253c552137de6b4"},
   bundlex:
     {:git, "https://github.com/membraneframework/bundlex.git",
-     "0c0e94394b8564f6ffa4f5c5355a0fcaff8f4a68", [branch: "master"]},
+     "9aeb7360e9b7e0217ac06e84a5de54e4ab1a9120", [branch: "mul-int-single-spec"]},
   dialyxir:
     {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5",
      [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm",
