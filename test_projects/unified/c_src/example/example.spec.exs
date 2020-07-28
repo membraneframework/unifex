@@ -1,5 +1,5 @@
 module Example
 
-interface [:nif, :cnode]
+interface [NIF, CNode]
 
 spec foo() :: {:ok :: label, answer :: int}

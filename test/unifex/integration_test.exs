@@ -41,6 +41,16 @@ defmodule Unifex.IntegrationTest do
   end
 
   defp test_particular(project, interface) do
+    test_tie_header(project)
+    test_main_files(project, interface)
+  end
+
+  defp test_tie_header(project) do
+    assert File.read!("test_projects/#{project}/c_src/example/_generated/example.h") ==
+             File.read!("test/fixtures/#{project}_ref_generated/example.h")
+  end
+
+  defp test_main_files(project, interface) do
     "test/fixtures/#{project}_ref_generated/#{interface}"
     |> File.ls!()
     |> Enum.each(fn ref ->

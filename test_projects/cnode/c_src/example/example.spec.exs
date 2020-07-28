@@ -1,6 +1,6 @@
 module Example
 
-interface :cnode
+interface CNode
 
 callback :main
 

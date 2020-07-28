@@ -46,7 +46,7 @@ defmodule Unifex.CodeGenerator do
       case interface do
         :nif -> :NIF
         :cnode -> :CNode
-        other -> raise "Valid interfaces are :nif and :cnode. Passed #{other}"
+        other -> other
       end
 
     module = Module.concat(Unifex.CodeGenerators, module_name)

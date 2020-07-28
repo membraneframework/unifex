@@ -1,6 +1,6 @@
 module Example
 
-interface :nif
+interface NIF
 
 callback :load
 

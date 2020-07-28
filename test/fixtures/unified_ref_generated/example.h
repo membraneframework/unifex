@@ -1,9 +1,10 @@
 #pragma once
 
-#ifdef NIF
+#ifdef BUNDLEX_NIF
 #include "nif/example.h"
 #endif
 
-#ifdef CNODE
+#ifdef BUNDLEX_CNODE
 #include "cnode/example.h"
 #endif
+
