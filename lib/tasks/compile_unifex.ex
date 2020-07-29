@@ -11,9 +11,9 @@ defmodule Mix.Tasks.Compile.Unifex do
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs_file} ->
       codes = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
-      codes |> Enum.map(&InterfaceIO.store_interface!(name, dir, &1))
+      codes |> Enum.each(&InterfaceIO.store_interface!(name, dir, &1))
       interfaces = codes |> Enum.map(fn {_header, _source, interface} -> interface end)
-      tie_header = Unifex.CodeGenerator.TieHeader.generate_tie_header(name, interfaces)
+      tie_header = Unifex.CodeGenerator.TieHeader.generate_header(name, interfaces)
       InterfaceIO.store_tie_header!(name, dir, tie_header)
       InterfaceIO.store_gitignore!(dir)
     end)

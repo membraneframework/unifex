@@ -3,10 +3,11 @@ defmodule Unifex.CodeGenerator.TieHeader do
   Generates connective header file that includes proper header based
   on selected interface.
   """
-
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
+  alias Unifex.CodeGenerator
 
-  def generate_tie_header(name, interfaces) do
+  @spec generate_header(name :: atom, interfaces :: [module]) :: CodeGenerator.code_t()
+  def generate_header(name, interfaces) do
     ~g"""
     #pragma once
 
@@ -21,10 +22,11 @@ defmodule Unifex.CodeGenerator.TieHeader do
   end
 
   defp generate_include(name, interface) do
-    interface = Unifex.Helper.get_module_string(interface)
+    interface = inspect(interface)
+    module = Module.concat(Unifex.CodeGenerators, interface)
 
     ~g"""
-    #ifdef BUNDLEX_#{interface |> String.upcase()}
+    #ifdef #{module.identification_constant()}
     #include "#{interface |> String.downcase()}/#{name}.h"
     #endif
     """

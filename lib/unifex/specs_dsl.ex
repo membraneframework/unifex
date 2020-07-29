@@ -90,7 +90,7 @@ defmodule Unifex.Specs.DSL do
   Specifies interface, for example NIF or CNode.
 
   It should be a module name (or list of module names) that will be prepended
-  to `Unifex.CodeGenerators`. If no interface is specified, it is automatically
+  with `Unifex.CodeGenerators`. If no interface is specified, it is automatically
   detected basing on `Bundlex.Project` specification.
   """
   defmacro interface(interface) do

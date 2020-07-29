@@ -21,7 +21,7 @@ defmodule Unifex.InterfaceIO do
 
   def store_interface!(name, dir, code) do
     {header, source, interface} = code
-    interface = Unifex.Helper.get_module_string(interface) |> String.downcase()
+    interface = inspect(interface) |> String.downcase()
     out_dir_name = Path.join([dir, @generated_dir_name, "#{interface}"])
     File.mkdir_p!(out_dir_name)
     out_base_path = Path.join(out_dir_name, name)

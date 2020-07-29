@@ -6,6 +6,7 @@ defmodule Unifex.CodeGenerator do
 
   @type code_t :: String.t()
 
+  @callback identification_constant() :: String.t()
   @callback generate_header(specs :: Specs.t()) :: code_t
   @callback generate_source(specs :: Specs.t()) :: code_t
 

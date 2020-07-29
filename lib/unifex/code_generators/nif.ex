@@ -10,6 +10,9 @@ defmodule Unifex.CodeGenerators.NIF do
   @behaviour CodeGenerator
 
   @impl CodeGenerator
+  def identification_constant(), do: "BUNDLEX_NIF"
+
+  @impl CodeGenerator
   def generate_header(specs) do
     ~g"""
     #pragma once
