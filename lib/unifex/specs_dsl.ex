@@ -89,9 +89,9 @@ defmodule Unifex.Specs.DSL do
   @doc """
   Specifies interface, for example NIF or CNode.
 
-  It should be a module name that will be prepended to `Unifex.CodeGenerators`.
-  If no interface is specified, it is automatically detected basing on `Bundlex.Project`
-  specification.
+  It should be a module name (or list of module names) that will be prepended
+  with `Unifex.CodeGenerators`. If no interface is specified, it is automatically
+  detected basing on `Bundlex.Project` specification.
   """
   defmacro interface(interface) do
     store_config(:interface, interface)

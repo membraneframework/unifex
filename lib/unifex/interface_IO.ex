@@ -5,7 +5,7 @@ defmodule Unifex.InterfaceIO do
   @generated_dir_name "_generated"
 
   def user_header_path(name) do
-    "../#{name}.h"
+    "../../#{name}.h"
   end
 
   def get_interfaces_specs!(dir) do
@@ -20,8 +20,9 @@ defmodule Unifex.InterfaceIO do
   end
 
   def store_interface!(name, dir, code) do
-    {header, source} = code
-    out_dir_name = Path.join(dir, @generated_dir_name)
+    {header, source, interface} = code
+    interface = inspect(interface) |> String.downcase()
+    out_dir_name = Path.join([dir, @generated_dir_name, "#{interface}"])
     File.mkdir_p!(out_dir_name)
     out_base_path = Path.join(out_dir_name, name)
     File.write!("#{out_base_path}.h", header)
@@ -33,10 +34,26 @@ defmodule Unifex.InterfaceIO do
         "#{out_base_path}.h #{out_base_path}.c #{out_base_path}.cpp"
     )
 
+    :ok
+  end
+
+  def store_tie_header!(name, dir, code) do
+    out_dir_name = Path.join(dir, @generated_dir_name)
+    File.mkdir_p!(out_dir_name)
+    out_base_path = Path.join(out_dir_name, "#{name}.h")
+    File.write!(out_base_path, code)
+
+    :ok
+  end
+
+  def store_gitignore!(dir) do
+    out_dir_name = Path.join(dir, @generated_dir_name)
+    File.mkdir_p!(out_dir_name)
+
     File.write!(Path.join(out_dir_name, ".gitignore"), """
-    *.h
-    *.c
-    *.cpp
+    **/*.h
+    **/*.c
+    **/*.cpp
     """)
 
     :ok

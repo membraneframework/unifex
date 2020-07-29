@@ -17,7 +17,7 @@ defmodule Unifex.Specs do
           callbacks: %{
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
-          interface: module | nil,
+          interface: [module] | module | nil,
           state_type: String.t() | nil
         }
 

@@ -10,8 +10,12 @@ defmodule Mix.Tasks.Compile.Unifex do
     Helper.get_source_dir()
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs_file} ->
-      code = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
-      InterfaceIO.store_interface!(name, dir, code)
+      codes = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
+      codes |> Enum.each(&InterfaceIO.store_interface!(name, dir, &1))
+      interfaces = codes |> Enum.map(fn {_header, _source, interface} -> interface end)
+      tie_header = Unifex.CodeGenerator.TieHeader.generate_header(name, interfaces)
+      InterfaceIO.store_tie_header!(name, dir, tie_header)
+      InterfaceIO.store_gitignore!(dir)
     end)
   end
 end

@@ -10,6 +10,9 @@ defmodule Unifex.CodeGenerators.CNode do
   @behaviour CodeGenerator
 
   @impl CodeGenerator
+  def identification_constant(), do: "BUNDLEX_CNODE"
+
+  @impl CodeGenerator
   def generate_header(specs) do
     ~g"""
     #pragma once
