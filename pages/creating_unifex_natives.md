@@ -80,7 +80,7 @@ module Example
 
 interface [NIF, CNode]
 
-spec foo() :: {:ok :: label, answer :: int}
+spec foo(num :: int) :: {:ok :: label, answer :: int}
 ```
 
 Note that here we also specified an interface or even interfaces!
@@ -106,11 +106,11 @@ Now, let's provide required implementation in `example.c`:
 ```c
 #include "example.h"
 
-UNIFEX_TERM foo(UnifexEnv* env) {
-  return foo_result_ok(env, 10);
+UNIFEX_TERM foo(UnifexEnv* env, int num) {
+  return foo_result_ok(env, num);
 }
 ```
-It is a very simple C code that always returns 10.
+It is a very simple C code that always returns the same number it gets.
 
 At this moment the project should successfully compile. 
 Run `mix deps.get && mix compile` to make sure everything is fine.
@@ -132,7 +132,7 @@ end
 And that's it! You can now run `iex -S mix` and check it out yourself:
 
 ```elixir
-iex(1)> Example.foo()
+iex(1)> Example.foo(10)
 {:ok, 10}
 ```
 
@@ -142,11 +142,6 @@ In case of `CNodes`, module with `Unifex.Loader` is unnecessary. We would just d
 iex(2)> require Unifex.CNode
 Unifex.CNode
 iex(3)> {:ok, cnode} = Unifex.CNode.start_link(:example)
-
-10:56:38.259 [info]  Protocol 'inet_tcp': register/listen error: econnrefused
-
- 
-10:56:38.259 [info]  Trying to start epmd...
 {:ok,
  %Unifex.CNode{
    bundlex_cnode: %Bundlex.CNode{
@@ -156,7 +151,7 @@ iex(3)> {:ok, cnode} = Unifex.CNode.start_link(:example)
    node: :"bundlex_cnode_0_4eb957f2-fd47-47c2-b816-6e9c580e658a@michal",
    server: #PID<0.259.0>
  }}
-iex(bundlex_app_4eb957f2-...)4> Unifex.CNode.call(cnode, :foo)
+iex(bundlex_app_4eb957f2-...)4> Unifex.CNode.call(cnode, :foo, [10])
 {:ok, 10}
 ```
 

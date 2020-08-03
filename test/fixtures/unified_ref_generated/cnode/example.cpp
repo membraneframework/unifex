@@ -19,9 +19,22 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
 
 UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_TERM result;
-  UNIFEX_UNUSED(in_buff);
 
-  result = foo(env);
+  int num;
+
+  if (({
+        long long num_longlong;
+        int result =
+            ei_decode_longlong(in_buff->buff, in_buff->index, &num_longlong);
+        num = (int)num_longlong;
+        result;
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'num' of type ':int'");
+    goto exit_foo_caller;
+  }
+
+  result = foo(env, num);
   goto exit_foo_caller;
 exit_foo_caller:
 

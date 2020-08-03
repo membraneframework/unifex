@@ -27,16 +27,22 @@ static ERL_NIF_TERM export_foo(ErlNifEnv *env, int argc,
                                const ERL_NIF_TERM argv[]) {
   UNIFEX_UNUSED(argc);
   ERL_NIF_TERM result;
-  UNIFEX_UNUSED(argv);
-  UnifexEnv *unifex_env = env;
 
-  result = foo(unifex_env);
+  UnifexEnv *unifex_env = env;
+  int num;
+
+  if (!enif_get_int(env, argv[0], &num)) {
+    result = unifex_raise_args_error(env, "num", ":int");
+    goto exit_export_foo;
+  }
+
+  result = foo(unifex_env, num);
   goto exit_export_foo;
 exit_export_foo:
 
   return result;
 }
 
-static ErlNifFunc nif_funcs[] = {{"unifex_foo", 0, export_foo, 0}};
+static ErlNifFunc nif_funcs[] = {{"unifex_foo", 1, export_foo, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)

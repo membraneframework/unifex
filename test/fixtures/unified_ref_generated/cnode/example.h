@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-UNIFEX_TERM foo(UnifexEnv *env);
+UNIFEX_TERM foo(UnifexEnv *env, int num);
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer);
 UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 
