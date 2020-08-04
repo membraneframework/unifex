@@ -38,4 +38,20 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
       ~g<unifex_free(#{name});>
     end
   end
+
+  defmodule CNode do
+    @moduledoc false
+    use Unifex.CodeGenerator.BaseType
+    alias Unifex.CodeGenerator.BaseType
+
+    @impl BaseType
+    def generate_initialization(name, _ctx) do
+      ~g<#{name} = (char *)malloc(255*sizeof(char));>
+    end
+
+    @impl BaseType
+    def generate_arg_parse(arg, var_name, _ctx) do
+      ~g<ei_decode_string(#{arg}-\>buff, #{arg}-\>index, #{var_name})>
+    end
+  end
 end
