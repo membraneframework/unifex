@@ -24,7 +24,7 @@ extern "C" {
  * The implementation have to be provided by the user.
  */
 
-UNIFEX_TERM foo(UnifexEnv *env);
+UNIFEX_TERM foo(UnifexEnv *env, int num);
 
 /*
  * Callbacks for nif lifecycle hooks.

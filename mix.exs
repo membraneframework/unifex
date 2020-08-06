@@ -42,7 +42,7 @@ defmodule Unifex.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "pages/creating_unifex_nif.md"],
+      extras: ["README.md", "pages/creating_unifex_natives.md"],
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [
         Unifex.CodeGenerators,
