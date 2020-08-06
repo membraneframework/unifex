@@ -8,7 +8,8 @@ Unifex is a tool for generating interfaces between native C code and Elixir, tha
 - provides intuitive and conscise tools for defining native interfaces,
 - generates all the boilerplate for you,
 - provides useful abstractions over binaries and state,
-- makes native code independent from `erl_nif` library, so the same code is usable either with NIFs or CNodes.
+- makes native code independent from [erl_nif](https://erlang.org/doc/man/erl_nif.html) 
+  or [ei](https://erlang.org/doc/man/ei.html) library, so the same code is usable either with NIFs or CNodes.
 
 API documentation is available at [HexDocs](https://hexdocs.pm/unifex/).
 

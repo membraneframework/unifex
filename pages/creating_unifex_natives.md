@@ -1,8 +1,7 @@
 # Creating Unifex Natives
 
 ## Introduction
-In this section we present how to create Unifex Natives. 
-We will show it by writing code that will be compiled both as NIF and CNode.
+In this tutorial, you will learn how to use Unifex natives to write native code that can be compiled both as NIF and CNode.
 
 ## Preparation
 
@@ -87,12 +86,6 @@ Note that here we also specified an interface or even interfaces!
 It is not necessary because if we didn't do it Unifex would take it from `bundlex.exs`.
 However, this is a good practice that makes code clearer and is also a little faster than fetching info from `bundlex.exs.` 
 
-More information on how `.spec.exs` files should be created can be found in docs for
-`Unifex.Specs.DSL` module.
-You can also check out our [test_projects](https://github.com/membraneframework/unifex/tree/master/test_projects)
-to see a little more advanced examples or look how we use Unifex in a our repositories 
-e.g. in [shmex](https://github.com/membraneframework).
-
 Next step is to implement our `example.h`.
 Since our example is very simple our `example.h` will be very simple too:
 ```c
@@ -157,6 +150,5 @@ iex(bundlex_app_4eb957f2-...)4> Unifex.CNode.call(cnode, :foo, [10])
 
 ## More examples
 You can find more complete projects [here](https://github.com/membraneframework/unifex/tree/master/test_projects).
-Also check out how we use Unifex in our [repositories](https://github.com/membraneframework) e.g. in 
-[shmex](https://github.com/membraneframework/shmex) and please refer to `Unifex.Specs.DSL` module's documentation 
-to see how to create more advanced `*.spec.exs` files.
+Also check out how we use Unifex in our [repositories](https://github.com/membraneframework) 
+and please refer to `Unifex.Specs.DSL` module's documentation to see how to create more advanced `*.spec.exs` files.
