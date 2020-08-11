@@ -22,13 +22,13 @@ defmodule Unifex.CodeGenerators.CNode do
     #include <string.h>
     #include <stdlib.h>
 
-    // required for erl_interface.h to work
+    // required for ei.h to work
     #ifndef _REENTRANT
     #define _REENTRANT
     #endif
 
+    #include <ei.h>
     #include <ei_connect.h>
-    #include <erl_interface.h>
 
     #include <unifex/unifex.h>
     #include <unifex/cnode.h>

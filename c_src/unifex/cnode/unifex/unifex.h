@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-// required for erl_interface.h to work
+// required for ei.h to work
 #ifndef _REENTRANT
 #define _REENTRANT
 #endif
 
+#include <ei.h>
 #include <ei_connect.h>
-#include <erl_interface.h>
 
 #ifdef __cplusplus
 extern "C" {
