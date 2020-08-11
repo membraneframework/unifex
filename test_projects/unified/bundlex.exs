@@ -10,16 +10,10 @@ defmodule Example.BundlexProject do
   def natives(_platform) do
     [
       example: [
-        deps: [unifex: :unifex],
         src_base: "example",
-        sources: ["_generated/nif/example.c", "example.c"],
-        interface: :nif
-      ],
-      example: [
-        deps: [unifex: :unifex],
-        src_base: "example",
-        sources: ["_generated/cnode/example.c", "example.c"],
-        interface: :cnode
+        sources: ["example.c"],
+        interface: [:nif, :cnode],
+        precompiler: Unifex
       ]
     ]
   end
