@@ -5,6 +5,8 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
+  @type interface_t :: NIF | CNode
+
   @type t :: %__MODULE__{
           name: atom,
           module: module() | nil,
@@ -17,7 +19,7 @@ defmodule Unifex.Specs do
           callbacks: %{
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
-          interface: [module] | module | nil,
+          interface: [interface_t()] | interface_t() | nil,
           state_type: String.t() | nil
         }
 

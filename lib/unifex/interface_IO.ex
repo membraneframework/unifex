@@ -1,6 +1,8 @@
 defmodule Unifex.InterfaceIO do
   @moduledoc false
 
+  alias Unifex.CodeGenerator
+
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
 
@@ -8,6 +10,9 @@ defmodule Unifex.InterfaceIO do
     "../../#{name}.h"
   end
 
+  @spec get_interfaces_specs!(dir :: Path.t()) :: [
+          {name :: String.t(), dir :: String.t(), file :: String.t()}
+        ]
   def get_interfaces_specs!(dir) do
     dir
     |> Path.join("**/?*#{@spec_name_sufix}")
@@ -19,10 +24,13 @@ defmodule Unifex.InterfaceIO do
     end)
   end
 
-  def store_interface!(name, dir, code) do
-    {header, source, interface} = code
-    interface = inspect(interface) |> String.downcase()
-    out_dir_name = Path.join([dir, @generated_dir_name, "#{interface}"])
+  @spec store_interface!(
+          name :: String.t(),
+          dir :: String.t(),
+          code :: CodeGenerator.generated_code_t()
+        ) :: :ok
+  def store_interface!(name, dir, {header, source, generator}) do
+    out_dir_name = Path.join([dir, @generated_dir_name, generator.subdirectory()])
     File.mkdir_p!(out_dir_name)
     out_base_path = Path.join(out_dir_name, name)
     File.write!("#{out_base_path}.h", header)
