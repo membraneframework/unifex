@@ -62,7 +62,7 @@ defmodule Unifex.MixProject do
       {:shmex, "~> 0.2.0"},
       {:bundlex,
        git: "https://github.com/membraneframework/bundlex.git",
-       branch: "postprocessor",
+       branch: "precompiler",
        override: true},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
