@@ -1,7 +1,7 @@
 %{
   "bunch": {:hex, :bunch, "1.3.0", "51b4423088b7fb9e21eae6d6bc5e5d219d955ea5556fbd6130bfb6213df4be32", [:mix], [], "hexpm", "9ad233a2bacc0dae8aa6553a9b9057f27446443b1c5903c3479b6f9f3820ce2d"},
   "bunch_native": {:hex, :bunch_native, "0.2.1", "0227d2a751a32f8c0b77dfec57c8dc7216351720c9c755c467e6d9387467fd1f", [:mix], [{:bundlex, "~> 0.2.7", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm", "f0819b2f9f78086447ac7459a8e7b6e25ad535b9d3a4f9469253c552137de6b4"},
-  "bundlex": {:git, "https://github.com/membraneframework/bundlex.git", "405fead5f9f8da27ee61d979fde71f95128774a5", [branch: "precompiler"]},
+  "bundlex": {:git, "https://github.com/membraneframework/bundlex.git", "c2f8520c74a32a9f10ed9194fbb335ef4d8dc5b0", [branch: "precompiler"]},
   "dialyxir": {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "aeb06588145fac14ca08d8061a142d52753dbc2cf7f0d00fc1013f53f8654654"},
   "earmark": {:hex, :earmark, "1.4.4", "4821b8d05cda507189d51f2caeef370cf1e18ca5d7dfb7d31e9cafe6688106a4", [:mix], [], "hexpm", "1f93aba7340574847c0f609da787f0d79efcab51b044bb6e242cae5aca9d264d"},
   "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},

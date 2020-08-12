@@ -29,7 +29,11 @@ defmodule Unifex.CodeGenerator do
     {:ok, bundlex_project} = Bundlex.Project.get()
     config = bundlex_project.config
 
-    interfaces = [:natives, :libs] |> Enum.find_value(&get_in(config, [&1, name, :interface]))
+    interfaces =
+      [:natives, :libs]
+      |> Enum.flat_map(&Keyword.get(config, &1))
+      |> Keyword.get_values(name)
+      |> Enum.map(&Keyword.get(&1, :interface))
 
     case interfaces do
       [] -> raise "Interface for native #{name} is not specified.
@@ -45,8 +49,8 @@ defmodule Unifex.CodeGenerator do
   defp get_generator_module_name(interface) do
     module_name =
       case interface do
-        :nif -> :NIF
-        :cnode -> :CNode
+        :nif -> NIF
+        :cnode -> CNode
         other -> other
       end
 
