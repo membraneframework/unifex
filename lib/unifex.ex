@@ -1,24 +1,24 @@
 defmodule Unifex do
   @moduledoc """
-  Implementation of `Bundlex.Precompiler`.
+  Implementation of `Bundlex.Preprocessor`.
 
   When added to a native configuration in `Bundlex.Project`, equips the native with
   the Unifex native dependency and generated sources.
   """
   alias Bundlex.Native
-  alias Bundlex.Project.Precompiler
+  alias Bundlex.Project.Preprocessor
   alias Unifex.InterfaceIO
 
-  @behaviour Precompiler
+  @behaviour Preprocessor
 
-  @impl Precompiler
-  def precompile_native_config(_name, _app, config) do
+  @impl Preprocessor
+  def preprocess_native_config(_name, _app, config) do
     unifex_deps = [unifex: :unifex]
     Keyword.update(config, :deps, unifex_deps, &(unifex_deps ++ &1))
   end
 
-  @impl Precompiler
-  def precompile_native(native) do
+  @impl Preprocessor
+  def preprocess_native(native) do
     %Native{app: app, name: name, interface: interface, language: language} = native
 
     {:ok, project_dir} = Bundlex.Helper.MixHelper.get_project_dir(app)

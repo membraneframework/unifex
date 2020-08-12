@@ -29,13 +29,13 @@ In order to start working, you need to prepare a few things:
           example: [
             sources: ["example.c"],
             interface: [:nif, :cnode],
-            precompiler: Unifex
+            preprocessor: Unifex
           ]
         ]
       end
     end
     ```
-   This defines a native called `example`, that should be implemented in the `example.c` file. We'll also need `example.spec.exs` file, that Unifex needs to generate boilerplate code for compiling the native as NIF and CNode. Both files should be located in the `c_src/example` folder. Setting `Unifex` as a precompiler lets it extend the configuration with the generated code.
+   This defines a native called `example`, that should be implemented in the `example.c` file. We'll also need `example.spec.exs` file, that Unifex needs to generate boilerplate code for compiling the native as NIF and CNode. Both files should be located in the `c_src/example` folder. Setting `Unifex` as a preprocessor lets it extend the configuration with the generated code.
    More details on how to use bundlex can be found in its [documentation](https://hexdocs.pm/bundlex).
 
 ## Native code

@@ -12,7 +12,7 @@ defmodule Example.BundlexProject do
       example: [
         src_base: "example",
         sources: ["example.c"],
-        precompiler: Unifex
+        preprocessor: Unifex
       ]
     ]
   end

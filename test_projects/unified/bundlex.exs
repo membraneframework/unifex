@@ -13,7 +13,7 @@ defmodule Example.BundlexProject do
         src_base: "example",
         sources: ["example.c"],
         interface: [:nif, :cnode],
-        precompiler: Unifex
+        preprocessor: Unifex
       ]
     ]
   end
