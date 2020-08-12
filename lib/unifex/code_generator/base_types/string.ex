@@ -18,6 +18,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
     ~g<#{name} = NULL;>
   end
 
+  @impl BaseType
+  def generate_destruction(name, _ctx) do
+    ~g<unifex_free(#{name});>
+  end
+
   defmodule NIF do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
@@ -32,11 +37,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g<unifex_string_from_term(env, #{arg}, &#{var_name})>
     end
-
-    @impl BaseType
-    def generate_destruction(name, _ctx) do
-      ~g<unifex_free(#{name});>
-    end
   end
 
   defmodule CNode do
@@ -45,13 +45,26 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
-    def generate_initialization(name, _ctx) do
-      ~g<#{name} = (char *)malloc(255*sizeof(char));>
+    def generate_arg_serialize(name, _ctx) do
+      ~g"""
+      ({
+        int str_len = strlen(#{name});
+        ei_x_encode_binary(out_buff, #{name}, str_len);
+      });
+      """
     end
 
     @impl BaseType
     def generate_arg_parse(arg, var_name, _ctx) do
-      ~g<ei_decode_string(#{arg}-\>buff, #{arg}-\>index, #{var_name})>
+      ~g"""
+      ({
+        int type;
+        int size;
+        ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
+        size = size + 1; // for NULL byte
+        ei_decode_binary(#{arg}->buff, #{arg}->index, #{var_name}, (long *)&size);
+      })
+      """
     end
   end
 end
