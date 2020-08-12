@@ -8,8 +8,7 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, UnifexPayload *in_payload,
-                MyState *state) {
+UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, UnifexPayload *in_payload, int *in_list, int list_length, MyState *state) {
   int res = send_example_msg(env, pid, 0, state->a);
   if (!res) {
     return foo_result_error(env, "send_failed");
@@ -18,9 +17,21 @@ UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, UnifexPayload *in_payload,
       unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
   memcpy(out_payload->data, in_payload->data, out_payload->size);
   out_payload->data[0]++;
-  UNIFEX_TERM result = foo_result_ok(env, state->a, out_payload);
+  UNIFEX_TERM result = foo_result_ok(env, state->a, out_payload, in_list, list_length);
   unifex_payload_release(out_payload);
   return result;
+}
+
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, int list_length) {
+    return test_list_result_ok(env, in_list, list_length);
+}
+
+UNIFEX_TERM test_string(UnifexEnv *env, char *str) {
+    return test_string_result_ok(env, str);
+}
+
+UNIFEX_TERM test_strings_list(UnifexEnv *env, char **str, int list_length) {
+    return test_strings_list_result_ok(env, str, list_length);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {

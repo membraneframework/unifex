@@ -243,7 +243,7 @@ defmodule Unifex.CodeGenerators.CNode do
     implemented_fun_args =
       [
         "env"
-        | Enum.map(args, fn {name, type} -> BaseType.generate_arg_name(type, name, CNode) end)
+        | Enum.flat_map(args, fn {name, type} -> BaseType.generate_arg_name(type, name, CNode) end)
       ]
       |> Enum.join(", ")
 

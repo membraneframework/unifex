@@ -12,9 +12,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
     def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       ({
-        long long #{name}_longlong;
-        int result = ei_decode_longlong(#{argument}->buff, #{argument}->index, &#{name}_longlong);
-        #{name} = (int)#{name}_longlong;
+        long long tmp_longlong;
+        int result = ei_decode_longlong(#{argument}->buff, #{argument}->index, &tmp_longlong);
+        #{name} = (int)tmp_longlong;
         result;
       })
       """
@@ -24,8 +24,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       ({
-      int #{name}_int = #{name};
-      ei_x_encode_longlong(out_buff, (long long)#{name}_int);
+      ei_x_encode_longlong(out_buff, (long long)#{name});
       });
       """
     end
