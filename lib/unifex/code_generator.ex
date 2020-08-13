@@ -54,8 +54,15 @@ defmodule Unifex.CodeGenerator do
   @spec bundlex_interface(Bundlex.Native.interface_t()) :: Specs.interface_t()
   def bundlex_interface(:cnode), do: CNode
   def bundlex_interface(:nif), do: NIF
+  def bundlex_interface(:port), do: Port
 
   @spec interface_generator(Specs.interface_t()) :: module()
-  def interface_generator(CNode), do: Unifex.CodeGenerators.CNode
-  def interface_generator(NIF), do: Unifex.CodeGenerators.NIF
+  def interface_generator(interface) do
+    generator = Module.concat(Unifex.CodeGenerators, interface)
+
+    # Ensure CodeGenerator module is present
+    true = Code.ensure_loaded?(generator)
+
+    generator
+  end
 end
