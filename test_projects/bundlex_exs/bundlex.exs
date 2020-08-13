@@ -13,7 +13,13 @@ defmodule BundlexExs.BundlexProject do
         deps: [unifex: :unifex],
         src_base: "example",
         sources: ["_generated/nif/example.c", "example.c"],
-        interface: [:nif, :cnode]
+        interface: :nif
+      ],
+      example: [
+        deps: [unifex: :unifex],
+        src_base: "example",
+        sources: ["_generated/cnode/example.c", "example.c"],
+        interface: :cnode
       ]
     ]
   end
