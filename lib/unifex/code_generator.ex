@@ -32,7 +32,9 @@ defmodule Unifex.CodeGenerator do
 
     generators =
       [:natives, :libs]
-      |> Enum.find_value(&get_in(config, [&1, name, :interface]))
+      |> Enum.flat_map(&Keyword.get(config, &1))
+      |> Keyword.get_values(name)
+      |> Enum.flat_map(&Bunch.listify(Keyword.get(&1, :interface)))
       |> Enum.map(&bundlex_interface/1)
       |> Enum.map(&interface_generator/1)
 
