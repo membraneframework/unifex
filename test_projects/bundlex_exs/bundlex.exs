@@ -12,15 +12,10 @@ defmodule BundlexExs.BundlexProject do
       example: [
         deps: [unifex: :unifex],
         src_base: "example",
-        sources: ["_generated/nif/example.c", "example.c"],
-        interface: :nif
+        sources: ["example.c"],
+        interface: [:nif, :cnode],
+        preprocessor: Unifex
       ],
-      example: [
-        deps: [unifex: :unifex],
-        src_base: "example",
-        sources: ["_generated/cnode/example.c", "example.c"],
-        interface: :cnode
-      ]
     ]
   end
 end

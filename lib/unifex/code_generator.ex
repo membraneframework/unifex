@@ -52,8 +52,8 @@ defmodule Unifex.CodeGenerator do
   end
 
   @spec bundlex_interface(Bundlex.Native.interface_t()) :: Specs.interface_t()
-  defp bundlex_interface(:cnode), do: CNode
-  defp bundlex_interface(:nif), do: NIF
+  def bundlex_interface(:cnode), do: CNode
+  def bundlex_interface(:nif), do: NIF
 
   @spec interface_generator(Specs.interface_t()) :: module()
   def interface_generator(CNode), do: Unifex.CodeGenerators.CNode

@@ -10,9 +10,9 @@ defmodule Example.BundlexProject do
   def nifs(_platform) do
     [
       example: [
-        deps: [unifex: :unifex],
         src_base: "example",
-        sources: ["_generated/nif/example.c", "example.c"]
+        sources: ["example.c"],
+        preprocessor: Unifex
       ]
     ]
   end

@@ -40,7 +40,7 @@ defmodule Unifex.Specs do
   @doc """
   Parses Unifex specs of native functions.
   """
-  @spec parse(specs_file :: Path.t(), name :: String.t()) :: t()
+  @spec parse(specs_file :: Path.t(), name :: atom) :: t()
   def parse(specs_file, name) do
     specs_code = File.read!(specs_file)
     {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env(specs_file))
@@ -56,7 +56,7 @@ defmodule Unifex.Specs do
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
     %__MODULE__{
-      name: String.to_atom(name),
+      name: name,
       module: Keyword.get(config, :module),
       functions_args: functions_args,
       functions_results: functions_results,

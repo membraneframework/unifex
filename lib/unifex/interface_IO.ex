@@ -18,10 +18,20 @@ defmodule Unifex.InterfaceIO do
     |> Path.join("**/?*#{@spec_name_sufix}")
     |> Path.wildcard()
     |> Enum.map(fn file ->
-      name = file |> Path.basename() |> String.replace_suffix(@spec_name_sufix, "")
+      name =
+        file |> Path.basename() |> String.replace_suffix(@spec_name_sufix, "") |> String.to_atom()
+
       dir = file |> Path.dirname()
       {name, dir, file}
     end)
+  end
+
+  def out_path(name, dir, generator, extension \\ "") do
+    Path.join(out_dir(dir, generator), "#{name}#{extension}")
+  end
+
+  def out_dir(base_dir, generator) do
+    Path.join([base_dir, @generated_dir_name, generator.subdirectory()])
   end
 
   @spec store_interface!(
@@ -30,9 +40,8 @@ defmodule Unifex.InterfaceIO do
           code :: CodeGenerator.generated_code_t()
         ) :: :ok
   def store_interface!(name, dir, {header, source, generator}) do
-    out_dir_name = Path.join([dir, @generated_dir_name, generator.subdirectory()])
-    File.mkdir_p!(out_dir_name)
-    out_base_path = Path.join(out_dir_name, name)
+    File.mkdir_p!(out_dir(dir, generator))
+    out_base_path = out_path(name, dir, generator)
     File.write!("#{out_base_path}.h", header)
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
