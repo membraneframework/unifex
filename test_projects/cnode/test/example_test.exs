@@ -4,22 +4,28 @@ defmodule ExampleTest do
   test "init" do
     require Unifex.CNode
     assert {:ok, cnode} = Unifex.CNode.start_link(:example)
-    assert :ok = Unifex.CNode.call(cnode, :init)
-    assert {:ok, 42, <<2, 2, 3>>, [1, 2, 3]} = Unifex.CNode.call(cnode, :foo, [self(), <<1, 2, 3>>, [1, 2, 3]])
-    assert_receive {:example_msg, 42}
 
+    test_init(cnode)
+    test_unsigned_int(cnode)
     test_string(cnode)
     test_list(cnode)
     test_list_as_string(cnode)
     test_list_of_strings(cnode)
+    test_payload(cnode)
+    test_pid(cnode)
+    test_example_message(cnode)
 
-    assert_raise RuntimeError, ~r/undefined.*function.*abc/i, fn ->
-      Unifex.CNode.call(cnode, :abc)
-    end
+    test_undefined_function(cnode)
+    test_wrong_arguments(cnode)
+  end
 
-    assert_raise RuntimeError, ~r/argument.*target.*pid/i, fn ->
-      Unifex.CNode.call(cnode, :foo, [:abc])
-    end
+  def test_init(cnode) do
+    assert :ok = Unifex.CNode.call(cnode, :init)
+  end
+
+  def test_unsigned_int(cnode) do
+    assert {:ok, 0} = Unifex.CNode.call(cnode, :test_uint, [0])
+    assert {:ok, 5} = Unifex.CNode.call(cnode, :test_uint, [5])
   end
 
   def test_string(cnode) do
@@ -53,6 +59,31 @@ defmodule ExampleTest do
   end
 
   def test_list_of_strings(cnode) do
-    assert {:ok, ['abc', 'def', 'ghi']} = Unifex.CNode.call(cnode, :test_strings_list, [['abc', 'def', 'ghi']])
+    assert {:ok, ['abc', 'def', 'ghi']} = Unifex.CNode.call(cnode, :test_list_of_strings, [['abc', 'def', 'ghi']])
+  end
+
+  def test_payload(cnode) do
+    assert {:ok, <<2, 2, 3>>} = Unifex.CNode.call(cnode, :test_payload, [<<1, 2, 3>>])
+  end
+
+  def test_pid(cnode) do
+    assert {:ok} = Unifex.CNode.call(cnode, :test_pid, [self()])
+  end
+
+  def test_example_message(cnode) do
+    assert {:ok} = Unifex.CNode.call(cnode, :test_example_message)
+    assert_receive {:example_msg, 23}
+  end
+
+  def test_undefined_function(cnode) do
+    assert_raise RuntimeError, ~r/undefined.*function.*abc/i, fn ->
+      Unifex.CNode.call(cnode, :abc)
+    end
+  end
+
+  def test_wrong_arguments(cnode) do
+    assert_raise RuntimeError, ~r/argument.*in_pid.*pid/i, fn ->
+      Unifex.CNode.call(cnode, :test_pid, [:abc])
+    end
   end
 end

@@ -9,10 +9,7 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
 
   ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "ok");
-  ({
-    int answer_int = answer;
-    ei_x_encode_longlong(out_buff, (long long)answer_int);
-  });
+  ({ ei_x_encode_longlong(out_buff, (long long)answer); });
 
   return out_buff;
 }
@@ -23,10 +20,10 @@ UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   int num;
 
   if (({
-        long long num_longlong;
+        long long tmp_longlong;
         int result =
-            ei_decode_longlong(in_buff->buff, in_buff->index, &num_longlong);
-        num = (int)num_longlong;
+            ei_decode_longlong(in_buff->buff, in_buff->index, &tmp_longlong);
+        num = (int)tmp_longlong;
         result;
       })) {
     result = unifex_raise(

@@ -8,30 +8,42 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, UnifexPayload *in_payload, int *in_list, int list_length, MyState *state) {
-  int res = send_example_msg(env, pid, 0, state->a);
-  if (!res) {
-    return foo_result_error(env, "send_failed");
-  }
-  UnifexPayload *out_payload =
-      unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
+UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint) {
+  return test_uint_result_ok(env, in_uint);
+}
+
+UNIFEX_TERM test_string(UnifexEnv *env, char *str) {
+  return test_string_result_ok(env, str);
+}
+
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, int list_length) {
+  return test_list_result_ok(env, in_list, list_length);
+}
+
+UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **str, int list_length) {
+  return test_list_of_strings_result_ok(env, str, list_length);
+}
+
+UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
+  UnifexPayload *out_payload = unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
   memcpy(out_payload->data, in_payload->data, out_payload->size);
   out_payload->data[0]++;
-  UNIFEX_TERM result = foo_result_ok(env, state->a, out_payload, in_list, list_length);
+  UNIFEX_TERM result = test_payload_result_ok(env, out_payload);
   unifex_payload_release(out_payload);
   return result;
 }
 
-UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, int list_length) {
-    return test_list_result_ok(env, in_list, list_length);
+UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid) {
+  UNIFEX_UNUSED(in_pid);
+  return test_pid_result_ok(env);
 }
 
-UNIFEX_TERM test_string(UnifexEnv *env, char *str) {
-    return test_string_result_ok(env, str);
-}
-
-UNIFEX_TERM test_strings_list(UnifexEnv *env, char **str, int list_length) {
-    return test_strings_list_result_ok(env, str, list_length);
+UNIFEX_TERM test_example_message(UnifexEnv *env) {
+  int res = send_example_msg(env, *env->reply_to, 0, 23);
+  if (!res) {
+    return test_example_message_result_error(env, "send_failed");
+  }
+  return test_example_message_result_ok(env);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {

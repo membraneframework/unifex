@@ -155,7 +155,7 @@ exit_export_foo:
   if (list_in != NULL) {
     for (unsigned int i = 0; i < list_in_length; i++) {
     }
-    enif_free(list_in);
+    unifex_free(list_in);
   }
 
   return result;

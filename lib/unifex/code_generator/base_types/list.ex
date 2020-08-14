@@ -129,27 +129,30 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ({
         int res = 1;
         int type;
-        char *p;
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &#{len_var_name});
         if(type == ERL_LIST_EXT) {
           res = ei_decode_list_header(#{arg}->buff, #{arg}->index, &#{len_var_name});
-          #{var_name} = malloc(sizeof(#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}) * #{len_var_name});
+          #{var_name} = malloc(sizeof(#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}) * #{
+        len_var_name
+      });
 
           for(int i = 0; i < #{len_var_name}; i++) {
             #{BaseType.generate_initialization(ctx.subtype, elem_name, ctx.generator)}
           }
 
           for(int i = 0; i < #{len_var_name}; i++) {
-            #{BaseType.generate_arg_parse(
-              ctx.subtype,
-              elem_name,
-              arg,
-              ctx.postproc_fun,
-              ctx.generator
-            )}
+            #{
+        BaseType.generate_arg_parse(
+          ctx.subtype,
+          elem_name,
+          arg,
+          ctx.postproc_fun,
+          ctx.generator
+        )
+      }
           }
         } else if(type == ERL_STRING_EXT) {
-          p = malloc(sizeof(char)*#{len_var_name});
+          char *p = malloc(sizeof(char) * #{len_var_name});
           res = ei_decode_string(#{arg}->buff, #{arg}->index, p);
           #{var_name} = malloc(sizeof(int) * #{len_var_name});
           for(int i = 0; i < #{len_var_name}; i++) {
