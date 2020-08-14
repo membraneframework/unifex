@@ -17,6 +17,14 @@ defmodule Unifex.IntegrationTest do
     test_project("unified", :cnode)
   end
 
+  test "bundlex.exs specified interface (NIF) test project" do
+    test_project("bundlex_exs", :nif)
+  end
+
+  test "bundlex.exs specified interface (CNode) test project" do
+    test_project("bundlex_exs", :cnode)
+  end
+
   defp test_project(project, interface) do
     assert {_output, 0} =
              System.cmd("bash", ["-c", "mix test 1>&2"], cd: "test_projects/#{project}")

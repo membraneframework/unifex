@@ -5,6 +5,14 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
+  @typedoc """
+  Name of interface generated for the native library.
+  Must be a suffix of code generator module in `Unifex.CodeGenerators` namespace.
+
+  Unifex has built-in generators for `NIF` and `CNode` interfaces.
+  """
+  @type interface_t :: atom()
+
   @type t :: %__MODULE__{
           name: atom,
           module: module() | nil,
@@ -17,7 +25,7 @@ defmodule Unifex.Specs do
           callbacks: %{
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
-          interface: [module] | module | nil,
+          interface: [interface_t()] | interface_t() | nil,
           state_type: String.t() | nil
         }
 

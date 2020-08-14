@@ -1,6 +1,8 @@
 defmodule Unifex.InterfaceIO do
   @moduledoc false
 
+  alias Unifex.CodeGenerator
+
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
 
@@ -8,6 +10,9 @@ defmodule Unifex.InterfaceIO do
     "../../#{name}.h"
   end
 
+  @spec get_interfaces_specs!(dir :: Path.t()) :: [
+          {name :: String.t(), dir :: String.t(), file :: String.t()}
+        ]
   def get_interfaces_specs!(dir) do
     dir
     |> Path.join("**/?*#{@spec_name_sufix}")
@@ -21,19 +26,22 @@ defmodule Unifex.InterfaceIO do
     end)
   end
 
-  def out_path(name, dir, interface, extension \\ "") do
-    Path.join(out_dir(dir, interface), "#{name}#{extension}")
+  def out_path(name, dir, generator, extension \\ "") do
+    Path.join(out_dir(dir, generator), "#{name}#{extension}")
   end
 
-  def out_dir(base_dir, interface) do
-    interface = interface |> inspect() |> String.downcase()
-    Path.join([base_dir, @generated_dir_name, "#{interface}"])
+  def out_dir(base_dir, generator) do
+    Path.join([base_dir, @generated_dir_name, generator.interface_io_name()])
   end
 
-  def store_interface!(name, dir, code) do
-    {header, source, interface} = code
-    File.mkdir_p!(out_dir(dir, interface))
-    out_base_path = out_path(name, dir, interface)
+  @spec store_interface!(
+          name :: String.t(),
+          dir :: String.t(),
+          code :: CodeGenerator.generated_code_t()
+        ) :: :ok
+  def store_interface!(name, dir, {header, source, generator}) do
+    File.mkdir_p!(out_dir(dir, generator))
+    out_base_path = out_path(name, dir, generator)
     File.write!("#{out_base_path}.h", header)
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)

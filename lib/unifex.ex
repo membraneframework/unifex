@@ -7,6 +7,7 @@ defmodule Unifex do
   """
   alias Bundlex.Native
   alias Bundlex.Project.Preprocessor
+  alias Unifex.CodeGenerator
   alias Unifex.InterfaceIO
 
   @behaviour Preprocessor
@@ -23,18 +24,17 @@ defmodule Unifex do
 
     {:ok, project_dir} = Bundlex.Helper.MixHelper.get_project_dir(app)
 
-    interface =
-      case interface do
-        :nif -> NIF
-        :cnode -> CNode
-      end
+    generator =
+      interface
+      |> CodeGenerator.bundlex_interface()
+      |> CodeGenerator.interface_generator()
 
     source =
       project_dir
       |> InterfaceIO.get_interfaces_specs!()
       |> Enum.find(fn {spec_name, _dir, _specs} -> spec_name == name end)
       |> case do
-        {_spec_name, dir, _specs} -> InterfaceIO.out_path(name, dir, interface, ".#{language}")
+        {_spec_name, dir, _specs} -> InterfaceIO.out_path(name, dir, generator, ".#{language}")
         nil -> raise "Native #{inspect(name)} not found in app #{inspect(app)} specification"
       end
 

@@ -6,28 +6,25 @@ defmodule Unifex.CodeGenerator.TieHeader do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator
 
-  @spec generate_header(name :: atom, interfaces :: [module]) :: CodeGenerator.code_t()
-  def generate_header(name, interfaces) do
+  @spec generate_header(name :: String.t(), generators :: [module()]) :: CodeGenerator.code_t()
+  def generate_header(name, generators) do
     ~g"""
     #pragma once
 
-    #{generate_includes(name, interfaces)}
+    #{generate_includes(name, generators)}
     """
   end
 
-  defp generate_includes(name, interfaces) do
-    interfaces
+  defp generate_includes(name, generators) do
+    generators
     |> Enum.map(&generate_include(name, &1))
     |> Enum.join("\n")
   end
 
-  defp generate_include(name, interface) do
-    interface = inspect(interface)
-    module = Module.concat(Unifex.CodeGenerators, interface)
-
+  defp generate_include(name, generator) do
     ~g"""
-    #ifdef #{module.identification_constant()}
-    #include "#{interface |> String.downcase()}/#{name}.h"
+    #ifdef #{generator.identification_constant()}
+    #include "#{generator.interface_io_name()}/#{name}.h"
     #endif
     """
   end
