@@ -13,7 +13,7 @@ defmodule Unifex.CodeGenerators.CNode do
   def identification_constant(), do: "BUNDLEX_CNODE"
 
   @impl CodeGenerator
-  def subdirectory(), do: "cnode"
+  def interface_io_name(), do: "cnode"
 
   @impl CodeGenerator
   def generate_header(specs) do

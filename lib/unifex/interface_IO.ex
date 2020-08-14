@@ -31,7 +31,7 @@ defmodule Unifex.InterfaceIO do
   end
 
   def out_dir(base_dir, generator) do
-    Path.join([base_dir, @generated_dir_name, generator.subdirectory()])
+    Path.join([base_dir, @generated_dir_name, generator.interface_io_name()])
   end
 
   @spec store_interface!(

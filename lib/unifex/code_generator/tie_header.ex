@@ -24,7 +24,7 @@ defmodule Unifex.CodeGenerator.TieHeader do
   defp generate_include(name, generator) do
     ~g"""
     #ifdef #{generator.identification_constant()}
-    #include "#{generator.subdirectory()}/#{name}.h"
+    #include "#{generator.interface_io_name()}/#{name}.h"
     #endif
     """
   end

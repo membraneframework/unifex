@@ -9,7 +9,7 @@ defmodule Unifex.CodeGenerator do
   @type generated_code_t :: {header :: code_t, source :: code_t, generator :: module()}
 
   @callback identification_constant() :: String.t()
-  @callback subdirectory() :: String.t()
+  @callback interface_io_name() :: String.t()
   @callback generate_header(specs :: Specs.t()) :: code_t
   @callback generate_source(specs :: Specs.t()) :: code_t
 
