@@ -24,7 +24,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       ({
-      ei_x_encode_longlong(out_buff, (long long)#{name});
+      int tmp_int = #{name};
+      ei_x_encode_longlong(out_buff, (long long)tmp_int);
       });
       """
     end
