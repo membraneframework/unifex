@@ -20,8 +20,12 @@ UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, int list_length) {
   return test_list_result_ok(env, in_list, list_length);
 }
 
-UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **str, int list_length) {
-  return test_list_of_strings_result_ok(env, str, list_length);
+UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings, int list_length) {
+  return test_list_of_strings_result_ok(env, in_strings, list_length);
+}
+
+UNIFEX_TERM test_list_of_uints(UnifexEnv *env, unsigned int *in_uints, int list_length) {
+  return test_list_of_uints_result_ok(env, in_uints, list_length);
 }
 
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {

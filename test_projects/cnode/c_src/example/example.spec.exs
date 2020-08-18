@@ -16,6 +16,8 @@ spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}
 
 spec test_list_of_strings(in_strings :: [string]) :: {:ok :: label, out_strings :: [string]}
 
+spec test_list_of_uints(in_uints :: [unsigned]) :: {:ok :: label, out_uints :: [unsigned]}
+
 spec test_payload(in_payload :: payload) :: {:ok :: label, out_payload :: payload}
 
 spec test_pid(in_pid :: pid) :: {:ok :: label}

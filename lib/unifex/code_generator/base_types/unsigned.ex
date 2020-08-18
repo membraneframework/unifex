@@ -35,8 +35,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       ({
-        unsigned int #{name}_uint = #{name};
-        ei_x_encode_ulonglong(out_buff, (unsigned long long)#{name}_uint);
+        unsigned int tmp_uint = #{name};
+        ei_x_encode_ulonglong(out_buff, (unsigned long long)tmp_uint);
       });
       """
     end
@@ -45,9 +45,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
     def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       ({
-        unsigned long long #{name}_ulonglong;
-        int result = ei_decode_ulonglong(#{argument}->buff, #{argument}->index, &#{name}_ulonglong);
-        #{name} = (unsigned int)#{name}_ulonglong;
+        unsigned long long tmp_ulonglong;
+        int result = ei_decode_ulonglong(#{argument}->buff, #{argument}->index, &tmp_ulonglong);
+        #{name} = (unsigned int)tmp_ulonglong;
         result;
       })
       """
