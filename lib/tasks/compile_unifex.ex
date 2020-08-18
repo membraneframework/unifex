@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Compile.Unifex do
 
   @impl Mix.Task
   def run(_args) do
+    {:ok, _apps} = Application.ensure_all_started(:unifex)
+
     Helper.get_source_dir()
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs_file} ->
