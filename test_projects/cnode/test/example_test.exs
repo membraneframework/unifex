@@ -37,7 +37,7 @@ defmodule ExampleTest do
     0..253
     |> Enum.each(fn x ->
       list = [x, x + 1, x + 2]
-      assert {:ok, list} = Unifex.CNode.call(context[:cnode], :test_list, [list])
+      assert {:ok, ^list} = Unifex.CNode.call(context[:cnode], :test_list, [list])
     end)
   end
 

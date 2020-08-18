@@ -70,7 +70,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ({
       int get_list_length_result = enif_get_list_length(env, #{arg}, &#{len_var_name});
       if(get_list_length_result){
-        #{var_name} = enif_alloc(sizeof(#{native_type} * #{len_var_name});
+        #{var_name} = enif_alloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           #{BaseType.generate_initialization(subtype, elem_name, generator)}
@@ -138,16 +138,35 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         } else if(type == ERL_STRING_EXT) {
           char *p = malloc(sizeof(char) * #{len_var_name});
           res = ei_decode_string(#{arg}->buff, #{arg}->index, p);
-          #{var_name} = malloc(sizeof(int) * #{len_var_name});
+          ei_x_buff buff;
+          ei_x_new_with_version(&buff);
+          ei_x_encode_list_header(&buff, #{len_var_name});
+
           for(unsigned int i = 0; i < #{len_var_name}; i++) {
-            #ifdef __CHAR_UNSIGNED
-              #{elem_name} = (int)p[i];
-            #else
-              #{elem_name} = (int)p[i];
-              if(#{elem_name} < 0) {
-                #{elem_name} = #{elem_name} + 256;
+            int char_value;
+            if (CHAR_MIN < 0) {
+              char_value = (int)p[i];
+              if(char_value < 0) {
+                char_value = char_value + UCHAR_MAX + 1;
               }
-            #endif
+            } else {
+              char_value = (int)p[i];
+            }
+            ei_x_encode_ulong(&buff, (unsigned long)char_value);
+          }
+          ei_x_encode_empty_list(&buff);
+
+          int index = 0;
+          int version;
+          ei_decode_version(buff.buff, &index, &version);
+          res = ei_get_type(buff.buff, &index, &type, &size);
+          res = ei_decode_list_header(buff.buff, &index, &size);
+          #{len_var_name} = (unsigned int) size;
+          #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
+          for (unsigned int i = 0; i < #{len_var_name}; i++) {
+            unsigned long tmp_ulong;
+            res = ei_decode_ulong(buff.buff, &index, &tmp_ulong);
+            #{elem_name} = (#{native_type})tmp_ulong;
           }
         }
         res;

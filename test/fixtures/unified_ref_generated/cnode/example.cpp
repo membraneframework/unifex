@@ -9,7 +9,10 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
 
   ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "ok");
-  ({ ei_x_encode_longlong(out_buff, (long long)answer); });
+  ({
+    int tmp_int = answer;
+    ei_x_encode_longlong(out_buff, (long long)tmp_int);
+  });
 
   return out_buff;
 }

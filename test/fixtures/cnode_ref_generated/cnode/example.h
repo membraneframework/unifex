@@ -31,9 +31,12 @@ void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM init(UnifexEnv *env);
 UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint);
 UNIFEX_TERM test_string(UnifexEnv *env, char *in_string);
-UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, int in_list_length);
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
+                      unsigned int in_list_length);
 UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings,
-                                 int in_strings_length);
+                                 unsigned int in_strings_length);
+UNIFEX_TERM test_list_of_uints(UnifexEnv *env, unsigned int *in_uints,
+                               unsigned int in_uints_length);
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload);
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_example_message(UnifexEnv *env);
@@ -41,10 +44,13 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, const char *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
-                                int out_list_length);
+                                unsigned int out_list_length);
 UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
                                            const char **out_strings,
-                                           int out_strings_length);
+                                           unsigned int out_strings_length);
+UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
+                                         const unsigned int *out_uints,
+                                         unsigned int out_uints_length);
 UNIFEX_TERM test_payload_result_ok(UnifexEnv *env, UnifexPayload *out_payload);
 UNIFEX_TERM test_pid_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
@@ -56,6 +62,8 @@ UNIFEX_TERM test_string_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
                                         UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
+                                      UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_payload_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_pid_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_example_message_caller(UnifexEnv *env,
