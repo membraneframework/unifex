@@ -16,6 +16,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.Pid do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
+    def generate_arg_serialize(name, ctx) do
+      ~g<enif_make_pid(env, &#{name})>
+    end
+
+    @impl BaseType
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g<enif_get_local_pid(env, #{arg}, &#{var_name})>
     end

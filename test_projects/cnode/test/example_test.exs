@@ -1,7 +1,7 @@
 defmodule ExampleTest do
   use ExUnit.Case, async: true
 
-  setup do
+  setup_all do
     require Unifex.CNode
     {:ok, cnode} = Unifex.CNode.start_link(:example)
     :ok = Unifex.CNode.call(cnode, :init)

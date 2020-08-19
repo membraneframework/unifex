@@ -53,8 +53,13 @@ void handle_destroy_state(UnifexEnv *env, UnifexState *state);
  */
 
 UNIFEX_TERM init(UnifexEnv *env);
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid target, int *list_in,
-                unsigned int list_in_length, UnifexState *state);
+UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
+UNIFEX_TERM test_int(UnifexEnv *env, int in_int);
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
+                      unsigned int in_list_length);
+UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
+UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
+UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
 
 /*
  * Callbacks for nif lifecycle hooks.
@@ -70,9 +75,15 @@ int handle_load(UnifexEnv *env, void **priv_data);
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state);
-UNIFEX_TERM foo_result_ok(UnifexEnv *env, const int *list_out,
-                          unsigned int list_out_length, int answer);
-UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason);
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
+UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+                                unsigned int out_list_length);
+UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
+UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);
+UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
+UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
+                                              const char *reason);
 
 /*
  * Functions that send the defined messages from Nif.
