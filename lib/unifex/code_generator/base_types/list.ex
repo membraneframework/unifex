@@ -64,9 +64,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator)
-      subtype = ctx.subtype
-      postproc_fun = ctx.postproc_fun
-      generator = ctx.generator
+      %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
 
       ~g"""
       ({
@@ -114,63 +112,57 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator)
-      subtype = ctx.subtype
-      postproc_fun = ctx.postproc_fun
-      generator = ctx.generator
+      %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
 
       ~g"""
       ({
         int res = 1;
         int type;
         int size;
+
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
         #{len_var_name} = (unsigned int) size;
-        if(type == ERL_LIST_EXT) {
-          res = ei_decode_list_header(#{arg}->buff, #{arg}->index, &size);
-          #{len_var_name} = (unsigned int) size;
-          #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
 
-          for(unsigned int i = 0; i < #{len_var_name}; i++) {
-            #{BaseType.generate_initialization(subtype, elem_name, generator)}
-          }
-
-          for(unsigned int i = 0; i < #{len_var_name}; i++) {
-            #{BaseType.generate_arg_parse(subtype, elem_name, arg, postproc_fun, generator)}
-          }
-        } else if(type == ERL_STRING_EXT) {
+        UnifexCNodeInBuff *unifex_buff;
+        unifex_buff = malloc(sizeof(UnifexCNodeInBuff));
+        if(type == ERL_STRING_EXT) {
           char *p = malloc(sizeof(char) * #{len_var_name});
           res = ei_decode_string(#{arg}->buff, #{arg}->index, p);
+          unsigned char *unsigned_p = (unsigned char *)p;
+
           ei_x_buff buff;
           ei_x_new_with_version(&buff);
           ei_x_encode_list_header(&buff, #{len_var_name});
-
           for(unsigned int i = 0; i < #{len_var_name}; i++) {
-            int char_value;
-            if (CHAR_MIN < 0) {
-              char_value = (int)p[i];
-              if(char_value < 0) {
-                char_value = char_value + UCHAR_MAX + 1;
-              }
-            } else {
-              char_value = (int)p[i];
-            }
-            ei_x_encode_ulong(&buff, (unsigned long)char_value);
+            ei_x_encode_ulong(&buff, (unsigned long)unsigned_p[i]);
           }
           ei_x_encode_empty_list(&buff);
 
-          int index = 0;
           int version;
+          int index = 0;
           ei_decode_version(buff.buff, &index, &version);
           res = ei_get_type(buff.buff, &index, &type, &size);
-          res = ei_decode_list_header(buff.buff, &index, &size);
-          #{len_var_name} = (unsigned int) size;
-          #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
-          for (unsigned int i = 0; i < #{len_var_name}; i++) {
-            unsigned long tmp_ulong;
-            res = ei_decode_ulong(buff.buff, &index, &tmp_ulong);
-            #{elem_name} = (#{native_type})tmp_ulong;
-          }
+          unifex_buff->buff = buff.buff;
+          unifex_buff->index = &index;
+        } else {
+          unifex_buff->buff = #{arg}->buff;
+          unifex_buff->index = #{arg}->index;
         }
+
+        res = ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        #{len_var_name} = (unsigned int) size;
+        #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
+
+        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+          #{BaseType.generate_initialization(subtype, elem_name, generator)}
+        }
+
+        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+          #{
+        BaseType.generate_arg_parse(subtype, elem_name, "unifex_buff", postproc_fun, generator)
+      }
+        }
+        res = ei_skip_term(unifex_buff->buff, unifex_buff->index);
         res;
       })
       """

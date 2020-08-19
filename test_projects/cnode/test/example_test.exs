@@ -69,6 +69,16 @@ defmodule ExampleTest do
     assert {:ok, [0, 1, 2]} = Unifex.CNode.call(cnode, :test_list_of_uints, [[0, 1, 2]])
   end
 
+  test "list with other arguments", context do
+    cnode = context[:cnode]
+
+    assert {:ok, [1, 2, 3], :other_arg} =
+             Unifex.CNode.call(cnode, :test_list_with_other_args, [[1, 2, 3], :other_arg])
+
+    assert {:ok, [300, 400, 500], :other_arg} =
+             Unifex.CNode.call(cnode, :test_list_with_other_args, [[300, 400, 500], :other_arg])
+  end
+
   test "payload", context do
     assert {:ok, <<2, 2, 3>>} = Unifex.CNode.call(context[:cnode], :test_payload, [<<1, 2, 3>>])
   end

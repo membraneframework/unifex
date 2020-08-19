@@ -126,6 +126,31 @@ UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
   return out_buff;
 }
 
+UNIFEX_TERM test_list_with_other_args_result_ok(UnifexEnv *env,
+                                                const int *out_list,
+                                                unsigned int out_list_length,
+                                                const char *other_param) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 3);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    ei_x_encode_list_header(out_buff, out_list_length);
+    for (unsigned int i = 0; i < out_list_length; i++) {
+      ({
+        int tmp_int = out_list[i];
+        ei_x_encode_longlong(out_buff, (long long)tmp_int);
+      });
+    }
+    ei_x_encode_empty_list(out_buff);
+  });
+
+  ei_x_encode_atom(out_buff, other_param);
+
+  return out_buff;
+}
+
 UNIFEX_TERM test_payload_result_ok(UnifexEnv *env, UnifexPayload *out_payload) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -264,63 +289,58 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
         int res = 1;
         int type;
         int size;
+
         ei_get_type(in_buff->buff, in_buff->index, &type, &size);
         in_list_length = (unsigned int)size;
-        if (type == ERL_LIST_EXT) {
-          res = ei_decode_list_header(in_buff->buff, in_buff->index, &size);
-          in_list_length = (unsigned int)size;
-          in_list = malloc(sizeof(int) * in_list_length);
 
-          for (unsigned int i = 0; i < in_list_length; i++) {
-          }
-
-          for (unsigned int i = 0; i < in_list_length; i++) {
-            if (({
-                  long long tmp_longlong;
-                  int result = ei_decode_longlong(in_buff->buff, in_buff->index,
-                                                  &tmp_longlong);
-                  in_list[i] = (int)tmp_longlong;
-                  result;
-                })) {
-              result = unifex_raise(env, "Unifex CNode: cannot parse argument "
-                                         "'in_list' of type '{:list, :int}'");
-              goto exit_test_list_caller;
-            }
-          }
-        } else if (type == ERL_STRING_EXT) {
+        UnifexCNodeInBuff *unifex_buff;
+        unifex_buff = malloc(sizeof(UnifexCNodeInBuff));
+        if (type == ERL_STRING_EXT) {
           char *p = malloc(sizeof(char) * in_list_length);
           res = ei_decode_string(in_buff->buff, in_buff->index, p);
+          unsigned char *unsigned_p = (unsigned char *)p;
+
           ei_x_buff buff;
           ei_x_new_with_version(&buff);
           ei_x_encode_list_header(&buff, in_list_length);
-
           for (unsigned int i = 0; i < in_list_length; i++) {
-            int char_value;
-            if (CHAR_MIN < 0) {
-              char_value = (int)p[i];
-              if (char_value < 0) {
-                char_value = char_value + UCHAR_MAX + 1;
-              }
-            } else {
-              char_value = (int)p[i];
-            }
-            ei_x_encode_ulong(&buff, (unsigned long)char_value);
+            ei_x_encode_ulong(&buff, (unsigned long)unsigned_p[i]);
           }
           ei_x_encode_empty_list(&buff);
 
-          int index = 0;
           int version;
+          int index = 0;
           ei_decode_version(buff.buff, &index, &version);
           res = ei_get_type(buff.buff, &index, &type, &size);
-          res = ei_decode_list_header(buff.buff, &index, &size);
-          in_list_length = (unsigned int)size;
-          in_list = malloc(sizeof(int) * in_list_length);
-          for (unsigned int i = 0; i < in_list_length; i++) {
-            unsigned long tmp_ulong;
-            res = ei_decode_ulong(buff.buff, &index, &tmp_ulong);
-            in_list[i] = (int)tmp_ulong;
+          unifex_buff->buff = buff.buff;
+          unifex_buff->index = &index;
+        } else {
+          unifex_buff->buff = in_buff->buff;
+          unifex_buff->index = in_buff->index;
+        }
+
+        res =
+            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        in_list_length = (unsigned int)size;
+        in_list = malloc(sizeof(int) * in_list_length);
+
+        for (unsigned int i = 0; i < in_list_length; i++) {
+        }
+
+        for (unsigned int i = 0; i < in_list_length; i++) {
+          if (({
+                long long tmp_longlong;
+                int result = ei_decode_longlong(
+                    unifex_buff->buff, unifex_buff->index, &tmp_longlong);
+                in_list[i] = (int)tmp_longlong;
+                result;
+              })) {
+            result = unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                       "'in_list' of type '{:list, :int}'");
+            goto exit_test_list_caller;
           }
         }
+        res = ei_skip_term(unifex_buff->buff, unifex_buff->index);
         res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_list' "
@@ -351,67 +371,63 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
         int res = 1;
         int type;
         int size;
+
         ei_get_type(in_buff->buff, in_buff->index, &type, &size);
         in_strings_length = (unsigned int)size;
-        if (type == ERL_LIST_EXT) {
-          res = ei_decode_list_header(in_buff->buff, in_buff->index, &size);
-          in_strings_length = (unsigned int)size;
-          in_strings = malloc(sizeof(char *) * in_strings_length);
 
-          for (unsigned int i = 0; i < in_strings_length; i++) {
-            in_strings[i] = NULL;
-          }
-
-          for (unsigned int i = 0; i < in_strings_length; i++) {
-            if (({
-                  int type;
-                  int size;
-                  ei_get_type(in_buff->buff, in_buff->index, &type, &size);
-                  size = size + 1; // for NULL byte
-                  in_strings[i] = malloc(sizeof(char) * size);
-                  ei_decode_string(in_buff->buff, in_buff->index,
-                                   in_strings[i]);
-                })) {
-              result =
-                  unifex_raise(env, "Unifex CNode: cannot parse argument "
-                                    "'in_strings' of type '{:list, :string}'");
-              goto exit_test_list_of_strings_caller;
-            }
-          }
-        } else if (type == ERL_STRING_EXT) {
+        UnifexCNodeInBuff *unifex_buff;
+        unifex_buff = malloc(sizeof(UnifexCNodeInBuff));
+        if (type == ERL_STRING_EXT) {
           char *p = malloc(sizeof(char) * in_strings_length);
           res = ei_decode_string(in_buff->buff, in_buff->index, p);
+          unsigned char *unsigned_p = (unsigned char *)p;
+
           ei_x_buff buff;
           ei_x_new_with_version(&buff);
           ei_x_encode_list_header(&buff, in_strings_length);
-
           for (unsigned int i = 0; i < in_strings_length; i++) {
-            int char_value;
-            if (CHAR_MIN < 0) {
-              char_value = (int)p[i];
-              if (char_value < 0) {
-                char_value = char_value + UCHAR_MAX + 1;
-              }
-            } else {
-              char_value = (int)p[i];
-            }
-            ei_x_encode_ulong(&buff, (unsigned long)char_value);
+            ei_x_encode_ulong(&buff, (unsigned long)unsigned_p[i]);
           }
           ei_x_encode_empty_list(&buff);
 
-          int index = 0;
           int version;
+          int index = 0;
           ei_decode_version(buff.buff, &index, &version);
           res = ei_get_type(buff.buff, &index, &type, &size);
-          res = ei_decode_list_header(buff.buff, &index, &size);
-          in_strings_length = (unsigned int)size;
-          in_strings = malloc(sizeof(char *) * in_strings_length);
-          for (unsigned int i = 0; i < in_strings_length; i++) {
-            unsigned long tmp_ulong;
-            res = ei_decode_ulong(buff.buff, &index, &tmp_ulong);
-            in_strings[i] = (char *)tmp_ulong;
+          unifex_buff->buff = buff.buff;
+          unifex_buff->index = &index;
+        } else {
+          unifex_buff->buff = in_buff->buff;
+          unifex_buff->index = in_buff->index;
+        }
+
+        res =
+            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        in_strings_length = (unsigned int)size;
+        in_strings = malloc(sizeof(char *) * in_strings_length);
+
+        for (unsigned int i = 0; i < in_strings_length; i++) {
+          in_strings[i] = NULL;
+        }
+
+        for (unsigned int i = 0; i < in_strings_length; i++) {
+          if (({
+                int type;
+                int size;
+                ei_get_type(unifex_buff->buff, unifex_buff->index, &type,
+                            &size);
+                size = size + 1; // for NULL byte
+                in_strings[i] = malloc(sizeof(char) * size);
+                ei_decode_string(unifex_buff->buff, unifex_buff->index,
+                                 in_strings[i]);
+              })) {
+            result =
+                unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                  "'in_strings' of type '{:list, :string}'");
+            goto exit_test_list_of_strings_caller;
           }
         }
+        res = ei_skip_term(unifex_buff->buff, unifex_buff->index);
         res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument "
@@ -443,64 +459,59 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
         int res = 1;
         int type;
         int size;
+
         ei_get_type(in_buff->buff, in_buff->index, &type, &size);
         in_uints_length = (unsigned int)size;
-        if (type == ERL_LIST_EXT) {
-          res = ei_decode_list_header(in_buff->buff, in_buff->index, &size);
-          in_uints_length = (unsigned int)size;
-          in_uints = malloc(sizeof(unsigned int) * in_uints_length);
 
-          for (unsigned int i = 0; i < in_uints_length; i++) {
-          }
-
-          for (unsigned int i = 0; i < in_uints_length; i++) {
-            if (({
-                  unsigned long long tmp_ulonglong;
-                  int result = ei_decode_ulonglong(
-                      in_buff->buff, in_buff->index, &tmp_ulonglong);
-                  in_uints[i] = (unsigned int)tmp_ulonglong;
-                  result;
-                })) {
-              result =
-                  unifex_raise(env, "Unifex CNode: cannot parse argument "
-                                    "'in_uints' of type '{:list, :unsigned}'");
-              goto exit_test_list_of_uints_caller;
-            }
-          }
-        } else if (type == ERL_STRING_EXT) {
+        UnifexCNodeInBuff *unifex_buff;
+        unifex_buff = malloc(sizeof(UnifexCNodeInBuff));
+        if (type == ERL_STRING_EXT) {
           char *p = malloc(sizeof(char) * in_uints_length);
           res = ei_decode_string(in_buff->buff, in_buff->index, p);
+          unsigned char *unsigned_p = (unsigned char *)p;
+
           ei_x_buff buff;
           ei_x_new_with_version(&buff);
           ei_x_encode_list_header(&buff, in_uints_length);
-
           for (unsigned int i = 0; i < in_uints_length; i++) {
-            int char_value;
-            if (CHAR_MIN < 0) {
-              char_value = (int)p[i];
-              if (char_value < 0) {
-                char_value = char_value + UCHAR_MAX + 1;
-              }
-            } else {
-              char_value = (int)p[i];
-            }
-            ei_x_encode_ulong(&buff, (unsigned long)char_value);
+            ei_x_encode_ulong(&buff, (unsigned long)unsigned_p[i]);
           }
           ei_x_encode_empty_list(&buff);
 
-          int index = 0;
           int version;
+          int index = 0;
           ei_decode_version(buff.buff, &index, &version);
           res = ei_get_type(buff.buff, &index, &type, &size);
-          res = ei_decode_list_header(buff.buff, &index, &size);
-          in_uints_length = (unsigned int)size;
-          in_uints = malloc(sizeof(unsigned int) * in_uints_length);
-          for (unsigned int i = 0; i < in_uints_length; i++) {
-            unsigned long tmp_ulong;
-            res = ei_decode_ulong(buff.buff, &index, &tmp_ulong);
-            in_uints[i] = (unsigned int)tmp_ulong;
+          unifex_buff->buff = buff.buff;
+          unifex_buff->index = &index;
+        } else {
+          unifex_buff->buff = in_buff->buff;
+          unifex_buff->index = in_buff->index;
+        }
+
+        res =
+            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        in_uints_length = (unsigned int)size;
+        in_uints = malloc(sizeof(unsigned int) * in_uints_length);
+
+        for (unsigned int i = 0; i < in_uints_length; i++) {
+        }
+
+        for (unsigned int i = 0; i < in_uints_length; i++) {
+          if (({
+                unsigned long long tmp_ulonglong;
+                int result = ei_decode_ulonglong(
+                    unifex_buff->buff, unifex_buff->index, &tmp_ulonglong);
+                in_uints[i] = (unsigned int)tmp_ulonglong;
+                result;
+              })) {
+            result =
+                unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                  "'in_uints' of type '{:list, :unsigned}'");
+            goto exit_test_list_of_uints_caller;
           }
         }
+        res = ei_skip_term(unifex_buff->buff, unifex_buff->index);
         res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_uints' "
@@ -517,6 +528,102 @@ exit_test_list_of_uints_caller:
     unifex_free(in_uints);
   }
 
+  return result;
+}
+
+UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
+                                             UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
+
+  int *in_list;
+  unsigned int in_list_length;
+  char *other_param;
+  in_list = NULL;
+  other_param = NULL;
+  if (({
+        int res = 1;
+        int type;
+        int size;
+
+        ei_get_type(in_buff->buff, in_buff->index, &type, &size);
+        in_list_length = (unsigned int)size;
+
+        UnifexCNodeInBuff *unifex_buff;
+        unifex_buff = malloc(sizeof(UnifexCNodeInBuff));
+        if (type == ERL_STRING_EXT) {
+          char *p = malloc(sizeof(char) * in_list_length);
+          res = ei_decode_string(in_buff->buff, in_buff->index, p);
+          unsigned char *unsigned_p = (unsigned char *)p;
+
+          ei_x_buff buff;
+          ei_x_new_with_version(&buff);
+          ei_x_encode_list_header(&buff, in_list_length);
+          for (unsigned int i = 0; i < in_list_length; i++) {
+            ei_x_encode_ulong(&buff, (unsigned long)unsigned_p[i]);
+          }
+          ei_x_encode_empty_list(&buff);
+
+          int version;
+          int index = 0;
+          ei_decode_version(buff.buff, &index, &version);
+          res = ei_get_type(buff.buff, &index, &type, &size);
+          unifex_buff->buff = buff.buff;
+          unifex_buff->index = &index;
+        } else {
+          unifex_buff->buff = in_buff->buff;
+          unifex_buff->index = in_buff->index;
+        }
+
+        res =
+            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        in_list_length = (unsigned int)size;
+        in_list = malloc(sizeof(int) * in_list_length);
+
+        for (unsigned int i = 0; i < in_list_length; i++) {
+        }
+
+        for (unsigned int i = 0; i < in_list_length; i++) {
+          if (({
+                long long tmp_longlong;
+                int result = ei_decode_longlong(
+                    unifex_buff->buff, unifex_buff->index, &tmp_longlong);
+                in_list[i] = (int)tmp_longlong;
+                result;
+              })) {
+            result = unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                       "'in_list' of type '{:list, :int}'");
+            goto exit_test_list_with_other_args_caller;
+          }
+        }
+        res = ei_skip_term(unifex_buff->buff, unifex_buff->index);
+        res;
+      })) {
+    result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_list' "
+                               "of type '{:list, :int}'");
+    goto exit_test_list_with_other_args_caller;
+  }
+
+  if (({
+        other_param = unifex_alloc(MAXATOMLEN);
+        ei_decode_atom(in_buff->buff, in_buff->index, other_param);
+      })) {
+    result = unifex_raise(
+        env,
+        "Unifex CNode: cannot parse argument 'other_param' of type ':atom'");
+    goto exit_test_list_with_other_args_caller;
+  }
+
+  result = test_list_with_other_args(env, in_list, in_list_length, other_param);
+  goto exit_test_list_with_other_args_caller;
+exit_test_list_with_other_args_caller:
+  if (in_list != NULL) {
+    for (unsigned int i = 0; i < in_list_length; i++) {
+    }
+    unifex_free(in_list);
+  }
+
+  if (other_param != NULL)
+    unifex_free(other_param);
   return result;
 }
 
@@ -604,6 +711,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return test_list_of_strings_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_list_of_uints") == 0) {
     return test_list_of_uints_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_list_with_other_args") == 0) {
+    return test_list_with_other_args_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_payload") == 0) {
     return test_payload_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_pid") == 0) {

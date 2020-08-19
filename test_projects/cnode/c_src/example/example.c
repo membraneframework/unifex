@@ -32,6 +32,10 @@ UNIFEX_TERM test_list_of_uints(UnifexEnv *env, unsigned int *in_uints, unsigned 
   return test_list_of_uints_result_ok(env, in_uints, list_length);
 }
 
+UNIFEX_TERM test_list_with_other_args(UnifexEnv *env, int *in_list, unsigned int list_length, char *other_param) {
+  return test_list_with_other_args_result_ok(env, in_list, list_length, other_param);
+}
+
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
   UnifexPayload *out_payload = unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
   memcpy(out_payload->data, in_payload->data, out_payload->size);
