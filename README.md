@@ -40,13 +40,17 @@ end
 
 ## Usage
 
-  For detailed usage description see [Creating Unifex Natives](https://hexdocs.pm/unifex/creating_unifex_natives.html) guide.
+For detailed usage description see [Creating Unifex Natives](https://hexdocs.pm/unifex/creating_unifex_natives.html) guide.
+
+## Supported types
+
+For currently supported types see [Supported Types](https://hexdocs.pm/unifex/supported_types.html) section.
 
 ## See also
 
-  Unifex depends on the following libraries:
-  - [Bundlex](https://github.com/membraneframework/bundlex)
-  - [Shmex](https://github.com/membraneframework/shmex)
+Unifex depends on the following libraries:
+- [Bundlex](https://github.com/membraneframework/bundlex)
+- [Shmex](https://github.com/membraneframework/shmex)
 
 ## Copyright and License
 

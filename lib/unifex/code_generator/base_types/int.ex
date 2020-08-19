@@ -1,6 +1,8 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Int do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for integers.
+
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
 
   defmodule CNode do

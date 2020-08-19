@@ -3,6 +3,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Atom do
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for atoms.
 
   Atoms in native code are represented by C-strings (`char *`)
+
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType

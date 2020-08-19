@@ -1,6 +1,8 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for unsigned int.
+
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
