@@ -8,6 +8,10 @@ defmodule ExampleTest do
     [cnode: cnode]
   end
 
+  test "atom", context do
+    assert {:ok, :unifex} = Unifex.CNode.call(context[:cnode], :test_atom, [:unifex])
+  end
+
   test "unsigned int", context do
     cnode = context[:cnode]
     assert {:ok, 0} = Unifex.CNode.call(cnode, :test_uint, [0])
@@ -70,7 +74,8 @@ defmodule ExampleTest do
   end
 
   test "pid", context do
-    assert {:ok} = Unifex.CNode.call(context[:cnode], :test_pid, [self()])
+    pid = self()
+    assert {:ok, ^pid} = Unifex.CNode.call(context[:cnode], :test_pid, [pid])
   end
 
   test "example message", context do

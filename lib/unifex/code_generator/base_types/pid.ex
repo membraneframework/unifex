@@ -25,4 +25,15 @@ defmodule Unifex.CodeGenerator.BaseTypes.Pid do
       ~g<enif_get_local_pid(env, #{arg}, &#{var_name})>
     end
   end
+
+  defmodule CNode do
+    @moduledoc false
+    use Unifex.CodeGenerator.BaseType
+    alias Unifex.CodeGenerator.BaseType
+
+    @impl BaseType
+    def generate_arg_serialize(name, ctx) do
+      ~g<ei_x_encode_pid(out_buff, &#{name});>
+    end
+  end
 end

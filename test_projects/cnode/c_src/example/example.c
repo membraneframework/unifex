@@ -8,6 +8,10 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
+UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
+  return test_atom_result_ok(env, in_atom);
+}
+
 UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint) {
   return test_uint_result_ok(env, in_uint);
 }
@@ -39,7 +43,7 @@ UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
 
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid) {
   UNIFEX_UNUSED(in_pid);
-  return test_pid_result_ok(env);
+  return test_pid_result_ok(env, in_pid);
 }
 
 UNIFEX_TERM test_example_message(UnifexEnv *env) {

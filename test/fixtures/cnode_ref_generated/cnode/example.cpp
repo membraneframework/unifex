@@ -28,6 +28,17 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   return out_buff;
 }
 
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ei_x_encode_atom(out_buff, out_atom);
+
+  return out_buff;
+}
+
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -126,12 +137,13 @@ UNIFEX_TERM test_payload_result_ok(UnifexEnv *env, UnifexPayload *out_payload) {
   return out_buff;
 }
 
-UNIFEX_TERM test_pid_result_ok(UnifexEnv *env) {
+UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
-  ei_x_encode_tuple_header(out_buff, 1);
+  ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "ok");
+  ei_x_encode_pid(out_buff, &out_pid);
 
   return out_buff;
 }
@@ -166,6 +178,28 @@ UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   goto exit_init_caller;
 exit_init_caller:
 
+  return result;
+}
+
+UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
+
+  char *in_atom;
+  in_atom = NULL;
+  if (({
+        in_atom = unifex_alloc(MAXATOMLEN);
+        ei_decode_atom(in_buff->buff, in_buff->index, in_atom);
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'in_atom' of type ':atom'");
+    goto exit_test_atom_caller;
+  }
+
+  result = test_atom(env, in_atom);
+  goto exit_test_atom_caller;
+exit_test_atom_caller:
+  if (in_atom != NULL)
+    unifex_free(in_atom);
   return result;
 }
 
@@ -558,6 +592,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
                                         UnifexCNodeInBuff *in_buff) {
   if (strcmp(fun_name, "init") == 0) {
     return init_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_atom") == 0) {
+    return test_atom_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_uint") == 0) {
     return test_uint_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_string") == 0) {
