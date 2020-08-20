@@ -28,6 +28,8 @@ void unifex_cnode_destroy_state(UnifexEnv *env, void *state);
 
 int unifex_cnode_init(int argc, char **argv, UnifexEnv *env);
 int unifex_cnode_receive(UnifexEnv *env);
+ei_x_buff unifex_cnode_string_to_list(UnifexCNodeInBuff *origin_buff,
+                                      unsigned int strlen);
 void unifex_cnode_destroy(UnifexEnv *env);
 
 #ifdef __cplusplus

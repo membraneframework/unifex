@@ -52,6 +52,23 @@ void unifex_cnode_add_to_released_states(UnifexEnv *env, void *state) {
   env->released_states = list;
 }
 
+ei_x_buff unifex_cnode_string_to_list(UnifexCNodeInBuff *origin_buff, unsigned int strlen) {
+  char *p = malloc(sizeof(char) * strlen);
+  ei_decode_string(origin_buff->buff, origin_buff->index, p);
+  unsigned char *unsigned_p = (unsigned char *)p;
+
+  ei_x_buff buff;
+  ei_x_new(&buff);
+  ei_x_encode_list_header(&buff, strlen);
+  for(unsigned int i = 0; i < strlen; i++) {
+    ei_x_encode_longlong(&buff, (unsigned long)unsigned_p[i]);
+  }
+  ei_x_encode_empty_list(&buff);
+
+  free(p);
+  return buff;
+}
+
 static void free_released_states(UnifexEnv *env) {
   while (env->released_states) {
     void *state = env->released_states->head;
