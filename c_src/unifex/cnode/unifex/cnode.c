@@ -53,19 +53,19 @@ void unifex_cnode_add_to_released_states(UnifexEnv *env, void *state) {
 }
 
 ei_x_buff unifex_cnode_string_to_list(UnifexCNodeInBuff *origin_buff, unsigned int strlen) {
-  char *p = malloc(sizeof(char) * strlen);
-  ei_decode_string(origin_buff->buff, origin_buff->index, p);
-  unsigned char *unsigned_p = (unsigned char *)p;
+  char *str = malloc(sizeof(char) * strlen);
+  ei_decode_string(origin_buff->buff, origin_buff->index, str);
+  unsigned char *unsigned_str = (unsigned char *)str;
 
   ei_x_buff buff;
   ei_x_new(&buff);
   ei_x_encode_list_header(&buff, strlen);
   for(unsigned int i = 0; i < strlen; i++) {
-    ei_x_encode_longlong(&buff, (unsigned long)unsigned_p[i]);
+    ei_x_encode_longlong(&buff, (long long)unsigned_str[i]);
   }
   ei_x_encode_empty_list(&buff);
 
-  free(p);
+  free(str);
   return buff;
 }
 

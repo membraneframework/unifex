@@ -1,9 +1,9 @@
 # Supported types
 
-Unifenosupports generating code both for usage with NIF's and CNode's. 
+Unifex supports generating code both for usage with NIF's and CNode's. 
 Nevertheless, some types can be not implemented yet.
 Below we present which types you can use at this moment. 
-You can also refer to [#42](https://github.com/membraneframework/unifenoissues/42) to see 
+You can also refer to [#42](https://github.com/membraneframework/unifex/issues/42) to see 
 state of work on remaining types.
 
 ## NIF

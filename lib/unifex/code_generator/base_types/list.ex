@@ -131,6 +131,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
           unifex_buff->buff = buff.buff;
           *unifex_buff->index = 0;
         } else {
+          free(unifex_buff->index);
           unifex_buff->buff = #{arg}->buff;
           unifex_buff->index = #{arg}->index;
         }
@@ -148,7 +149,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         BaseType.generate_arg_parse(subtype, elem_name, "unifex_buff", postproc_fun, generator)
       }
         }
-        res = ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        if(type == ERL_STRING_EXT) {
+          free(unifex_buff->index);
+        }
         free(unifex_buff);
         res;
       })

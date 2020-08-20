@@ -302,6 +302,7 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
           unifex_buff->buff = buff.buff;
           *unifex_buff->index = 0;
         } else {
+          free(unifex_buff->index);
           unifex_buff->buff = in_buff->buff;
           unifex_buff->index = in_buff->index;
         }
@@ -327,8 +328,10 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
             goto exit_test_list_caller;
           }
         }
-        res =
-            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        if (type == ERL_STRING_EXT) {
+          free(unifex_buff->index);
+        }
         free(unifex_buff);
         res;
       })) {
@@ -374,6 +377,7 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
           unifex_buff->buff = buff.buff;
           *unifex_buff->index = 0;
         } else {
+          free(unifex_buff->index);
           unifex_buff->buff = in_buff->buff;
           unifex_buff->index = in_buff->index;
         }
@@ -404,8 +408,10 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
             goto exit_test_list_of_strings_caller;
           }
         }
-        res =
-            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        if (type == ERL_STRING_EXT) {
+          free(unifex_buff->index);
+        }
         free(unifex_buff);
         res;
       })) {
@@ -452,6 +458,7 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
           unifex_buff->buff = buff.buff;
           *unifex_buff->index = 0;
         } else {
+          free(unifex_buff->index);
           unifex_buff->buff = in_buff->buff;
           unifex_buff->index = in_buff->index;
         }
@@ -478,8 +485,10 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
             goto exit_test_list_of_uints_caller;
           }
         }
-        res =
-            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        if (type == ERL_STRING_EXT) {
+          free(unifex_buff->index);
+        }
         free(unifex_buff);
         res;
       })) {
@@ -526,6 +535,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
           unifex_buff->buff = buff.buff;
           *unifex_buff->index = 0;
         } else {
+          free(unifex_buff->index);
           unifex_buff->buff = in_buff->buff;
           unifex_buff->index = in_buff->index;
         }
@@ -551,8 +561,10 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
             goto exit_test_list_with_other_args_caller;
           }
         }
-        res =
-            ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        if (type == ERL_STRING_EXT) {
+          free(unifex_buff->index);
+        }
         free(unifex_buff);
         res;
       })) {
