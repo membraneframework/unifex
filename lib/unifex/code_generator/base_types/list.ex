@@ -116,7 +116,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
       ~g"""
       ({
-        int res = 1;
         int type;
         int size;
 
@@ -134,7 +133,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
           unifex_buff.buff = #{arg}->buff;
           unifex_buff.index = #{arg}->index;
         }
-        res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
         #{len_var_name} = (unsigned int) size;
         #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
 
@@ -154,7 +153,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       }
         }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
-        res;
       })
       """
     end

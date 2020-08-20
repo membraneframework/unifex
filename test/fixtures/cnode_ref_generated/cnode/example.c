@@ -286,7 +286,6 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   unsigned int in_list_length;
   in_list = NULL;
   if (({
-        int res = 1;
         int type;
         int size;
 
@@ -304,8 +303,8 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
-        res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                    unifex_buff_ptr->index, &size);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                              &size);
         in_list_length = (unsigned int)size;
         in_list = malloc(sizeof(int) * in_list_length);
 
@@ -328,7 +327,6 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
         }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
-        res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_list' "
                                "of type '{:list, :int}'");
@@ -355,7 +353,6 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
   unsigned int in_strings_length;
   in_strings = NULL;
   if (({
-        int res = 1;
         int type;
         int size;
 
@@ -374,8 +371,8 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
-        res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                    unifex_buff_ptr->index, &size);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                              &size);
         in_strings_length = (unsigned int)size;
         in_strings = malloc(sizeof(char *) * in_strings_length);
 
@@ -402,7 +399,6 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
         }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
-        res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument "
                                "'in_strings' of type '{:list, :string}'");
@@ -430,7 +426,6 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
   unsigned int in_uints_length;
   in_uints = NULL;
   if (({
-        int res = 1;
         int type;
         int size;
 
@@ -449,8 +444,8 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
-        res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                    unifex_buff_ptr->index, &size);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                              &size);
         in_uints_length = (unsigned int)size;
         in_uints = malloc(sizeof(unsigned int) * in_uints_length);
 
@@ -474,7 +469,6 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
         }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
-        res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_uints' "
                                "of type '{:list, :unsigned}'");
@@ -503,7 +497,6 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
   in_list = NULL;
   other_param = NULL;
   if (({
-        int res = 1;
         int type;
         int size;
 
@@ -521,8 +514,8 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
-        res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                    unifex_buff_ptr->index, &size);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                              &size);
         in_list_length = (unsigned int)size;
         in_list = malloc(sizeof(int) * in_list_length);
 
@@ -545,7 +538,6 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
         }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
-        res;
       })) {
     result = unifex_raise(env, "Unifex CNode: cannot parse argument 'in_list' "
                                "of type '{:list, :int}'");
