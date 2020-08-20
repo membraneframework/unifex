@@ -123,20 +123,18 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
         #{len_var_name} = (unsigned int) size;
 
-        UnifexCNodeInBuff *unifex_buff = (UnifexCNodeInBuff *)malloc(sizeof(UnifexCNodeInBuff));
-        unifex_buff->index = (int *)malloc(sizeof(int));
-
+        int index = 0;
+        UnifexCNodeInBuff unifex_buff;
+        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
         if(type == ERL_STRING_EXT) {
           ei_x_buff buff = unifex_cnode_string_to_list(#{arg}, #{len_var_name});
-          unifex_buff->buff = buff.buff;
-          *unifex_buff->index = 0;
+          unifex_buff.buff = buff.buff;
+          unifex_buff.index = &index;
         } else {
-          free(unifex_buff->index);
-          unifex_buff->buff = #{arg}->buff;
-          unifex_buff->index = #{arg}->index;
+          unifex_buff.buff = #{arg}->buff;
+          unifex_buff.index = #{arg}->index;
         }
-
-        res = ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
+        res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
         #{len_var_name} = (unsigned int) size;
         #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
 
@@ -146,14 +144,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           #{
-        BaseType.generate_arg_parse(subtype, elem_name, "unifex_buff", postproc_fun, generator)
+        BaseType.generate_arg_parse(
+          subtype,
+          elem_name,
+          "unifex_buff_ptr",
+          postproc_fun,
+          generator
+        )
       }
         }
-        ei_decode_list_header(unifex_buff->buff, unifex_buff->index, &size);
-        if(type == ERL_STRING_EXT) {
-          free(unifex_buff->index);
-        }
-        free(unifex_buff);
+        ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
         res;
       })
       """
