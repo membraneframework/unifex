@@ -1,6 +1,8 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Payload do
   @moduledoc """
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for payloads.
+
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType

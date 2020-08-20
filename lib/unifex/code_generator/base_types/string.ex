@@ -3,6 +3,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   Module implementing `Unifex.CodeGenerator.BaseType` behaviour for strings.
 
   They are represented by NULL-terminated char arrays.
+
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
@@ -16,6 +18,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   @impl BaseType
   def generate_initialization(name, _ctx) do
     ~g<#{name} = NULL;>
+  end
+
+  @impl BaseType
+  def generate_destruction(name, _ctx) do
+    ~g<unifex_free(#{name});>
   end
 
   defmodule NIF do
@@ -32,10 +39,25 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g<unifex_string_from_term(env, #{arg}, &#{var_name})>
     end
+  end
+
+  defmodule CNode do
+    @moduledoc false
+    use Unifex.CodeGenerator.BaseType
+    alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
-    def generate_destruction(name, _ctx) do
-      ~g<unifex_free(#{name});>
+    def generate_arg_parse(arg, var_name, _ctx) do
+      ~g"""
+      ({
+        int type;
+        int size;
+        ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
+        size = size + 1; // for NULL byte
+        #{var_name} = malloc(sizeof(char) * size);
+        ei_decode_string(#{arg}->buff, #{arg}->index, #{var_name});
+      })
+      """
     end
   end
 end

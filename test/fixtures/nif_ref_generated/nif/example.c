@@ -10,24 +10,65 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
   });
 }
 
-UNIFEX_TERM foo_result_ok(UnifexEnv *env, const int *list_out,
-                          unsigned int list_out_length, int answer) {
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
+                                  enif_make_atom(env, out_atom)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
+                                  enif_make_int(env, out_int)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+                                unsigned int out_list_length) {
   return ({
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = list_out_length - 1; i >= 0; i--) {
+          for (int i = out_list_length - 1; i >= 0; i--) {
             list =
-                enif_make_list_cell(env, enif_make_int(env, list_out[i]), list);
+                enif_make_list_cell(env, enif_make_int(env, out_list[i]), list);
           }
           list;
-        }),
-        enif_make_int(env, answer)};
-    enif_make_tuple_from_array(env, terms, 3);
+        })
+
+    };
+    enif_make_tuple_from_array(env, terms, 2);
   });
 }
 
-UNIFEX_TERM foo_result_error(UnifexEnv *env, const char *reason) {
+UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
+                                  enif_make_pid(env, &out_pid)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
+                                  unifex_make_resource(env, state)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok")};
+    enif_make_tuple_from_array(env, terms, 1);
+  });
+}
+
+UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
+                                              const char *reason) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "error"),
                                   enif_make_atom(env, reason)};
@@ -101,67 +142,164 @@ exit_export_init:
   return result;
 }
 
-static ERL_NIF_TERM export_foo(ErlNifEnv *env, int argc,
-                               const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM export_test_atom(ErlNifEnv *env, int argc,
+                                     const ERL_NIF_TERM argv[]) {
   UNIFEX_UNUSED(argc);
   ERL_NIF_TERM result;
 
   UnifexEnv *unifex_env = env;
-  UnifexPid target;
-  int *list_in;
-  unsigned int list_in_length;
-  UnifexState *state;
+  char *in_atom;
 
-  list_in = NULL;
+  in_atom = NULL;
 
-  if (!enif_get_local_pid(env, argv[0], &target)) {
-    result = unifex_raise_args_error(env, "target", ":pid");
-    goto exit_export_foo;
+  if (!unifex_alloc_and_get_atom(env, argv[0], &in_atom)) {
+    result = unifex_raise_args_error(env, "in_atom", ":atom");
+    goto exit_export_test_atom;
   }
+
+  result = test_atom(unifex_env, in_atom);
+  goto exit_export_test_atom;
+exit_export_test_atom:
+  if (in_atom != NULL)
+    unifex_free(in_atom);
+  return result;
+}
+
+static ERL_NIF_TERM export_test_int(ErlNifEnv *env, int argc,
+                                    const ERL_NIF_TERM argv[]) {
+  UNIFEX_UNUSED(argc);
+  ERL_NIF_TERM result;
+
+  UnifexEnv *unifex_env = env;
+  int in_int;
+
+  if (!enif_get_int(env, argv[0], &in_int)) {
+    result = unifex_raise_args_error(env, "in_int", ":int");
+    goto exit_export_test_int;
+  }
+
+  result = test_int(unifex_env, in_int);
+  goto exit_export_test_int;
+exit_export_test_int:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
+                                     const ERL_NIF_TERM argv[]) {
+  UNIFEX_UNUSED(argc);
+  ERL_NIF_TERM result;
+
+  UnifexEnv *unifex_env = env;
+  int *in_list;
+  unsigned int in_list_length;
+
+  in_list = NULL;
 
   if (!({
         int get_list_length_result =
-            enif_get_list_length(env, argv[1], &list_in_length);
+            enif_get_list_length(env, argv[0], &in_list_length);
         if (get_list_length_result) {
-          list_in = enif_alloc(sizeof(int) * list_in_length);
+          in_list = enif_alloc(sizeof(int) * in_list_length);
 
-          for (unsigned int i = 0; i < list_in_length; i++) {
+          for (unsigned int i = 0; i < in_list_length; i++) {
           }
 
-          ERL_NIF_TERM list = argv[1];
-          for (unsigned int i = 0; i < list_in_length; i++) {
+          ERL_NIF_TERM list = argv[0];
+          for (unsigned int i = 0; i < in_list_length; i++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            if (!enif_get_int(env, elem, &list_in[i])) {
-              result = unifex_raise_args_error(env, "list_in", "{:list, :int}");
-              goto exit_export_foo;
+            if (!enif_get_int(env, elem, &in_list[i])) {
+              result = unifex_raise_args_error(env, "in_list", "{:list, :int}");
+              goto exit_export_test_list;
             }
           }
         }
         get_list_length_result;
       })) {
-    result = unifex_raise_args_error(env, "list_in", "{:list, :int}");
-    goto exit_export_foo;
+    result = unifex_raise_args_error(env, "in_list", "{:list, :int}");
+    goto exit_export_test_list;
   }
 
-  if (!enif_get_resource(env, argv[2], STATE_RESOURCE_TYPE, (void **)&state)) {
-    result = unifex_raise_args_error(env, "state", ":state");
-    goto exit_export_foo;
-  }
-
-  result = foo(unifex_env, target, list_in, list_in_length, state);
-  goto exit_export_foo;
-exit_export_foo:
-  if (list_in != NULL) {
-    for (unsigned int i = 0; i < list_in_length; i++) {
+  result = test_list(unifex_env, in_list, in_list_length);
+  goto exit_export_test_list;
+exit_export_test_list:
+  if (in_list != NULL) {
+    for (unsigned int i = 0; i < in_list_length; i++) {
     }
-    enif_free(list_in);
+    unifex_free(in_list);
   }
 
   return result;
 }
 
-static ErlNifFunc nif_funcs[] = {{"unifex_init", 0, export_init, 0},
-                                 {"unifex_foo", 3, export_foo, 0}};
+static ERL_NIF_TERM export_test_pid(ErlNifEnv *env, int argc,
+                                    const ERL_NIF_TERM argv[]) {
+  UNIFEX_UNUSED(argc);
+  ERL_NIF_TERM result;
+
+  UnifexEnv *unifex_env = env;
+  UnifexPid in_pid;
+
+  if (!enif_get_local_pid(env, argv[0], &in_pid)) {
+    result = unifex_raise_args_error(env, "in_pid", ":pid");
+    goto exit_export_test_pid;
+  }
+
+  result = test_pid(unifex_env, in_pid);
+  goto exit_export_test_pid;
+exit_export_test_pid:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_state(ErlNifEnv *env, int argc,
+                                      const ERL_NIF_TERM argv[]) {
+  UNIFEX_UNUSED(argc);
+  ERL_NIF_TERM result;
+
+  UnifexEnv *unifex_env = env;
+  UnifexState *state;
+
+  if (!enif_get_resource(env, argv[0], STATE_RESOURCE_TYPE, (void **)&state)) {
+    result = unifex_raise_args_error(env, "state", ":state");
+    goto exit_export_test_state;
+  }
+
+  result = test_state(unifex_env, state);
+  goto exit_export_test_state;
+exit_export_test_state:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_example_message(ErlNifEnv *env, int argc,
+                                                const ERL_NIF_TERM argv[]) {
+  UNIFEX_UNUSED(argc);
+  ERL_NIF_TERM result;
+
+  UnifexEnv *unifex_env = env;
+  UnifexPid pid;
+
+  if (!enif_get_local_pid(env, argv[0], &pid)) {
+    result = unifex_raise_args_error(env, "pid", ":pid");
+    goto exit_export_test_example_message;
+  }
+
+  result = test_example_message(unifex_env, pid);
+  goto exit_export_test_example_message;
+exit_export_test_example_message:
+
+  return result;
+}
+
+static ErlNifFunc nif_funcs[] = {
+    {"unifex_init", 0, export_init, 0},
+    {"unifex_test_atom", 1, export_test_atom, 0},
+    {"unifex_test_int", 1, export_test_int, 0},
+    {"unifex_test_list", 1, export_test_list, 0},
+    {"unifex_test_pid", 1, export_test_pid, 0},
+    {"unifex_test_state", 1, export_test_state, 0},
+    {"unifex_test_example_message", 1, export_test_example_message, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)

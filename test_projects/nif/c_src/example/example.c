@@ -17,13 +17,32 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
-UNIFEX_TERM foo(UnifexEnv *env, UnifexPid pid, int *list,
-                unsigned int list_length, MyState *state) {
-  int res = send_example_msg(env, pid, 0, state->a);
+UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
+  return test_atom_result_ok(env, in_atom);
+}
+
+UNIFEX_TERM test_int(UnifexEnv *env, int in_int) {
+  return test_int_result_ok(env, in_int);
+}
+
+UNIFEX_TERM test_list(UnifexEnv *env, int* in_list, unsigned int list_length) {
+  return test_list_result_ok(env, in_list, list_length);
+}
+
+UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid) {
+  return test_pid_result_ok(env, in_pid);
+}
+
+UNIFEX_TERM test_state(UnifexEnv *env, MyState *state) {
+  return test_state_result_ok(env, state);
+}
+
+UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid) {
+  int res = send_example_msg(env, pid, 0, 10);
   if (!res) {
-    return foo_result_error(env, "send_failed");
+    return test_example_message_result_error(env, "send_failed");
   }
-  return foo_result_ok(env, list, list_length, state->a);
+  return test_example_message_result_ok(env);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
