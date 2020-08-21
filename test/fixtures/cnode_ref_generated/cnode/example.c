@@ -303,6 +303,9 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
+        if (in_list_length == 0) {
+          goto empty_list;
+        }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
         in_list_length = (unsigned int)size;
@@ -325,6 +328,7 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
             goto exit_test_list_caller;
           }
         }
+      empty_list:
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
       })) {
@@ -371,6 +375,9 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
+        if (in_strings_length == 0) {
+          goto empty_list;
+        }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
         in_strings_length = (unsigned int)size;
@@ -397,6 +404,7 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
             goto exit_test_list_of_strings_caller;
           }
         }
+      empty_list:
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
       })) {
@@ -444,6 +452,9 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
+        if (in_uints_length == 0) {
+          goto empty_list;
+        }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
         in_uints_length = (unsigned int)size;
@@ -467,6 +478,7 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
             goto exit_test_list_of_uints_caller;
           }
         }
+      empty_list:
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
       })) {
@@ -514,6 +526,9 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
           unifex_buff.buff = in_buff->buff;
           unifex_buff.index = in_buff->index;
         }
+        if (in_list_length == 0) {
+          goto empty_list;
+        }
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
         in_list_length = (unsigned int)size;
@@ -536,6 +551,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
             goto exit_test_list_with_other_args_caller;
           }
         }
+      empty_list:
         ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                               &size);
       })) {

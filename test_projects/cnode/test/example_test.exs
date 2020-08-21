@@ -47,6 +47,7 @@ defmodule ExampleTest do
 
   test "list", context do
     cnode = context[:cnode]
+    assert {:ok, []} = Unifex.CNode.call(cnode, :test_list, [[]])
     assert {:ok, [-1, -1, -1]} = Unifex.CNode.call(cnode, :test_list, [[-1, -1, -1]])
     assert {:ok, [-10, -17, -28]} = Unifex.CNode.call(cnode, :test_list, [[-10, -17, -28]])
     assert {:ok, [355, 355, 355]} = Unifex.CNode.call(cnode, :test_list, [[355, 355, 355]])
@@ -55,6 +56,8 @@ defmodule ExampleTest do
 
   test "list of strings", context do
     cnode = context[:cnode]
+    assert {:ok, []} = Unifex.CNode.call(cnode, :test_list_of_strings, [[]])
+
     assert {:ok, ['', '', '']} = Unifex.CNode.call(cnode, :test_list_of_strings, [['', '', '']])
 
     assert {:ok, ['1', '2', '3']} =
