@@ -11,8 +11,7 @@ In order to start working, you need to prepare a few things:
    Please refer to [Instalation](https://hexdocs.pm/unifex/readme.html#instalation) section to see how to do it. 
 2. After successful installation we should take a look at [Bundlex](https://github.com/membraneframework/bundlex).
    Unifex uses Bundlex to compile the native code. 
-   You can think of Bundlex as a tool that generates build scripts responsible for including proper libs,  
-   compiling your native code and linking it with mentioned libs.
+   You can think of Bundlex as a tool that generates build scripts responsible for including proper libs compiling your native code and linking it with mentioned libs.
    To make it work, create the `bundlex.exs` file in the project's root directory with the following content:
     ```elixir
     defmodule Example.BundlexProject do

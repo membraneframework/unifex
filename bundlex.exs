@@ -10,7 +10,7 @@ defmodule Unifex.BundlexProject do
   defp libs do
     [
       unifex: [
-        deps: [shmex: :lib_nif],
+        deps: [shmex: :shmex],
         src_base: "unifex/nif/unifex",
         sources: ["unifex.c", "payload.c"],
         interface: :nif
