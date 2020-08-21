@@ -286,6 +286,7 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   unsigned int in_list_length;
   in_list = NULL;
   if (({
+        __label__ empty_list;
         int type;
         int size;
 
@@ -357,6 +358,7 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
   unsigned int in_strings_length;
   in_strings = NULL;
   if (({
+        __label__ empty_list;
         int type;
         int size;
 
@@ -434,6 +436,7 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
   unsigned int in_uints_length;
   in_uints = NULL;
   if (({
+        __label__ empty_list;
         int type;
         int size;
 
@@ -509,6 +512,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
   in_list = NULL;
   other_param = NULL;
   if (({
+        __label__ empty_list;
         int type;
         int size;
 

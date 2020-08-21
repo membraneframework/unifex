@@ -116,6 +116,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
       ~g"""
       ({
+        __label__ empty_list;
         int type;
         int size;
 
