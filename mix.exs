@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.2.6"
+  @version "0.3.0"
   @github_link "https://github.com/membraneframework/unifex"
 
   def project do
@@ -42,7 +42,12 @@ defmodule Unifex.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "pages/creating_unifex_natives.md", "pages/supported_types.md"],
+      extras: [
+        "README.md",
+        "pages/creating_unifex_natives.md",
+        "pages/creating_unifex_nif.md",
+        "pages/supported_types.md"
+      ],
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [
         Unifex.CodeGenerators,
@@ -57,11 +62,11 @@ defmodule Unifex.MixProject do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:bunch, "~> 1.0"},
-      {:shmex, "~> 0.2.0"},
-      {:bundlex, git: "https://github.com/membraneframework/bundlex.git", override: true},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
+      {:shmex, "~> 0.3.0"},
+      {:bundlex, "~> 0.4.0"},
+      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false}
     ]
   end
 end

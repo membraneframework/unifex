@@ -1,7 +1,7 @@
 #pragma once
 
 #include "unifex.h"
-#include <shmex/lib_nif.h>
+#include <shmex/shmex.h>
 
 #ifdef __cplusplus
 extern "C" {
