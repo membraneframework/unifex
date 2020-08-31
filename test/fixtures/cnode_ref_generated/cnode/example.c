@@ -39,6 +39,17 @@ UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom) {
   return out_buff;
 }
 
+UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ei_x_encode_atom(out_buff, out_bool ? "true" : "false");
+
+  return out_buff;
+}
+
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -225,6 +236,37 @@ UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
 exit_test_atom_caller:
   if (in_atom != NULL)
     unifex_free(in_atom);
+  return result;
+}
+
+UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
+
+  int in_bool;
+
+  if (({
+        int res = -1;
+        char boolean_str[6];
+        ei_decode_atom(in_buff->buff, in_buff->index, boolean_str);
+
+        if (strcmp(boolean_str, "true") == 0) {
+          in_bool = 1;
+          res = 0;
+        } else if (strcmp(boolean_str, "false") == 0) {
+          in_bool = 0;
+          res = 0;
+        }
+        res;
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'in_bool' of type ':bool'");
+    goto exit_test_bool_caller;
+  }
+
+  result = test_bool(env, in_bool);
+  goto exit_test_bool_caller;
+exit_test_bool_caller:
+
   return result;
 }
 
@@ -654,6 +696,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return init_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_atom") == 0) {
     return test_atom_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_bool") == 0) {
+    return test_bool_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_uint") == 0) {
     return test_uint_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_string") == 0) {

@@ -12,6 +12,12 @@ defmodule ExampleTest do
     assert {:ok, :unifex} = Unifex.CNode.call(context[:cnode], :test_atom, [:unifex])
   end
 
+  test "bool", context do
+    assert {:ok, true} = Unifex.CNode.call(context[:cnode], :test_bool, [true])
+    assert {:ok, false} = Unifex.CNode.call(context[:cnode], :test_bool, [false])
+    refute match?({:ok, false}, Unifex.CNode.call(context[:cnode], :test_bool, [true]))
+  end
+
   test "unsigned int", context do
     cnode = context[:cnode]
     assert {:ok, 0} = Unifex.CNode.call(cnode, :test_uint, [0])
