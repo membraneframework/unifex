@@ -24,7 +24,7 @@ state of work on remaining types.
 | type    | as function parameter | as return type  |
 | ------- | :-------------------: | :-------------: |
 | atom    | yes                   | yes             |
-| bool    | no                    | no              |
+| bool    | yes                   | yes             |
 | uint    | yes                   | yes             |
 | uint64  | no                    | no              |
 | int     | yes                   | yes             |

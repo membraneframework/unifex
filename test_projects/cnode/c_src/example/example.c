@@ -12,6 +12,10 @@ UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
   return test_atom_result_ok(env, in_atom);
 }
 
+UNIFEX_TERM test_bool(UnifexEnv *env, int in_bool) {
+  return test_bool_result_ok(env, in_bool);
+}
+
 UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint) {
   return test_uint_result_ok(env, in_uint);
 }
