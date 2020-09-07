@@ -32,14 +32,14 @@ defmodule ExampleTest do
     cnode = context[:cnode]
 
     big_test_string =
-      'unifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexu
+      "unifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexu
       nifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexuni
-      fexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifex'
+      fexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifexunifex"
 
-    assert {:ok, ''} = Unifex.CNode.call(cnode, :test_string, [''])
-    assert {:ok, 'test_string'} = Unifex.CNode.call(cnode, :test_string, ['test_string'])
-    assert {:ok, '-12345'} = Unifex.CNode.call(cnode, :test_string, ['-12345'])
-    assert {:ok, '255'} = Unifex.CNode.call(cnode, :test_string, ['255'])
+    assert {:ok, ""} = Unifex.CNode.call(cnode, :test_string, [""])
+    assert {:ok, "test_string"} = Unifex.CNode.call(cnode, :test_string, ["test_string"])
+    assert {:ok, "-12345"} = Unifex.CNode.call(cnode, :test_string, ["-12345"])
+    assert {:ok, "255"} = Unifex.CNode.call(cnode, :test_string, ["255"])
     assert {:ok, big_test_string} = Unifex.CNode.call(cnode, :test_string, [big_test_string])
   end
 
@@ -64,13 +64,13 @@ defmodule ExampleTest do
     cnode = context[:cnode]
     assert {:ok, []} = Unifex.CNode.call(cnode, :test_list_of_strings, [[]])
 
-    assert {:ok, ['', '', '']} = Unifex.CNode.call(cnode, :test_list_of_strings, [['', '', '']])
+    assert {:ok, ["", "", ""]} = Unifex.CNode.call(cnode, :test_list_of_strings, [["", "", ""]])
 
-    assert {:ok, ['1', '2', '3']} =
-             Unifex.CNode.call(cnode, :test_list_of_strings, [['1', '2', '3']])
+    assert {:ok, ["1", "2", "3"]} =
+             Unifex.CNode.call(cnode, :test_list_of_strings, [["1", "2", "3"]])
 
-    assert {:ok, ['abc', 'def', 'ghi']} =
-             Unifex.CNode.call(cnode, :test_list_of_strings, [['abc', 'def', 'ghi']])
+    assert {:ok, ["abc", "def", "ghi"]} =
+             Unifex.CNode.call(cnode, :test_list_of_strings, [["abc", "def", "ghi"]])
   end
 
   test "list of unsigned ints", context do

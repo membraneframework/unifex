@@ -47,15 +47,22 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
     alias Unifex.CodeGenerator.BaseType
 
     @impl BaseType
+    def generate_arg_serialize(name, _ctx) do
+      ~g<ei_x_encode_binary(out_buff, #{name}, strlen(#{name}));>
+    end
+
+    @impl BaseType
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g"""
       ({
         int type;
         int size;
+        long len;
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
         size = size + 1; // for NULL byte
         #{var_name} = malloc(sizeof(char) * size);
-        ei_decode_string(#{arg}->buff, #{arg}->index, #{var_name});
+        memset(#{var_name}, 0, size);
+        ei_decode_binary(#{arg}->buff, #{arg}->index, #{var_name}, &len);
       })
       """
     end

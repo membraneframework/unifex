@@ -70,7 +70,7 @@ UNIFEX_TERM test_string_result_ok(UnifexEnv *env, const char *out_string) {
 
   ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "ok");
-  ei_x_encode_string(out_buff, out_string);
+  ei_x_encode_binary(out_buff, out_string, strlen(out_string));
 
   return out_buff;
 }
@@ -107,7 +107,7 @@ UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
   ({
     ei_x_encode_list_header(out_buff, out_strings_length);
     for (unsigned int i = 0; i < out_strings_length; i++) {
-      ei_x_encode_string(out_buff, out_strings[i]);
+      ei_x_encode_binary(out_buff, out_strings[i], strlen(out_strings[i]));
     }
     ei_x_encode_empty_list(out_buff);
   });
@@ -303,10 +303,12 @@ UNIFEX_TERM test_string_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   if (({
         int type;
         int size;
+        long len;
         ei_get_type(in_buff->buff, in_buff->index, &type, &size);
         size = size + 1; // for NULL byte
         in_string = malloc(sizeof(char) * size);
-        ei_decode_string(in_buff->buff, in_buff->index, in_string);
+        memset(in_string, 0, size);
+        ei_decode_binary(in_buff->buff, in_buff->index, in_string, &len);
       })) {
     result = unifex_raise(
         env,
@@ -429,12 +431,14 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
           if (({
                 int type;
                 int size;
+                long len;
                 ei_get_type(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                             &type, &size);
                 size = size + 1; // for NULL byte
                 in_strings[i] = malloc(sizeof(char) * size);
-                ei_decode_string(unifex_buff_ptr->buff, unifex_buff_ptr->index,
-                                 in_strings[i]);
+                memset(in_strings[i], 0, size);
+                ei_decode_binary(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                                 in_strings[i], &len);
               })) {
             result =
                 unifex_raise(env, "Unifex CNode: cannot parse argument "
