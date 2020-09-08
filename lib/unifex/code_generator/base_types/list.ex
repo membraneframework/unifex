@@ -15,7 +15,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     prefix = if ctx.mode == :const, do: "const ", else: ""
 
     [
-      "#{prefix}#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}*",
+      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator)} #{prefix}*",
       {"unsigned int", "_length"}
     ]
   end
