@@ -60,7 +60,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
         long len;
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
         size = size + 1; // for NULL byte
-        #{var_name} = malloc(sizeof(char) * size);
+        #{var_name} = (char *)malloc(sizeof(char) * size);
         memset(#{var_name}, 0, size);
         ei_decode_binary(#{arg}->buff, #{arg}->index, #{var_name}, &len);
       })
