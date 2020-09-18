@@ -16,6 +16,10 @@ UNIFEX_TERM test_bool(UnifexEnv *env, int in_bool) {
   return test_bool_result_ok(env, in_bool);
 }
 
+UNIFEX_TERM test_float(UnifexEnv *env, double in_float) {
+  return test_float_result_ok(env, in_float);
+}
+
 UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint) {
   return test_uint_result_ok(env, in_uint);
 }
