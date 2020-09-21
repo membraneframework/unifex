@@ -306,7 +306,7 @@ UNIFEX_TERM test_string_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
         long len;
         ei_get_type(in_buff->buff, in_buff->index, &type, &size);
         size = size + 1; // for NULL byte
-        in_string = malloc(sizeof(char) * size);
+        in_string = (char *)malloc(sizeof(char) * size);
         memset(in_string, 0, size);
         ei_decode_binary(in_buff->buff, in_buff->index, in_string, &len);
       })) {
@@ -350,7 +350,7 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
         int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
                                                unifex_buff_ptr->index, &size);
         in_list_length = (unsigned int)size;
-        in_list = malloc(sizeof(int) * in_list_length);
+        in_list = (int *)malloc(sizeof(int) * in_list_length);
 
         for (unsigned int i = 0; i < in_list_length; i++) {
         }
@@ -421,7 +421,7 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
         int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
                                                unifex_buff_ptr->index, &size);
         in_strings_length = (unsigned int)size;
-        in_strings = malloc(sizeof(char *) * in_strings_length);
+        in_strings = (char **)malloc(sizeof(char *) * in_strings_length);
 
         for (unsigned int i = 0; i < in_strings_length; i++) {
           in_strings[i] = NULL;
@@ -435,7 +435,7 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
                 ei_get_type(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                             &type, &size);
                 size = size + 1; // for NULL byte
-                in_strings[i] = malloc(sizeof(char) * size);
+                in_strings[i] = (char *)malloc(sizeof(char) * size);
                 memset(in_strings[i], 0, size);
                 ei_decode_binary(unifex_buff_ptr->buff, unifex_buff_ptr->index,
                                  in_strings[i], &len);
@@ -499,7 +499,8 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
         int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
                                                unifex_buff_ptr->index, &size);
         in_uints_length = (unsigned int)size;
-        in_uints = malloc(sizeof(unsigned int) * in_uints_length);
+        in_uints =
+            (unsigned int *)malloc(sizeof(unsigned int) * in_uints_length);
 
         for (unsigned int i = 0; i < in_uints_length; i++) {
         }
@@ -572,7 +573,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
         int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
                                                unifex_buff_ptr->index, &size);
         in_list_length = (unsigned int)size;
-        in_list = malloc(sizeof(int) * in_list_length);
+        in_list = (int *)malloc(sizeof(int) * in_list_length);
 
         for (unsigned int i = 0; i < in_list_length; i++) {
         }

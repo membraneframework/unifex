@@ -135,7 +135,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         }
         int header_res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
         #{len_var_name} = (unsigned int) size;
-        #{var_name} = malloc(sizeof(#{native_type}) * #{len_var_name});
+        #{var_name} = (#{native_type} *)malloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           #{BaseType.generate_initialization(subtype, elem_name, generator)}
