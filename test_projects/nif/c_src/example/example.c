@@ -21,6 +21,10 @@ UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
   return test_atom_result_ok(env, in_atom);
 }
 
+UNIFEX_TERM test_float(UnifexEnv *env, double in_float) {
+  return test_float_result_ok(env, in_float);
+}
+
 UNIFEX_TERM test_int(UnifexEnv *env, int in_int) {
   return test_int_result_ok(env, in_int);
 }

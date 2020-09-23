@@ -10,6 +10,8 @@ spec init() :: {:ok :: label, was_handle_load_called :: int, state}
 
 spec test_atom(in_atom :: atom) :: {:ok :: label, out_atom :: atom}
 
+spec test_float(in_float :: float) :: {:ok :: label, out_float :: float}
+
 spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
 spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}

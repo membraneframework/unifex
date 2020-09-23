@@ -50,6 +50,17 @@ UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool) {
   return out_buff;
 }
 
+UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ei_x_encode_double(out_buff, out_float);
+
+  return out_buff;
+}
+
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -266,6 +277,24 @@ UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   result = test_bool(env, in_bool);
   goto exit_test_bool_caller;
 exit_test_bool_caller:
+
+  return result;
+}
+
+UNIFEX_TERM test_float_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_TERM result;
+
+  double in_float;
+
+  if (ei_decode_double(in_buff->buff, in_buff->index, &in_float)) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'in_float' of type ':float'");
+    goto exit_test_float_caller;
+  }
+
+  result = test_float(env, in_float);
+  goto exit_test_float_caller;
+exit_test_float_caller:
 
   return result;
 }
@@ -703,6 +732,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return test_atom_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_bool") == 0) {
     return test_bool_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_float") == 0) {
+    return test_float_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_uint") == 0) {
     return test_uint_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_string") == 0) {
