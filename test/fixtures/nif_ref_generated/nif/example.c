@@ -138,9 +138,9 @@ static int unifex_load_nif(ErlNifEnv *env, void **priv_data,
 
 static ERL_NIF_TERM export_init(ErlNifEnv *env, int argc,
                                 const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-  UNIFEX_UNUSED(argv);
   UnifexEnv *unifex_env = env;
 
   result = init(unifex_env);
@@ -152,9 +152,9 @@ exit_export_init:
 
 static ERL_NIF_TERM export_test_atom(ErlNifEnv *env, int argc,
                                      const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   char *in_atom;
 
@@ -175,9 +175,9 @@ exit_export_test_atom:
 
 static ERL_NIF_TERM export_test_float(ErlNifEnv *env, int argc,
                                       const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   double in_float;
 
@@ -195,9 +195,9 @@ exit_export_test_float:
 
 static ERL_NIF_TERM export_test_int(ErlNifEnv *env, int argc,
                                     const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   int in_int;
 
@@ -215,9 +215,9 @@ exit_export_test_int:
 
 static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
                                      const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   int *in_list;
   unsigned int in_list_length;
@@ -263,9 +263,9 @@ exit_export_test_list:
 
 static ERL_NIF_TERM export_test_pid(ErlNifEnv *env, int argc,
                                     const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   UnifexPid in_pid;
 
@@ -283,9 +283,9 @@ exit_export_test_pid:
 
 static ERL_NIF_TERM export_test_state(ErlNifEnv *env, int argc,
                                       const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   UnifexState *state;
 
@@ -303,9 +303,9 @@ exit_export_test_state:
 
 static ERL_NIF_TERM export_test_example_message(ErlNifEnv *env, int argc,
                                                 const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   UnifexPid pid;
 

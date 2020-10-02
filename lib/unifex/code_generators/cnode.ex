@@ -215,6 +215,8 @@ defmodule Unifex.CodeGenerators.CNode do
     declaration = generate_caller_function_declaration({name, args})
     exit_label = "exit_#{name}_caller"
 
+    maybe_unused_args = generate_maybe_unused_args_statements(["in_buff"]) |> Enum.join("\n")
+
     args_declaration =
       args |> generate_args_declarations() |> Enum.map(&~g<#{&1};>) |> Enum.join("\n")
 
@@ -255,8 +257,8 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{declaration} {
+      #{maybe_unused_args}
       UNIFEX_TERM result;
-      #{if Enum.empty?(args), do: "UNIFEX_UNUSED(in_buff);", else: ""}
       #{args_declaration}
       #{args_initialization}
       #{args_parsing}
@@ -271,6 +273,10 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_caller_function_declaration({name, _args}) do
     ~g"UNIFEX_TERM #{name}_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff)"
+  end
+
+  defp generate_maybe_unused_args_statements(args) do
+    args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)
   end
 
   defp generate_state_related_declarations(%Specs{state_type: nil}) do
@@ -288,8 +294,12 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_state_related_functions(%Specs{state_type: nil}) do
+    maybe_unused_args = generate_maybe_unused_args_statements(["env", "state"]) |> Enum.join("\n")
+
     ~g"""
-    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {}
+    void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
+      #{maybe_unused_args}
+    }
     """
   end
 
