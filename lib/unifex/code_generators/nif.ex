@@ -181,7 +181,8 @@ defmodule Unifex.CodeGenerators.NIF do
     result_var = "result"
     exit_label = "exit_export_#{name}"
 
-    maybe_unused_args = generate_maybe_unused_args_statements(["argc", "argv"]) |> Enum.join("\n")
+    maybe_unused_args =
+      Utils.generate_maybe_unused_args_statements(["argc", "argv"]) |> Enum.join("\n")
 
     args_declaration =
       args
@@ -238,10 +239,6 @@ defmodule Unifex.CodeGenerators.NIF do
       return result;
     }
     """
-  end
-
-  defp generate_maybe_unused_args_statements(args) do
-    args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)
   end
 
   defp generate_state_related_declarations(%Specs{state_type: nil}) do
