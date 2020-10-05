@@ -96,4 +96,9 @@ defmodule Unifex.CodeGenerator.Utils do
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
+
+  @spec generate_maybe_unused_args_statements(args :: [String.t()]) :: [String.t()]
+  def generate_maybe_unused_args_statements(args) do
+    args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)
+  end
 end

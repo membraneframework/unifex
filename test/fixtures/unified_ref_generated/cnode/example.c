@@ -1,7 +1,10 @@
 #include "example.h"
 #include <stdio.h>
 
-void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {}
+void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
+  UNIFEX_MAYBE_UNUSED(env);
+  UNIFEX_MAYBE_UNUSED(state);
+}
 
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
@@ -18,8 +21,8 @@ UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
 }
 
 UNIFEX_TERM foo_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   int num;
 
   if (({

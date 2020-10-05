@@ -218,8 +218,8 @@ UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
 }
 
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-  UNIFEX_UNUSED(in_buff);
 
   result = init(env);
   goto exit_init_caller;
@@ -229,8 +229,8 @@ exit_init_caller:
 }
 
 UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   char *in_atom;
   in_atom = NULL;
   if (({
@@ -251,8 +251,8 @@ exit_test_atom_caller:
 }
 
 UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   int in_bool;
 
   if (({
@@ -282,8 +282,8 @@ exit_test_bool_caller:
 }
 
 UNIFEX_TERM test_float_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   double in_float;
 
   if (ei_decode_double(in_buff->buff, in_buff->index, &in_float)) {
@@ -300,8 +300,8 @@ exit_test_float_caller:
 }
 
 UNIFEX_TERM test_uint_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   unsigned int in_uint;
 
   if (({
@@ -325,8 +325,8 @@ exit_test_uint_caller:
 }
 
 UNIFEX_TERM test_string_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   char *in_string;
   in_string = NULL;
   if (({
@@ -353,8 +353,8 @@ exit_test_string_caller:
 }
 
 UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   int *in_list;
   unsigned int in_list_length;
   in_list = NULL;
@@ -423,8 +423,8 @@ exit_test_list_caller:
 
 UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
                                         UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   char **in_strings;
   unsigned int in_strings_length;
   in_strings = NULL;
@@ -501,8 +501,8 @@ exit_test_list_of_strings_caller:
 
 UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
                                       UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   unsigned int *in_uints;
   unsigned int in_uints_length;
   in_uints = NULL;
@@ -574,8 +574,8 @@ exit_test_list_of_uints_caller:
 
 UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
                                              UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   int *in_list;
   unsigned int in_list_length;
   char *other_param;
@@ -657,8 +657,8 @@ exit_test_list_with_other_args_caller:
 }
 
 UNIFEX_TERM test_payload_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   UnifexPayload *in_payload;
   in_payload = NULL;
   if (unifex_payload_decode(env, in_buff, &in_payload)) {
@@ -679,8 +679,8 @@ exit_test_payload_caller:
 }
 
 UNIFEX_TERM test_pid_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-
   UnifexPid in_pid;
 
   if (ei_decode_pid(in_buff->buff, in_buff->index, &in_pid)) {
@@ -698,8 +698,8 @@ exit_test_pid_caller:
 
 UNIFEX_TERM test_example_message_caller(UnifexEnv *env,
                                         UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
-  UNIFEX_UNUSED(in_buff);
 
   result = test_example_message(env);
   goto exit_test_example_message_caller;
