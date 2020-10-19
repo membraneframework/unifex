@@ -5,7 +5,7 @@
 [![CircleCI](https://circleci.com/gh/membraneframework/unifex.svg?style=svg)](https://circleci.com/gh/membraneframework/unifex)
 
 Unifex is a tool for generating interfaces between native C code and Elixir, that:
-- provides intuitive and conscise tools for defining native interfaces,
+- provides intuitive and concise tools for defining native interfaces,
 - generates all the boilerplate for you,
 - provides useful abstractions over binaries and state,
 - makes native code independent from [erl_nif](https://erlang.org/doc/man/erl_nif.html) 
@@ -13,7 +13,7 @@ Unifex is a tool for generating interfaces between native C code and Elixir, tha
 
 API documentation is available at [HexDocs](https://hexdocs.pm/unifex/).
 
-## Instalation
+## Installation
 
 To install, you need to configure Mix project as follows:
 
@@ -32,7 +32,7 @@ defmodule MyApp.Mixfile do
 
   defp deps() do
     [
-      {:unifex, "~> 0.3.1"} # add unifex to deps
+      {:unifex, "~> 0.3.2"} # add unifex to deps
     ]
   end
 end

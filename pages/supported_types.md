@@ -15,6 +15,7 @@ state of work on remaining types.
 | uint64  | yes                   | yes             |
 | int     | yes                   | yes             |
 | int64   | yes                   | yes             |
+| float   | yes                   | yes             |
 | list    | yes                   | yes             |
 | payload | yes                   | yes             |
 | pid     | yes                   | yes             |
@@ -29,6 +30,7 @@ state of work on remaining types.
 | uint64  | no                    | no              |
 | int     | yes                   | yes             |
 | int64   | no                    | no              |
+| float   | yes                   | yes             |
 | list    | yes                   | yes             |
 | payload | yes                   | yes             |
 | pid     | yes                   | yes             |
