@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.3.1"
+  @version "0.3.2"
   @github_link "https://github.com/membraneframework/unifex"
 
   def project do
@@ -9,7 +9,7 @@ defmodule Unifex.MixProject do
       app: :unifex,
       compilers: [:bundlex] ++ Mix.compilers(),
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       name: "Unifex",
       description: "Tool for generating interfaces between native C code and Elixir",
