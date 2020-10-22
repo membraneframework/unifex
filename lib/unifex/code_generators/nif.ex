@@ -31,8 +31,6 @@ defmodule Unifex.CodeGenerators.NIF do
     extern "C" {
     #endif
 
-    #define UNIFEX_MODULE "#{specs.module}"
-
     /*
      * Functions that manage lib and state lifecycle
      * Functions with 'unifex_' prefix are generated automatically,

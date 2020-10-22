@@ -11,8 +11,6 @@
 extern "C" {
 #endif
 
-#define UNIFEX_MODULE "Elixir.Example"
-
 /*
  * Functions that manage lib and state lifecycle
  * Functions with 'unifex_' prefix are generated automatically,
