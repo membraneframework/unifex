@@ -34,7 +34,7 @@ UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
   });
 }
 
-UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length) {
   return ({
     const ERL_NIF_TERM terms[] = {
@@ -228,7 +228,7 @@ static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
         int get_list_length_result =
             enif_get_list_length(env, argv[0], &in_list_length);
         if (get_list_length_result) {
-          in_list = enif_alloc(sizeof(int) * in_list_length);
+          in_list = (int *)enif_alloc(sizeof(int) * in_list_length);
 
           for (unsigned int i = 0; i < in_list_length; i++) {
           }
