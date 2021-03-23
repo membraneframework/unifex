@@ -164,12 +164,36 @@ defmodule Unifex.Specs.DSL do
     store_config(:callback, {hook, fun})
   end
 
+  defmacro struct_def(struct) do
+    store_config(:struct_def, struct |> parse_struct() |> Macro.escape())
+  end
+
   defp store_config(key, value) when is_atom(key) do
     config_store = Macro.var(:unifex_config__, nil)
 
     quote generated: true do
       unquote(config_store) = [{unquote(key), unquote(value)} | unquote(config_store)]
     end
+  end
+
+  defp parse_struct({:"::", _, [{struct_alias, _, _}, struct]}) do
+    {:%, _, [
+      {:__aliases__, _, struct_name},
+      {:%{}, _, args}
+    ]} = struct
+
+    struct_name =
+      struct_name
+      |> Enum.join(".")
+
+    args =
+      args
+      |> Enum.map(fn
+        {name, {type, _, _}} -> {name, type}
+        {name, [{type, _, _}]} -> {name, {:list, type}}
+      end)
+
+    {struct_alias, struct_name, args}
   end
 
   defp parse_function({:"::", _, [{fun_name, _, args}, results]}) do
