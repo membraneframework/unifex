@@ -177,23 +177,25 @@ defmodule Unifex.Specs.DSL do
   end
 
   defp parse_struct({:"::", _, [{struct_alias, _, _}, struct]}) do
-    {:%, _, [
-      {:__aliases__, _, struct_name},
-      {:%{}, _, args}
-    ]} = struct
+    {:%, _,
+     [
+       {:__aliases__, _, struct_module_name},
+       {:%{}, _, struct_fields}
+     ]} = struct
 
-    struct_name =
-      struct_name
+    struct_module_name =
+      struct_module_name
       |> Enum.join(".")
+      |> String.to_atom()
 
-    args =
-      args
+    struct_fields =
+      struct_fields
       |> Enum.map(fn
         {name, {type, _, _}} -> {name, type}
         {name, [{type, _, _}]} -> {name, {:list, type}}
       end)
 
-    {struct_alias, struct_name, args}
+    {struct_alias, struct_module_name, struct_fields}
   end
 
   defp parse_function({:"::", _, [{fun_name, _, args}, results]}) do
