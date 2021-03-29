@@ -41,6 +41,13 @@ defmodule Unifex.CodeGenerators.NIF do
 
     #{generate_state_related_declarations(specs)}
 
+    #{
+      Utils.generate_structs_definitions(
+        specs.structs,
+        &generate_struct_native_definition/1
+      )
+    }
+
     /*
      * Declaration of native functions for module #{specs.module}.
      * The implementation have to be provided by the user.
@@ -448,5 +455,27 @@ defmodule Unifex.CodeGenerators.NIF do
       arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF) end,
       tuple_serializer: &generate_tuple_maker/1
     })
+  end
+
+  defp generate_struct_native_definition({struct_type_name, _struct_module_name, struct_fields}) do
+    struct_fields_definition =
+      struct_fields
+      |> Enum.map(fn {field_name, field_type} ->
+        ~g<#{BaseType.generate_native_type(field_type, field_name, NIF)} #{field_name};>
+      end)
+      |> Enum.join("\n")
+
+    ~g"""
+    #ifdef __cplusplus
+      struct #{struct_type_name} {
+        #{struct_fields_definition}
+      };
+    #else
+      struct #{struct_type_name}_t {
+        #{struct_fields_definition}
+      };
+      typedef #{struct_type_name}_t #{struct_type_name};
+    #endif
+    """
   end
 end

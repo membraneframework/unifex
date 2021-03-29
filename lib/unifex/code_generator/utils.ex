@@ -96,4 +96,11 @@ defmodule Unifex.CodeGenerator.Utils do
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
+
+  def generate_structs_definitions(config, generator) do
+    config
+    |> Enum.map(generator)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.join("\n")
+  end
 end

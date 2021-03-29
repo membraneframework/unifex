@@ -45,6 +45,13 @@ defmodule Unifex.CodeGenerators.CNode do
     #{generate_state_related_declarations(specs)}
 
     #{
+      Utils.generate_structs_definitions(
+        specs.structs,
+        &generate_struct_native_definition/1
+      )
+    }
+
+    #{
       Utils.generate_functions_declarations(
         specs.functions_args,
         &generate_implemented_function_declaration/1
@@ -337,5 +344,27 @@ defmodule Unifex.CodeGenerators.CNode do
       end
 
     Enum.join(tuple_header ++ results, "\n")
+  end
+
+  defp generate_struct_native_definition({struct_type_name, _struct_module_name, struct_fields}) do
+    struct_fields_definition =
+      struct_fields
+      |> Enum.map(fn {field_name, field_type} ->
+        ~g<#{BaseType.generate_native_type(field_type, field_name, CNode)} #{field_name};>
+      end)
+      |> Enum.join("\n")
+
+    ~g"""
+    #ifdef __cplusplus
+      struct #{struct_type_name} {
+        #{struct_fields_definition}
+      };
+    #else
+      struct #{struct_type_name}_t {
+        #{struct_fields_definition}
+      };
+      typedef struct #{struct_type_name}_t #{struct_type_name};
+    #endif
+    """
   end
 end

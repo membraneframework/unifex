@@ -1,7 +1,31 @@
 defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
   def compile_struct_module(struct_type_name, struct_module_name, struct_fields) do
-    module_code(struct_type_name, struct_module_name, struct_fields)
-    |> Code.compile_string()
+    r =
+      module_code(struct_type_name, struct_module_name, struct_fields)
+      |> Code.compile_string()
+
+    # generated_module_name_sufix = struct_type_name |> Atom.to_string() |> Macro.camelize() |> String.to_atom()
+    # generated_module_name = "Elixir.Unifex.CodeGenerator.BaseTypes.#{generated_module_name_sufix}" |> String.to_atom()
+
+    generated_module_name =
+      Module.concat(
+        Unifex.CodeGenerator.BaseTypes,
+        struct_type_name |> Atom.to_string() |> Macro.camelize()
+      )
+
+    IO.inspect(generated_module_name)
+
+    Code.ensure_loaded(generated_module_name)
+    |> IO.inspect(label: "dupa 2")
+
+    Module.concat(generated_module_name, "CNode")
+    |> Code.ensure_loaded()
+    |> IO.inspect(label: "dupa 1")
+
+    Kernel.function_exported?(generated_module_name, :generate_destruction, 2)
+    |> IO.inspect(label: "dupa ma byc true")
+
+    r
   end
 
   defp module_code(struct_type_name, struct_module_name, struct_fields) do
@@ -28,16 +52,24 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
         end)
         |> Enum.map(&(&1 != ""))
         |> Enum.join("\n")
+        |> IO.inspect(label: "generate_initialization from #{__MODULE__}")
+
       end
 
       @impl BaseType
       def generate_destruction(name, ctx) do
+
+
         struct_fields()
         |> Enum.map(fn {field_name, field_type} ->
           BaseType.generate_destruction(field_type, :"#{name}.#{field_name}", ctx.generator)
         end)
         |> Enum.map(&(&1 != ""))
         |> Enum.join("\n")
+
+
+        |> IO.inspect(label: "generate_destruction from #{__MODULE__}")
+
       end
 
       defmodule NIF do
@@ -46,6 +78,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
 
         @impl BaseType
         def generate_arg_serialize(name, ctx) do
+
+
           struct_fields_number = length(struct_fields())
           fields_serialization =
             struct_fields()
@@ -72,10 +106,15 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
             result;
           })
           """
+
+          |> IO.inspect(label: "generate_arg_serialize from #{__MODULE__}")
+
         end
 
         @impl BaseType
         def generate_arg_parse(arg, var_name, ctx) do
+
+
           %{postproc_fun: postproc_fun, generator: generator} = ctx
 
           fields_parsing =
@@ -106,6 +145,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
             #{result};
           })
           """
+
+          |> IO.inspect(label: "generate_arg_parse from #{__MODULE__}")
+
         end
 
         defp struct_fields() do
@@ -119,6 +161,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
 
         @impl BaseType
         def generate_arg_serialize(name, ctx) do
+
           fields_serialization =
             struct_fields()
             |> Enum.map(fn field ->
@@ -137,10 +180,14 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
             ei_x_encode_atom(out_buff, "<%= @struct_module_name |> Atom.to_string() %>");
           })
           """
+
+          |> IO.inspect(label: "generate_arg_serialize from #{__MODULE__}")
+
         end
 
         @impl BaseType
         def generate_arg_parse(arg, var_name, ctx) do
+
           %{postproc_fun: postproc_fun, generator: generator} = ctx
 
           fields_parsing =
@@ -172,7 +219,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
             decode_map_header_result;
           })
           """
+
+          |> IO.inspect(label: "generate_arg_parse from #{__MODULE__}")
+
         end
+
         defp struct_fields() do
           <%= inspect(@struct_fields, limit: :infinity, printable_limit: :infinity) %>
         end
