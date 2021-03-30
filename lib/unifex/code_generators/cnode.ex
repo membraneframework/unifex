@@ -357,8 +357,11 @@ defmodule Unifex.CodeGenerators.CNode do
     struct_fields_definition =
       struct_fields
       |> Enum.map(fn {field_name, field_type} ->
-        ~g<#{BaseType.generate_native_type(field_type, field_name, CNode)} #{field_name};>
+        BaseType.generate_declaration(field_type, field_name, CNode)
       end)
+      |> Enum.map(&Bunch.listify/1)
+      |> Enum.flat_map(fn x -> x end)
+      |> Enum.map(fn declaration -> ~g<#{declaration};> end)
       |> Enum.join("\n")
 
     ~g"""

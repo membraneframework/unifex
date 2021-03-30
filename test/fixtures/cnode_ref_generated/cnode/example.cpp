@@ -217,6 +217,45 @@ UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
   return out_buff;
 }
 
+UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    ei_x_encode_map_header(out_buff, 4);
+    ei_x_encode_atom(out_buff, "id");
+    ({
+      int tmp_int = out_struct.id;
+      ei_x_encode_longlong(out_buff, (long long)tmp_int);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "data");
+    ({
+      ei_x_encode_list_header(out_buff, out_struct.data_length);
+      for (unsigned int i = 0; i < out_struct.data_length; i++) {
+        ({
+          int tmp_int = out_struct.data[i];
+          ei_x_encode_longlong(out_buff, (long long)tmp_int);
+        });
+      }
+      ei_x_encode_empty_list(out_buff);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "name");
+    ei_x_encode_binary(out_buff, out_struct.name, strlen(out_struct.name));
+    ;
+
+    ei_x_encode_atom(out_buff, "__struct__");
+    ei_x_encode_atom(out_buff, "Elixir.My.Struct");
+  });
+
+  return out_buff;
+}
+
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
@@ -708,6 +747,149 @@ exit_test_example_message_caller:
   return result;
 }
 
+UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+  my_struct in_struct;
+  in_struct.data = NULL;
+  in_struct.name = NULL;
+  if (({
+        int arity = 0;
+        int decode_map_header_result =
+            ei_decode_map_header(in_buff->buff, in_buff->index, &arity);
+        if (decode_map_header_result == 0) {
+          for (int i = 0; i < arity; ++i) {
+            char key[MAXATOMLEN + 1];
+            int decode_key_result =
+                ei_decode_atom(in_buff->buff, in_buff->index, key);
+            if (decode_key_result == 0) {
+              if (strcmp(key, "id") == 0) {
+                if (({
+                      long long tmp_longlong;
+                      int result = ei_decode_longlong(
+                          in_buff->buff, in_buff->index, &tmp_longlong);
+                      in_struct.id = (int)tmp_longlong;
+                      result;
+                    })) {
+                  result =
+                      unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                        "'in_struct' of type ':my_struct'");
+                  goto exit_test_my_struct_caller;
+                }
+
+              } else if (strcmp(key, "data") == 0) {
+                if (({
+                      int type;
+                      int size;
+
+                      ei_get_type(in_buff->buff, in_buff->index, &type, &size);
+                      in_struct.data_length = (unsigned int)size;
+
+                      int index = 0;
+                      UnifexCNodeInBuff unifex_buff;
+                      UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+                      if (type == ERL_STRING_EXT) {
+                        ei_x_buff buff = unifex_cnode_string_to_list(
+                            in_buff, in_struct.data_length);
+                        unifex_buff.buff = buff.buff;
+                        unifex_buff.index = &index;
+                      } else {
+                        unifex_buff.buff = in_buff->buff;
+                        unifex_buff.index = in_buff->index;
+                      }
+                      int header_res = ei_decode_list_header(
+                          unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+                      in_struct.data_length = (unsigned int)size;
+                      in_struct.data =
+                          (int *)malloc(sizeof(int) * in_struct.data_length);
+
+                      for (unsigned int i = 0; i < in_struct.data_length; i++) {
+                      }
+
+                      for (unsigned int i = 0; i < in_struct.data_length; i++) {
+                        if (({
+                              long long tmp_longlong;
+                              int result = ei_decode_longlong(
+                                  unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                                  &tmp_longlong);
+                              in_struct.data[i] = (int)tmp_longlong;
+                              result;
+                            })) {
+                          result = unifex_raise(
+                              env, "Unifex CNode: cannot parse argument "
+                                   "'in_struct' of type ':my_struct'");
+                          goto exit_test_my_struct_caller;
+                        }
+                      }
+                      if (in_struct.data_length) {
+                        header_res = ei_decode_list_header(
+                            unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                            &size);
+                      }
+                      header_res;
+                    })) {
+                  result =
+                      unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                        "'in_struct' of type ':my_struct'");
+                  goto exit_test_my_struct_caller;
+                }
+
+              } else if (strcmp(key, "name") == 0) {
+                if (({
+                      int type;
+                      int size;
+                      long len;
+                      ei_get_type(in_buff->buff, in_buff->index, &type, &size);
+                      size = size + 1; // for NULL byte
+                      in_struct.name = (char *)malloc(sizeof(char) * size);
+                      memset(in_struct.name, 0, size);
+                      ei_decode_binary(in_buff->buff, in_buff->index,
+                                       in_struct.name, &len);
+                    })) {
+                  result =
+                      unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                        "'in_struct' of type ':my_struct'");
+                  goto exit_test_my_struct_caller;
+                }
+
+              } else if (strcmp(key, "__struct__") == 0) {
+                char *elixir_module_name;
+                if (({
+                      elixir_module_name = (char *)unifex_alloc(MAXATOMLEN);
+                      ei_decode_atom(in_buff->buff, in_buff->index,
+                                     elixir_module_name);
+                    })) {
+                  result =
+                      unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                        "'in_struct' of type ':my_struct'");
+                  goto exit_test_my_struct_caller;
+                }
+              }
+            }
+          }
+        }
+
+        decode_map_header_result;
+      })) {
+    result = unifex_raise(
+        env,
+        "Unifex CNode: cannot parse argument 'in_struct' of type ':my_struct'");
+    goto exit_test_my_struct_caller;
+  }
+
+  result = test_my_struct(env, in_struct);
+  goto exit_test_my_struct_caller;
+exit_test_my_struct_caller:
+  if (in_struct.data != NULL) {
+    for (unsigned int i = 0; i < in_struct.data_length; i++) {
+    }
+    unifex_free(in_struct.data);
+  }
+
+  unifex_free(in_struct.name);
+  return result;
+}
+
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   UNIFEX_UNUSED(flags);
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
@@ -752,6 +934,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return test_pid_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_example_message") == 0) {
     return test_example_message_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_my_struct") == 0) {
+    return test_my_struct_caller(env, in_buff);
   } else {
     return unifex_cnode_undefined_function_error(env, fun_name);
   }
