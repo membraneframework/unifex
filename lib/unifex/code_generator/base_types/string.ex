@@ -11,8 +11,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
 
   @impl BaseType
   def generate_native_type(ctx) do
-    prefix = if ctx.mode == :const, do: "const ", else: ""
-    ~g<#{prefix}char*>
+    optional_const = if ctx.mode == :const, do: "const ", else: ""
+    ~g<char #{optional_const}*>
   end
 
   @impl BaseType

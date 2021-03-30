@@ -45,7 +45,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Atom do
     def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       ({
-      #{name} = unifex_alloc(MAXATOMLEN);
+      #{name} = (char *) unifex_alloc(MAXATOMLEN);
       ei_decode_atom(#{argument}->buff, #{argument}->index, #{name});
       })
       """

@@ -75,7 +75,7 @@ UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint) {
   return out_buff;
 }
 
-UNIFEX_TERM test_string_result_ok(UnifexEnv *env, const char *out_string) {
+UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
@@ -86,7 +86,7 @@ UNIFEX_TERM test_string_result_ok(UnifexEnv *env, const char *out_string) {
   return out_buff;
 }
 
-UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -108,7 +108,7 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
 }
 
 UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
-                                           const char **out_strings,
+                                           char const *const *out_strings,
                                            unsigned int out_strings_length) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -127,7 +127,7 @@ UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
 }
 
 UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
-                                         const unsigned int *out_uints,
+                                         unsigned int const *out_uints,
                                          unsigned int out_uints_length) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -149,7 +149,7 @@ UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
 }
 
 UNIFEX_TERM test_list_with_other_args_result_ok(UnifexEnv *env,
-                                                const int *out_list,
+                                                int const *out_list,
                                                 unsigned int out_list_length,
                                                 const char *other_param) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
@@ -234,7 +234,7 @@ UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   char *in_atom;
   in_atom = NULL;
   if (({
-        in_atom = unifex_alloc(MAXATOMLEN);
+        in_atom = (char *)unifex_alloc(MAXATOMLEN);
         ei_decode_atom(in_buff->buff, in_buff->index, in_atom);
       })) {
     result = unifex_raise(
@@ -633,7 +633,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
   }
 
   if (({
-        other_param = unifex_alloc(MAXATOMLEN);
+        other_param = (char *)unifex_alloc(MAXATOMLEN);
         ei_decode_atom(in_buff->buff, in_buff->index, other_param);
       })) {
     result = unifex_raise(

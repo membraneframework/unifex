@@ -77,7 +77,7 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
-UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
 UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
 UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);

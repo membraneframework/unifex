@@ -12,10 +12,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
   @impl BaseType
   def generate_native_type(ctx) do
-    prefix = if ctx.mode == :const, do: "const ", else: ""
+    optional_const = if ctx.mode == :const, do: "const ", else: ""
 
     [
-      "#{prefix}#{BaseType.generate_native_type(ctx.subtype, ctx.generator)}*",
+      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator)} #{optional_const}*",
       {"unsigned int", "_length"}
     ]
   end
@@ -70,7 +70,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ({
       int get_list_length_result = enif_get_list_length(env, #{arg}, &#{len_var_name});
       if(get_list_length_result){
-        #{var_name} = enif_alloc(sizeof(#{native_type}) * #{len_var_name});
+        #{var_name} = (#{native_type} *) enif_alloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           #{BaseType.generate_initialization(subtype, elem_name, generator)}
