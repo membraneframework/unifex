@@ -11,8 +11,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
 
   @impl BaseType
   def generate_native_type(ctx) do
-    prefix = if ctx.mode == :const, do: "const ", else: ""
-    ~g<#{prefix}char*>
+    optional_const = if ctx.mode == :const, do: "const ", else: ""
+    ~g<char #{optional_const}*>
   end
 
   @impl BaseType
@@ -60,7 +60,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
         long len;
         ei_get_type(#{arg}->buff, #{arg}->index, &type, &size);
         size = size + 1; // for NULL byte
-        #{var_name} = malloc(sizeof(char) * size);
+        #{var_name} = (char *)malloc(sizeof(char) * size);
         memset(#{var_name}, 0, size);
         ei_decode_binary(#{arg}->buff, #{arg}->index, #{var_name}, &len);
       })

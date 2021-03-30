@@ -31,8 +31,6 @@ defmodule Unifex.CodeGenerators.NIF do
     extern "C" {
     #endif
 
-    #define UNIFEX_MODULE "#{specs.module}"
-
     /*
      * Functions that manage lib and state lifecycle
      * Functions with 'unifex_' prefix are generated automatically,
@@ -188,6 +186,9 @@ defmodule Unifex.CodeGenerators.NIF do
     result_var = "result"
     exit_label = "exit_export_#{name}"
 
+    maybe_unused_args =
+      Utils.generate_maybe_unused_args_statements(["argc", "argv"]) |> Enum.join("\n")
+
     args_declaration =
       args
       |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
@@ -227,9 +228,8 @@ defmodule Unifex.CodeGenerators.NIF do
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
-      UNIFEX_UNUSED(argc);
+      #{maybe_unused_args}
       ERL_NIF_TERM #{result_var};
-      #{if args |> Enum.empty?(), do: ~g<UNIFEX_UNUSED(argv);>, else: ""}
       #{generate_unifex_env()}
       #{args_declaration}
 

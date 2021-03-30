@@ -18,6 +18,13 @@ defmodule ExampleTest do
     refute match?({:ok, false}, Unifex.CNode.call(context[:cnode], :test_bool, [true]))
   end
 
+  test "float", context do
+    assert {:ok, 0.0} = Unifex.CNode.call(context[:cnode], :test_float, [0.0])
+    assert {:ok, 0.1} = Unifex.CNode.call(context[:cnode], :test_float, [0.1])
+    assert {:ok, -0.1} = Unifex.CNode.call(context[:cnode], :test_float, [-0.1])
+    refute match?({:ok, 1}, Unifex.CNode.call(context[:cnode], :test_float, [1.0]))
+  end
+
   test "unsigned int", context do
     cnode = context[:cnode]
     assert {:ok, 0} = Unifex.CNode.call(cnode, :test_uint, [0])
@@ -40,7 +47,7 @@ defmodule ExampleTest do
     assert {:ok, "test_string"} = Unifex.CNode.call(cnode, :test_string, ["test_string"])
     assert {:ok, "-12345"} = Unifex.CNode.call(cnode, :test_string, ["-12345"])
     assert {:ok, "255"} = Unifex.CNode.call(cnode, :test_string, ["255"])
-    assert {:ok, big_test_string} = Unifex.CNode.call(cnode, :test_string, [big_test_string])
+    assert {:ok, ^big_test_string} = Unifex.CNode.call(cnode, :test_string, [big_test_string])
   end
 
   test "list as string", context do

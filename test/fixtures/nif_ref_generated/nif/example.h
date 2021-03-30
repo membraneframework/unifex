@@ -11,8 +11,6 @@
 extern "C" {
 #endif
 
-#define UNIFEX_MODULE "Elixir.Example"
-
 /*
  * Functions that manage lib and state lifecycle
  * Functions with 'unifex_' prefix are generated automatically,
@@ -54,6 +52,7 @@ void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
 UNIFEX_TERM init(UnifexEnv *env);
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
+UNIFEX_TERM test_float(UnifexEnv *env, double in_float);
 UNIFEX_TERM test_int(UnifexEnv *env, int in_int);
 UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
                       unsigned int in_list_length);
@@ -76,8 +75,9 @@ int handle_load(UnifexEnv *env, void **priv_data);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state);
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
+UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
-UNIFEX_TERM test_list_result_ok(UnifexEnv *env, const int *out_list,
+UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
 UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
 UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);

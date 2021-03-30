@@ -21,6 +21,8 @@ typedef ei_x_buff *UNIFEX_TERM;
 
 typedef erlang_pid UnifexPid;
 
+#define UNIFEX_MAYBE_UNUSED(x) UNIFEX_UNUSED(x)
+
 #define UNIFEX_UNUSED(x) (void)(x)
 
 typedef struct UnifexLinkedList {

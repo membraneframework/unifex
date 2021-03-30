@@ -25,9 +25,9 @@ static int unifex_load_nif(ErlNifEnv *env, void **priv_data,
 
 static ERL_NIF_TERM export_foo(ErlNifEnv *env, int argc,
                                const ERL_NIF_TERM argv[]) {
-  UNIFEX_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
   ERL_NIF_TERM result;
-
   UnifexEnv *unifex_env = env;
   int num;
 

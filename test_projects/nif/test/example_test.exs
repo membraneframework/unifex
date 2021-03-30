@@ -12,6 +12,13 @@ defmodule ExampleTest do
     assert {:ok, :unifex} = Example.test_atom(:unifex)
   end
 
+  test "float" do
+    assert {:ok, 0.0} = Example.test_float(0.0)
+    assert {:ok, 0.1} = Example.test_float(0.1)
+    assert {:ok, -0.1} = Example.test_float(-0.1)
+    refute match?({:ok, 1}, Example.test_float(1.0))
+  end
+
   test "int" do
     assert {:ok, 10} = Example.test_int(10)
   end

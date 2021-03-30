@@ -7,6 +7,8 @@
 
 #define UNIFEX_UNUSED(x) (void)(x)
 
+#define UNIFEX_MAYBE_UNUSED(x) UNIFEX_UNUSED(x)
+
 #define UNIFEX_NO_FLAGS 0
 
 #define UNIFEX_SEND_THREADED 1
