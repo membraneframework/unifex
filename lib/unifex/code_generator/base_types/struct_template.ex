@@ -176,8 +176,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
   end
 
   def compile_struct_module(struct_type_name, struct_module_name, struct_fields) do
-    quoted_module_code(struct_type_name, struct_module_name, struct_fields)
-    |> Code.compile_quoted()
+    ignore_module_conflicts_option = Code.compiler_options()[:ignore_module_conflict] || false
+    Code.put_compiler_option(:ignore_module_conflict, true)
+
+    compiled_code =
+      quoted_module_code(struct_type_name, struct_module_name, struct_fields)
+      |> Code.compile_quoted()
+
+    Code.put_compiler_option(:ignore_module_conflict, ignore_module_conflicts_option)
+
+    compiled_code
   end
 
   defp quoted_module_code(struct_type_name, struct_module_name, struct_fields) do
