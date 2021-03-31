@@ -45,6 +45,23 @@ void unifex_keep_state(UnifexEnv *env, UnifexState *state);
  */
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
+#ifdef __cplusplus
+struct my_struct {
+  int id;
+  int *data;
+  unsigned int data_length;
+  char *name;
+};
+#else
+struct my_struct_t {
+  int id;
+  int *data;
+  unsigned int data_length;
+  char *name;
+};
+typedef struct my_struct_t my_struct;
+#endif
+
 /*
  * Declaration of native functions for module Elixir.Example.
  * The implementation have to be provided by the user.
@@ -59,6 +76,7 @@ UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
+UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 
 /*
  * Callbacks for nif lifecycle hooks.
@@ -84,6 +102,7 @@ UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
                                               const char *reason);
+UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 
 /*
  * Functions that send the defined messages from Nif.

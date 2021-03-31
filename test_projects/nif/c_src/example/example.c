@@ -29,7 +29,7 @@ UNIFEX_TERM test_int(UnifexEnv *env, int in_int) {
   return test_int_result_ok(env, in_int);
 }
 
-UNIFEX_TERM test_list(UnifexEnv *env, int* in_list, unsigned int list_length) {
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, unsigned int list_length) {
   return test_list_result_ok(env, in_list, list_length);
 }
 
@@ -47,6 +47,10 @@ UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid) {
     return test_example_message_result_error(env, "send_failed");
   }
   return test_example_message_result_ok(env);
+}
+
+UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct) {
+  return test_my_struct_result_ok(env, in_struct);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {

@@ -23,3 +23,13 @@ spec test_state(state) :: {:ok :: label, state}
 spec test_example_message(pid :: pid) :: {:ok :: label} | {:error :: label, reason :: atom}
 
 sends {:example_msg :: label, num :: int}
+
+struct_def(
+  my_struct :: %My.Struct{
+    id: int,
+    data: [int],
+    name: string
+  }
+)
+
+spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}

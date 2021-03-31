@@ -461,8 +461,11 @@ defmodule Unifex.CodeGenerators.NIF do
     struct_fields_definition =
       struct_fields
       |> Enum.map(fn {field_name, field_type} ->
-        ~g<#{BaseType.generate_native_type(field_type, field_name, NIF)} #{field_name};>
+        BaseType.generate_declaration(field_type, field_name, CNode)
       end)
+      |> Enum.map(&Bunch.listify/1)
+      |> Enum.flat_map(fn x -> x end)
+      |> Enum.map(fn declaration -> ~g<#{declaration};> end)
       |> Enum.join("\n")
 
     ~g"""
@@ -474,7 +477,7 @@ defmodule Unifex.CodeGenerators.NIF do
       struct #{struct_type_name}_t {
         #{struct_fields_definition}
       };
-      typedef #{struct_type_name}_t #{struct_type_name};
+      typedef struct #{struct_type_name}_t #{struct_type_name};
     #endif
     """
   end
