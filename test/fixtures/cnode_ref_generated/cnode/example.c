@@ -864,6 +864,9 @@ UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
                                         "'in_struct' of type ':my_struct'");
                   goto exit_test_my_struct_caller;
                 }
+
+                if (elixir_module_name != NULL)
+                  unifex_free(elixir_module_name);
               }
             }
           }

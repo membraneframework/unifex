@@ -150,6 +150,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.StructTemplate do
             #{
             BaseType.generate_arg_parse(:atom, :elixir_module_name, arg, postproc_fun, generator)
           }
+            #{BaseType.generate_destruction(:atom, :elixir_module_name, generator)}
           }
           """
         ])
