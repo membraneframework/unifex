@@ -104,6 +104,12 @@ defmodule Unifex.Specs.DSL do
     store_config(:state_type, state_type)
   end
 
+  defmacro enum(enum) do
+    IO.inspect(enum, label: "dupa to jest ast enuma")
+    IO.inspect(enum |> parse_enum(), label: "dupa to jest sparsowany enum")
+    store_config(:enum, enum |> parse_enum() |> enquote)
+  end
+
   @doc """
   Macro used for marking functions as dirty, i.e. performing long cpu-bound or
   io-bound operations.
@@ -170,6 +176,18 @@ defmodule Unifex.Specs.DSL do
     quote generated: true do
       unquote(config_store) = [{unquote(key), unquote(value)} | unquote(config_store)]
     end
+  end
+
+  defp parse_enum({:"::", _, [{enum_name, _, _}, enum_types]}) do
+    {enum_name, parse_enum_types(enum_types)}
+  end
+
+  defp parse_enum_types(type_name) when is_atom(type_name) do
+    [type_name]
+  end
+
+  defp parse_enum_types({:|, _, [first_arg, second_arg]}) do
+    parse_enum_types(first_arg) ++ parse_enum_types(second_arg)
   end
 
   defp parse_function({:"::", _, [{fun_name, _, args}, results]}) do

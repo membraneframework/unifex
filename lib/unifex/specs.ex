@@ -38,7 +38,8 @@ defmodule Unifex.Specs do
     :dirty_functions,
     :callbacks,
     :interface,
-    :state_type
+    :state_type,
+    :enums
   ]
 
   defstruct @enforce_keys
@@ -71,7 +72,8 @@ defmodule Unifex.Specs do
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface),
-      state_type: Keyword.get(config, :state_type, nil)
+      state_type: Keyword.get(config, :state_type, nil),
+      enums: Keyword.get_values(config, :enum)
     }
   end
 
