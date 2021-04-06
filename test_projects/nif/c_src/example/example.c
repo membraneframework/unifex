@@ -29,7 +29,7 @@ UNIFEX_TERM test_int(UnifexEnv *env, int in_int) {
   return test_int_result_ok(env, in_int);
 }
 
-UNIFEX_TERM test_list(UnifexEnv *env, int* in_list, unsigned int list_length) {
+UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, unsigned int list_length) {
   return test_list_result_ok(env, in_list, list_length);
 }
 

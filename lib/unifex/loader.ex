@@ -11,11 +11,11 @@ defmodule Unifex.Loader do
   alias Unifex.{Helper, InterfaceIO, Specs}
 
   defmacro __using__(_args) do
-    specs =
+    {specs, specs_path} =
       Helper.get_source_dir()
       |> InterfaceIO.get_interfaces_specs!()
-      |> Enum.map(fn {name, _dir, specs} -> Specs.parse(specs, name) end)
-      |> Enum.find(&(&1.module == __CALLER__.module))
+      |> Enum.map(fn {name, _dir, specs_path} -> {Specs.parse(specs_path, name), specs_path} end)
+      |> Enum.find(fn {specs, _specs_path} -> specs.module == __CALLER__.module end)
 
     funs =
       specs.functions_args
@@ -40,6 +40,8 @@ defmodule Unifex.Loader do
       end)
 
     quote do
+      @external_resource unquote(specs_path)
+
       use Bundlex.Loader, nif: unquote(specs.name)
 
       unquote_splicing(funs)
