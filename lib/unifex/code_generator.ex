@@ -3,7 +3,6 @@ defmodule Unifex.CodeGenerator do
   Behaviour for code generation.
   """
 
-  alias Unifex.CodeGenerator.BaseTypes.StructTemplate
   alias Unifex.Specs
 
   @type code_t :: String.t()
@@ -19,18 +18,6 @@ defmodule Unifex.CodeGenerator do
   """
   @spec generate_code(Specs.t()) :: [generated_code_t()]
   def generate_code(specs) do
-    generate_elixir_code(specs)
-    generate_native_code(specs)
-  end
-
-  defp generate_elixir_code(%Specs{structs: structs}) do
-    for {type_name, module_name, fields} <- structs do
-      StructTemplate.compile_struct_module(type_name, module_name, fields)
-    end
-  end
-
-  @spec generate_native_code(Specs.t()) :: [generated_code_t()]
-  defp generate_native_code(specs) do
     for generator <- get_generators(specs) do
       header = generator.generate_header(specs)
       source = generator.generate_source(specs)

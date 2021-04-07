@@ -76,30 +76,37 @@ defmodule Unifex.CodeGenerator.Utils do
 
   @spec generate_functions(
           config :: Enumerable.t(),
-          generator :: (term -> CodeGenerator.code_t())
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
         ) :: CodeGenerator.code_t()
-  def generate_functions(config, generator) do
+  def generate_functions(config, generator, ctx) do
     config
-    |> Enum.map(generator)
+    |> Enum.map(fn c -> generator.(c, ctx) end)
     |> Enum.filter(&(&1 != ""))
     |> Enum.join("\n")
   end
 
   @spec generate_functions_declarations(
           config :: Enumerable.t(),
-          generator :: (term -> CodeGenerator.code_t())
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
         ) :: CodeGenerator.code_t()
-  def generate_functions_declarations(config, generator) do
+  def generate_functions_declarations(config, generator, ctx) do
     config
-    |> Enum.map(generator)
+    |> Enum.map(fn c -> generator.(c, ctx) end)
     |> Enum.filter(&(&1 != ""))
     |> Enum.map(&(&1 <> ";"))
     |> Enum.join("\n")
   end
 
-  def generate_structs_definitions(config, generator) do
+  @spec generate_structs_definitions(
+          config :: Enumerable.t(),
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
+        ) :: CodeGenerator.code_t()
+  def generate_structs_definitions(config, generator, ctx) do
     config
-    |> Enum.map(generator)
+    |> Enum.map(fn c -> generator.(c, ctx) end)
     |> Enum.filter(&(&1 != ""))
     |> Enum.join("\n")
   end

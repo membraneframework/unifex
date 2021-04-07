@@ -6,6 +6,7 @@ defmodule Unifex.CodeGenerators.NIF do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerator, InterfaceIO, Specs}
   alias Unifex.CodeGenerator.{BaseType, Utils}
+  alias Unifex.CodeGenerators.Common
 
   @behaviour CodeGenerator
 
@@ -17,6 +18,8 @@ defmodule Unifex.CodeGenerators.NIF do
 
   @impl CodeGenerator
   def generate_header(specs) do
+    ctx = Common.get_ctx(specs)
+
     ~g"""
     #pragma once
 
@@ -42,7 +45,8 @@ defmodule Unifex.CodeGenerators.NIF do
     #{
       Utils.generate_structs_definitions(
         specs.structs,
-        &generate_struct_native_definition/1
+        &generate_struct_native_definition/2,
+        ctx
       )
     }
 
@@ -54,7 +58,8 @@ defmodule Unifex.CodeGenerators.NIF do
     #{
       Utils.generate_functions_declarations(
         specs.functions_args,
-        &generate_implemented_function_declaration/1
+        &generate_implemented_function_declaration/2,
+        ctx
       )
     }
 
@@ -73,7 +78,8 @@ defmodule Unifex.CodeGenerators.NIF do
     #{
       Utils.generate_functions_declarations(
         specs.functions_results,
-        &generate_result_function_declaration/1
+        &generate_result_function_declaration/2,
+        ctx
       )
     }
 
@@ -85,7 +91,8 @@ defmodule Unifex.CodeGenerators.NIF do
     #{
       Utils.generate_functions_declarations(
         specs.sends,
-        &generate_send_function_declaration/1
+        &generate_send_function_declaration/2,
+        ctx
       )
     }
 
@@ -97,24 +104,26 @@ defmodule Unifex.CodeGenerators.NIF do
 
   @impl CodeGenerator
   def generate_source(specs) do
+    ctx = Common.get_ctx(specs)
+
     ~g"""
     #include "#{specs.name}.h"
 
-    #{Utils.generate_functions(specs.functions_results, &generate_result_function/1)}
-    #{Utils.generate_functions(specs.sends, &generate_send_function/1)}
+    #{Utils.generate_functions(specs.functions_results, &generate_result_function/2, ctx)}
+    #{Utils.generate_functions(specs.sends, &generate_send_function/2, ctx)}
     #{generate_state_related_functions(specs)}
     #{generate_nif_lifecycle_callbacks(specs)}
-    #{Utils.generate_functions(specs.functions_args, &generate_export_function/1)}
+    #{Utils.generate_functions(specs.functions_args, &generate_export_function/2, ctx)}
     #{generate_erlang_boilerplate(specs)}
     """
   end
 
-  defp generate_implemented_function_declaration({name, args}) do
+  defp generate_implemented_function_declaration({name, args}, ctx) do
     args_declarations =
       [
         ~g<UnifexEnv* env>
         | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, NIF)
+            BaseType.generate_declaration(type, name, NIF, ctx)
           end)
       ]
       |> Enum.join(", ")
@@ -122,9 +131,9 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g<UNIFEX_TERM #{name}(#{args_declarations})>
   end
 
-  defp generate_result_function({name, result}) do
-    declaration = generate_result_function_declaration({name, result})
-    {result, _meta} = generate_serialization(result)
+  defp generate_result_function({name, result}, ctx) do
+    declaration = generate_result_function_declaration({name, result}, ctx)
+    {result, _meta} = generate_serialization(result, ctx)
 
     ~g"""
     #{declaration} {
@@ -133,8 +142,8 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp generate_result_function_declaration({name, result}) do
-    {_result, meta} = generate_serialization(result)
+  defp generate_result_function_declaration({name, result}, ctx) do
+    {_result, meta} = generate_serialization(result, ctx)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -143,7 +152,7 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexEnv* env>
         | args
           |> Enum.flat_map(fn {name, type} ->
-            BaseType.generate_declaration(type, name, :const, NIF)
+            BaseType.generate_declaration(type, name, :const, NIF, ctx)
           end)
       ]
       |> Enum.join(", ")
@@ -151,9 +160,9 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
-  defp generate_send_function(sends) do
-    declaration = generate_send_function_declaration(sends)
-    {result, _meta} = generate_serialization(sends)
+  defp generate_send_function(sends, ctx) do
+    declaration = generate_send_function_declaration(sends, ctx)
+    {result, _meta} = generate_serialization(sends, ctx)
 
     ~g"""
     #{declaration} {
@@ -163,8 +172,8 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp generate_send_function_declaration(sends) do
-    {_result, meta} = generate_serialization(sends)
+  defp generate_send_function_declaration(sends, ctx) do
+    {_result, meta} = generate_serialization(sends, ctx)
     args = meta |> Keyword.get_values(:arg)
     labels = meta |> Keyword.get_values(:label)
 
@@ -174,7 +183,7 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexPid pid>,
         ~g<int flags>
         | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, :const, NIF)
+            BaseType.generate_declaration(type, name, :const, NIF, ctx)
           end)
       ]
       |> Enum.join(", ")
@@ -182,7 +191,7 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g<int #{[:send | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
-  defp generate_export_function({name, args}) do
+  defp generate_export_function({name, args}, ctx) do
     result_var = "result"
     exit_label = "exit_export_#{name}"
 
@@ -191,13 +200,13 @@ defmodule Unifex.CodeGenerators.NIF do
 
     args_declaration =
       args
-      |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF) end)
+      |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF, ctx) end)
       |> Enum.map(&~g<#{&1};>)
       |> Enum.join("\n")
 
     args_initialization =
       args
-      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, NIF) end)
+      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, NIF, ctx) end)
       |> Enum.join("\n")
 
     args_parsing =
@@ -213,18 +222,19 @@ defmodule Unifex.CodeGenerators.NIF do
           """
         end
 
-        BaseType.generate_arg_parse(type, name, "argv[#{i}]", postproc_fun, NIF)
+        BaseType.generate_arg_parse(type, name, "argv[#{i}]", postproc_fun, NIF, ctx)
       end)
       |> Enum.join("\n")
 
     args_destruction =
       args
-      |> Enum.map(fn {name, type} -> BaseType.generate_destruction(type, name, NIF) end)
+      |> Enum.map(fn {name, type} -> BaseType.generate_destruction(type, name, NIF, ctx) end)
       |> Enum.reject(&("" == &1))
       |> Enum.join("\n")
 
     args_names =
-      args |> Enum.flat_map(fn {name, type} -> BaseType.generate_arg_name(type, name, NIF) end)
+      args
+      |> Enum.flat_map(fn {name, type} -> BaseType.generate_arg_name(type, name, NIF, ctx) end)
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
@@ -450,35 +460,14 @@ defmodule Unifex.CodeGenerators.NIF do
     ~g<UnifexEnv *unifex_env = env;>
   end
 
-  defp generate_serialization(specs) do
+  defp generate_serialization(specs, ctx) do
     Utils.generate_serialization(specs, %{
-      arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF) end,
+      arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF, ctx) end,
       tuple_serializer: &generate_tuple_maker/1
     })
   end
 
-  defp generate_struct_native_definition({struct_type_name, _struct_module_name, struct_fields}) do
-    struct_fields_definition =
-      struct_fields
-      |> Enum.map(fn {field_name, field_type} ->
-        BaseType.generate_declaration(field_type, field_name, CNode)
-      end)
-      |> Enum.map(&Bunch.listify/1)
-      |> Enum.flat_map(fn x -> x end)
-      |> Enum.map(fn declaration -> ~g<#{declaration};> end)
-      |> Enum.join("\n")
-
-    ~g"""
-    #ifdef __cplusplus
-      struct #{struct_type_name} {
-        #{struct_fields_definition}
-      };
-    #else
-      struct #{struct_type_name}_t {
-        #{struct_fields_definition}
-      };
-      typedef struct #{struct_type_name}_t #{struct_type_name};
-    #endif
-    """
+  defp generate_struct_native_definition(struct_data, ctx) do
+    Unifex.CodeGenerators.Common.generate_struct_native_definition(struct_data, NIF, ctx)
   end
 end
