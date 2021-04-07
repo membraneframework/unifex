@@ -41,4 +41,9 @@ defmodule ExampleTest do
     assert {:ok} = Example.test_example_message(self())
     assert_receive {:example_msg, 10}
   end
+
+  test "my_struct" do
+    my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    assert {:ok, ^my_struct} = Example.test_my_struct(my_struct)
+  end
 end

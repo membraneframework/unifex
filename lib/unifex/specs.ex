@@ -39,7 +39,8 @@ defmodule Unifex.Specs do
     :callbacks,
     :interface,
     :state_type,
-    :enums
+    :enums,
+    :structs
   ]
 
   defstruct @enforce_keys
@@ -73,7 +74,8 @@ defmodule Unifex.Specs do
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface),
       state_type: Keyword.get(config, :state_type, nil),
-      enums: Keyword.get_values(config, :enum)
+      enums: Keyword.get_values(config, :enum),
+      structs: Keyword.get_values(config, :struct_def)
     }
   end
 

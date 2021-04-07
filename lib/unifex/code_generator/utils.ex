@@ -76,29 +76,41 @@ defmodule Unifex.CodeGenerator.Utils do
 
   @spec generate_functions(
           config :: Enumerable.t(),
-          generator :: (term -> CodeGenerator.code_t())
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
         ) :: CodeGenerator.code_t()
-  def generate_functions(config, generator) do
-    config
-    |> Enum.map(generator)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.join("\n")
+  def generate_functions(config, generator, ctx) do
+    generate(config, generator, ctx)
   end
 
   @spec generate_functions_declarations(
           config :: Enumerable.t(),
-          generator :: (term -> CodeGenerator.code_t())
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
         ) :: CodeGenerator.code_t()
-  def generate_functions_declarations(config, generator) do
-    config
-    |> Enum.map(generator)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map(&(&1 <> ";"))
-    |> Enum.join("\n")
+  def generate_functions_declarations(config, generator, ctx) do
+    generate(config, generator, &(&1 <> ";"), ctx)
+  end
+
+  @spec generate_structs_definitions(
+          config :: Enumerable.t(),
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
+        ) :: CodeGenerator.code_t()
+  def generate_structs_definitions(config, generator, ctx) do
+    generate(config, generator, ctx)
   end
 
   @spec generate_maybe_unused_args_statements(args :: [String.t()]) :: [String.t()]
   def generate_maybe_unused_args_statements(args) do
     args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)
+  end
+
+  defp generate(config, generator, mapper \\ & &1, ctx) do
+    config
+    |> Enum.map(fn c -> generator.(c, ctx) end)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.map(mapper)
+    |> Enum.join("\n")
   end
 end

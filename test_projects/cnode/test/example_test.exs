@@ -104,6 +104,13 @@ defmodule ExampleTest do
     assert {:ok, ^pid} = Unifex.CNode.call(context[:cnode], :test_pid, [pid])
   end
 
+  test "struct", context do
+    cnode = context[:cnode]
+
+    my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    assert {:ok, ^my_struct} = Unifex.CNode.call(cnode, :test_my_struct, [my_struct])
+  end
+
   test "example message", context do
     assert {:ok} = Unifex.CNode.call(context[:cnode], :test_example_message)
     assert_receive {:example_msg, 23}
