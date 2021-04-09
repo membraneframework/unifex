@@ -120,6 +120,35 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
   });
 }
 
+UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"), ({
+                                    ERL_NIF_TERM res;
+                                    if (out_enum == OPTION_ONE) {
+                                      char *enum_as_string = "option_one";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    } else if (out_enum == OPTION_TWO) {
+                                      char *enum_as_string = "option_two";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    } else if (out_enum == OPTION_THREE) {
+                                      char *enum_as_string = "option_three";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    } else if (out_enum == OPTION_FOUR) {
+                                      char *enum_as_string = "option_four";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    } else {
+                                      char *enum_as_string = "option_five";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    }
+
+                                    res;
+                                  })
+
+    };
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   ERL_NIF_TERM term = ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "example_msg"),
@@ -440,6 +469,53 @@ exit_export_test_my_struct:
   return result;
 }
 
+static ERL_NIF_TERM export_test_my_enum(ErlNifEnv *env, int argc,
+                                        const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  MyEnum in_enum;
+
+  if (!({
+        char *enum_as_string;
+        int res = 0;
+
+        if (!unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
+          result = unifex_raise_args_error(env, "in_enum", ":my_enum");
+          goto exit_export_test_my_enum;
+        };
+
+        if (strcmp(enum_as_string, "option_one") == 0) {
+          in_enum = OPTION_ONE;
+          res = 1;
+        } else if (strcmp(enum_as_string, "option_two") == 0) {
+          in_enum = OPTION_TWO;
+          res = 1;
+        } else if (strcmp(enum_as_string, "option_three") == 0) {
+          in_enum = OPTION_THREE;
+          res = 1;
+        } else if (strcmp(enum_as_string, "option_four") == 0) {
+          in_enum = OPTION_FOUR;
+          res = 1;
+        } else if (strcmp(enum_as_string, "option_five") == 0) {
+          in_enum = OPTION_FIVE;
+          res = 1;
+        }
+
+        res;
+      })) {
+    result = unifex_raise_args_error(env, "in_enum", ":my_enum");
+    goto exit_export_test_my_enum;
+  }
+
+  result = test_my_enum(unifex_env, in_enum);
+  goto exit_export_test_my_enum;
+exit_export_test_my_enum:
+
+  return result;
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"unifex_init", 0, export_init, 0},
     {"unifex_test_atom", 1, export_test_atom, 0},
@@ -449,6 +525,7 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_pid", 1, export_test_pid, 0},
     {"unifex_test_state", 1, export_test_state, 0},
     {"unifex_test_example_message", 1, export_test_example_message, 0},
-    {"unifex_test_my_struct", 1, export_test_my_struct, 0}};
+    {"unifex_test_my_struct", 1, export_test_my_struct, 0},
+    {"unifex_test_my_enum", 1, export_test_my_enum, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)

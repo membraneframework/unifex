@@ -26,7 +26,12 @@ defmodule Unifex.Specs do
             (hook :: :load | :upgrade | :unload | :main_function) => function_name :: String.t()
           },
           interface: [interface_t()] | interface_t() | nil,
-          state_type: String.t() | nil
+          state_type: String.t() | nil,
+          enums: [{enum_name :: atom, [enum_field :: atom]}],
+          structs: [
+            {struct_alias :: atom, struct_module_name :: atom,
+             [{field_name :: atom, field_type :: {atom | {:list, atom}}}]}
+          ]
         }
 
   @enforce_keys [

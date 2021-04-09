@@ -101,6 +101,15 @@ defmodule Unifex.CodeGenerator.Utils do
     generate(config, generator, ctx)
   end
 
+  @spec generate_enums_definitions(
+          config :: Enumerable.t(),
+          generator :: (term, map -> CodeGenerator.code_t()),
+          ctx :: map
+        ) :: CodeGenerator.code_t()
+  def generate_enums_definitions(config, generator, ctx) do
+    generate(config, generator, ctx)
+  end
+
   @spec generate_maybe_unused_args_statements(args :: [String.t()]) :: [String.t()]
   def generate_maybe_unused_args_statements(args) do
     args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)

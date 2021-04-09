@@ -105,9 +105,7 @@ defmodule Unifex.Specs.DSL do
   end
 
   defmacro enum(enum) do
-    IO.inspect(enum, label: "dupa to jest ast enuma")
-    IO.inspect(enum |> parse_enum(), label: "dupa to jest sparsowany enum")
-    store_config(:enum, enum |> parse_enum() |> enquote)
+    store_config(:enum, enum |> parse_enum() |> enquote())
   end
 
   @doc """

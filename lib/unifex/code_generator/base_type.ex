@@ -167,8 +167,8 @@ defmodule Unifex.CodeGenerator.BaseType do
       end
 
     module =
-      with %{customized_types: %{^type => _type_spec}} <- ctx do
-        BaseTypes.Struct
+      with %{customized_types: %{^type => %{__struct__: module}}} <- ctx do
+        module
       else
         _ -> Module.concat(BaseTypes, type |> to_string() |> String.capitalize())
       end

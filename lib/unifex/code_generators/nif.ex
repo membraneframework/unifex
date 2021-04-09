@@ -43,6 +43,14 @@ defmodule Unifex.CodeGenerators.NIF do
     #{generate_state_related_declarations(specs)}
 
     #{
+      Utils.generate_enums_definitions(
+        specs.enums,
+        &Common.generate_enum_native_definition/2,
+        ctx
+      )
+    }
+
+    #{
       Utils.generate_structs_definitions(
         specs.structs,
         &generate_struct_native_definition/2,

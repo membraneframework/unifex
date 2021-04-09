@@ -256,6 +256,34 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
   return out_buff;
 }
 
+UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    if (out_enum == OPTION_ONE) {
+      char *enum_as_string = "option_one";
+      ei_x_encode_atom(out_buff, enum_as_string);
+    } else if (out_enum == OPTION_TWO) {
+      char *enum_as_string = "option_two";
+      ei_x_encode_atom(out_buff, enum_as_string);
+    } else if (out_enum == OPTION_THREE) {
+      char *enum_as_string = "option_three";
+      ei_x_encode_atom(out_buff, enum_as_string);
+    } else if (out_enum == OPTION_FOUR) {
+      char *enum_as_string = "option_four";
+      ei_x_encode_atom(out_buff, enum_as_string);
+    } else {
+      char *enum_as_string = "option_five";
+      ei_x_encode_atom(out_buff, enum_as_string);
+    }
+  });
+
+  return out_buff;
+}
+
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
@@ -893,6 +921,59 @@ exit_test_my_struct_caller:
   return result;
 }
 
+UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+  MyEnum in_enum;
+
+  if (({
+        int res = 1;
+        char *enum_as_string;
+        if (({
+              enum_as_string = (char *)unifex_alloc(MAXATOMLEN);
+              ei_decode_atom(in_buff->buff, in_buff->index, enum_as_string);
+            })) {
+          result = unifex_raise(env, "Unifex CNode: cannot parse argument "
+                                     "'in_enum' of type ':my_enum'");
+          goto exit_test_my_enum_caller;
+        }
+
+        if (strcmp(enum_as_string, "option_one") == 0) {
+          in_enum = OPTION_ONE;
+          res = 0;
+        }
+        if (strcmp(enum_as_string, "option_two") == 0) {
+          in_enum = OPTION_TWO;
+          res = 0;
+        }
+        if (strcmp(enum_as_string, "option_three") == 0) {
+          in_enum = OPTION_THREE;
+          res = 0;
+        }
+        if (strcmp(enum_as_string, "option_four") == 0) {
+          in_enum = OPTION_FOUR;
+          res = 0;
+        }
+        if (strcmp(enum_as_string, "option_five") == 0) {
+          in_enum = OPTION_FIVE;
+          res = 0;
+        }
+
+        res;
+      })) {
+    result = unifex_raise(
+        env,
+        "Unifex CNode: cannot parse argument 'in_enum' of type ':my_enum'");
+    goto exit_test_my_enum_caller;
+  }
+
+  result = test_my_enum(env, in_enum);
+  goto exit_test_my_enum_caller;
+exit_test_my_enum_caller:
+
+  return result;
+}
+
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   UNIFEX_UNUSED(flags);
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
@@ -939,6 +1020,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return test_example_message_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_my_struct") == 0) {
     return test_my_struct_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_my_enum") == 0) {
+    return test_my_enum_caller(env, in_buff);
   } else {
     return unifex_cnode_undefined_function_error(env, fun_name);
   }

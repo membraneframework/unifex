@@ -111,6 +111,14 @@ defmodule ExampleTest do
     assert {:ok, ^my_struct} = Unifex.CNode.call(cnode, :test_my_struct, [my_struct])
   end
 
+  test "enum", context do
+    cnode = context[:cnode]
+
+    assert {:ok, :option_one} = Unifex.CNode.call(cnode, :test_my_enum, [:option_one])
+    assert {:ok, :option_two} = Unifex.CNode.call(cnode, :test_my_enum, [:option_two])
+    assert {:ok, :option_three} = Unifex.CNode.call(cnode, :test_my_enum, [:option_three])
+  end
+
   test "example message", context do
     assert {:ok} = Unifex.CNode.call(context[:cnode], :test_example_message)
     assert_receive {:example_msg, 23}

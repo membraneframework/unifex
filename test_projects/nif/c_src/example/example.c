@@ -53,6 +53,10 @@ UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct) {
   return test_my_struct_result_ok(env, in_struct);
 }
 
+UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum) {
+  return test_my_enum_result_ok(env, in_enum);
+}
+
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
   state->a = 0;

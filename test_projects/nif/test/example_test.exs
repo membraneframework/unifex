@@ -42,8 +42,14 @@ defmodule ExampleTest do
     assert_receive {:example_msg, 10}
   end
 
-  test "my_struct" do
+  test "struct" do
     my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
     assert {:ok, ^my_struct} = Example.test_my_struct(my_struct)
+  end
+
+  test "enum" do
+    assert {:ok, :option_one} = Example.test_my_enum(:option_one)
+    assert {:ok, :option_two} = Example.test_my_enum(:option_two)
+    assert {:ok, :option_three} = Example.test_my_enum(:option_three)
   end
 end

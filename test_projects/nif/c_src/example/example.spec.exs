@@ -33,3 +33,7 @@ struct_def(
 )
 
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
+
+enum(my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five)
+
+spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
