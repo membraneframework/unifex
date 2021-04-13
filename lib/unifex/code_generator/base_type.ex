@@ -120,16 +120,12 @@ defmodule Unifex.CodeGenerator.BaseType do
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
   def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator, ctx) do
-    ctx =
-      ctx
-      |> Map.put(:postproc_fun, postproc_fun)
-
     call(
       type,
       :generate_arg_parse,
       [argument, name],
       code_generator,
-      ctx
+      Map.put(ctx, :postproc_fun, postproc_fun)
     )
     |> postproc_fun.()
   end
@@ -144,11 +140,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   end
 
   def generate_native_type(type, mode \\ :default, code_generator, ctx) do
-    ctx =
-      ctx
-      |> Map.put(:mode, mode)
-
-    call(type, :generate_native_type, [], code_generator, %{ctx | mode: mode})
+    call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
   end
 
   defp call(full_type, callback, args, code_generator, ctx) do
@@ -160,8 +152,7 @@ defmodule Unifex.CodeGenerator.BaseType do
 
     ctx =
       with %{customized_types: %{^type => type_spec}} <- ctx do
-        ctx
-        |> Map.put(:type_spec, type_spec)
+        Map.put(ctx, :type_spec, type_spec)
       else
         _ -> ctx
       end

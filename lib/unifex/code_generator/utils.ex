@@ -80,7 +80,7 @@ defmodule Unifex.CodeGenerator.Utils do
           ctx :: map
         ) :: CodeGenerator.code_t()
   def generate_functions(config, generator, ctx) do
-    generate(config, generator, ctx)
+    do_generate(config, generator, ctx)
   end
 
   @spec generate_functions_declarations(
@@ -89,7 +89,7 @@ defmodule Unifex.CodeGenerator.Utils do
           ctx :: map
         ) :: CodeGenerator.code_t()
   def generate_functions_declarations(config, generator, ctx) do
-    generate(config, generator, &(&1 <> ";"), ctx)
+    do_generate(config, generator, &(&1 <> ";"), ctx)
   end
 
   @spec generate_structs_definitions(
@@ -98,7 +98,7 @@ defmodule Unifex.CodeGenerator.Utils do
           ctx :: map
         ) :: CodeGenerator.code_t()
   def generate_structs_definitions(config, generator, ctx) do
-    generate(config, generator, ctx)
+    do_generate(config, generator, ctx)
   end
 
   @spec generate_maybe_unused_args_statements(args :: [String.t()]) :: [String.t()]
@@ -106,7 +106,7 @@ defmodule Unifex.CodeGenerator.Utils do
     args |> Enum.map(fn arg -> ~g<UNIFEX_MAYBE_UNUSED(#{arg});> end)
   end
 
-  defp generate(config, generator, mapper \\ & &1, ctx) do
+  defp do_generate(config, generator, mapper \\ & &1, ctx) do
     config
     |> Enum.map(fn c -> generator.(c, ctx) end)
     |> Enum.filter(&(&1 != ""))
