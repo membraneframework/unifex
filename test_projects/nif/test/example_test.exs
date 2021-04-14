@@ -42,8 +42,16 @@ defmodule ExampleTest do
     assert_receive {:example_msg, 10}
   end
 
-  test "my_struct" do
+  test "struct" do
     my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
     assert {:ok, ^my_struct} = Example.test_my_struct(my_struct)
+
+    outer_struct = %Outer.Struct{id: 2, nested_struct: my_struct}
+    assert {:ok, ^outer_struct} = Example.test_outer_struct(outer_struct)
+
+    invalid_struct = %Outer.Struct{id: 3, nested_struct: "Ala ma kota"}
+    assert_raise ErlangError, "Erlang error: {:unifex_parse_arg, {:in_struct, ':outer_struct'}}", fn ->
+      Example.test_outer_struct(invalid_struct)
+    end
   end
 end

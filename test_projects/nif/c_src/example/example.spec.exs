@@ -24,7 +24,7 @@ spec test_example_message(pid :: pid) :: {:ok :: label} | {:error :: label, reas
 
 sends {:example_msg :: label, num :: int}
 
-struct_def(
+type(
   my_struct :: %My.Struct{
     id: int,
     data: [int],
@@ -33,3 +33,10 @@ struct_def(
 )
 
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
+
+type outer_struct :: %Outer.Struct{
+  nested_struct: my_struct,
+  id: int
+}
+
+spec test_outer_struct(in_struct :: outer_struct) :: {:ok :: label, out_struct :: outer_struct}

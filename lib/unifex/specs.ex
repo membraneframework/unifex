@@ -73,7 +73,7 @@ defmodule Unifex.Specs do
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface),
       state_type: Keyword.get(config, :state_type, nil),
-      structs: Keyword.get_values(config, :struct_def)
+      structs: Keyword.get_values(config, :struct)
     }
   end
 

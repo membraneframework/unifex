@@ -151,14 +151,14 @@ defmodule Unifex.CodeGenerator.BaseType do
       end
 
     ctx =
-      with %{customized_types: %{^type => type_spec}} <- ctx do
+      with %{user_types: %{^type => type_spec}} <- ctx do
         Map.put(ctx, :type_spec, type_spec)
       else
         _ -> ctx
       end
 
     module =
-      with %{customized_types: %{^type => _type_spec}} <- ctx do
+      with %{user_types: %{^type => _type_spec}} <- ctx do
         BaseTypes.Struct
       else
         _ -> Module.concat(BaseTypes, type |> to_string() |> String.capitalize())

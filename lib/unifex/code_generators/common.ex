@@ -2,10 +2,17 @@ defmodule Unifex.CodeGenerators.Common do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator.BaseType
 
+  @moduledoc """
+  Contains function used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
+  """
+
+  @doc """
+  Createx ctx passed to functions generating native code
+  """
   def get_ctx(specs) do
-    customized_types =
+    user_types =
       specs.structs
-      |> Enum.map(fn {struct_alias, struct_module_name, struct_fields} ->
+      |> Map.new(fn {struct_alias, struct_module_name, struct_fields} ->
         {
           struct_alias,
           %{
@@ -15,11 +22,13 @@ defmodule Unifex.CodeGenerators.Common do
           }
         }
       end)
-      |> Enum.into(%{})
 
-    %{customized_types: customized_types}
+    %{user_types: user_types}
   end
 
+  @doc """
+  Generates native definition of struct
+  """
   def generate_struct_native_definition(
         {struct_type_name, _struct_module_name, struct_fields},
         code_generator,
