@@ -35,7 +35,7 @@ spec test_example_message() :: {:ok :: label} | {:error :: label, reason :: atom
 
 sends {:example_msg :: label, num :: int}
 
-struct_def(
+type(
   my_struct :: %My.Struct{
     id: int,
     data: [int],
@@ -45,6 +45,13 @@ struct_def(
 
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
 
-enum(my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five)
+type outer_struct :: %Outer.Struct{
+  nested_struct: my_struct,
+  id: int
+}
+
+spec test_outer_struct(in_struct :: outer_struct) :: {:ok :: label, out_struct :: outer_struct}
+
+type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
 
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}

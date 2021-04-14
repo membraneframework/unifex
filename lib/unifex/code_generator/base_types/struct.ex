@@ -73,18 +73,25 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
     def generate_arg_parse(arg, var_name, ctx) do
       %{postproc_fun: postproc_fun, generator: generator} = ctx
 
+      unique_sufix =
+        var_name
+        |> Atom.to_string()
+        |> String.replace(".", "_")
+
       fields_parsing =
         ctx.type_spec.fields
         |> Enum.map(fn {field_name, field_type} ->
           ~g"""
-          key = enif_make_atom(env, "#{field_name}");
-          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key, &value);
+          key_#{unique_sufix} = enif_make_atom(env, "#{field_name}");
+          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_sufix}, &value_#{
+            unique_sufix
+          });
           if (get_#{field_name}_result) {
             #{
             BaseType.generate_arg_parse(
               field_type,
               :"#{var_name}.#{field_name}",
-              ~g<value>,
+              ~g<value_#{unique_sufix}>,
               postproc_fun,
               generator,
               ctx
@@ -102,8 +109,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
 
       ~g"""
       ({
-        ERL_NIF_TERM key;
-        ERL_NIF_TERM value;
+        ERL_NIF_TERM key_#{unique_sufix};
+        ERL_NIF_TERM value_#{unique_sufix};
 
         #{fields_parsing}
         #{result};

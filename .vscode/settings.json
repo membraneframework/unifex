@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "payload.h": "c"
+        "*.leex": "html-eex",
+        "payload.h": "c",
+        "typeinfo": "c"
     }
 }
