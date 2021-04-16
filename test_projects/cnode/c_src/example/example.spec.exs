@@ -35,19 +35,17 @@ spec test_example_message() :: {:ok :: label} | {:error :: label, reason :: atom
 
 sends {:example_msg :: label, num :: int}
 
-type(
-  my_struct :: %My.Struct{
-    id: int,
-    data: [int],
-    name: string
-  }
-)
+type my_struct :: %My.Struct{
+  id: int,
+  data: [int],
+  name: string
+}
 
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
 
-type outer_struct :: %Outer.Struct{
-  nested_struct: my_struct,
+type nested_struct :: %Nested.Struct{
+  inner_struct: my_struct,
   id: int
 }
 
-spec test_outer_struct(in_struct :: outer_struct) :: {:ok :: label, out_struct :: outer_struct}
+spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}

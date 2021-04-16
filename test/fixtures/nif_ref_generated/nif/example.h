@@ -63,16 +63,16 @@ typedef struct my_struct_t my_struct;
 #endif
 
 #ifdef __cplusplus
-struct outer_struct {
-  my_struct nested_struct;
+struct nested_struct {
+  my_struct inner_struct;
   int id;
 };
 #else
-struct outer_struct_t {
-  my_struct nested_struct;
+struct nested_struct_t {
+  my_struct inner_struct;
   int id;
 };
-typedef struct outer_struct_t outer_struct;
+typedef struct nested_struct_t nested_struct;
 #endif
 
 /*
@@ -90,7 +90,7 @@ UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
-UNIFEX_TERM test_outer_struct(UnifexEnv *env, outer_struct in_struct);
+UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 
 /*
  * Callbacks for nif lifecycle hooks.
@@ -117,8 +117,8 @@ UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
                                               const char *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
-UNIFEX_TERM test_outer_struct_result_ok(UnifexEnv *env,
-                                        outer_struct out_struct);
+UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
+                                         nested_struct out_struct);
 
 /*
  * Functions that send the defined messages from Nif.
