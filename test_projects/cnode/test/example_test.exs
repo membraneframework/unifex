@@ -110,12 +110,12 @@ defmodule ExampleTest do
     my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
     assert {:ok, ^my_struct} = Unifex.CNode.call(cnode, :test_my_struct, [my_struct])
 
-    outer_struct = %Outer.Struct{id: 2, nested_struct: my_struct}
-    assert {:ok, ^outer_struct} = Unifex.CNode.call(cnode, :test_outer_struct, [outer_struct])
+    nested_struct = %Nested.Struct{id: 2, inner_struct: my_struct}
+    assert {:ok, ^nested_struct} = Unifex.CNode.call(cnode, :test_nested_struct, [nested_struct])
 
-    invalid_struct = %Outer.Struct{id: 3, nested_struct: "Ala ma kota"}
-    assert_raise RuntimeError, ~r/argument.*in_struct.*outer_struct/i, fn ->
-      Unifex.CNode.call(cnode, :test_outer_struct, [invalid_struct])
+    invalid_struct = %Nested.Struct{id: 3, inner_struct: "Unifex"}
+    assert_raise RuntimeError, ~r/argument.*in_struct.*nested_struct/i, fn ->
+      Unifex.CNode.call(cnode, :test_nested_struct, [invalid_struct])
     end
   end
 

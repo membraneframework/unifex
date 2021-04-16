@@ -59,16 +59,16 @@ typedef struct my_struct_t my_struct;
 #endif
 
 #ifdef __cplusplus
-struct outer_struct {
-  my_struct nested_struct;
+struct nested_struct {
+  my_struct inner_struct;
   int id;
 };
 #else
-struct outer_struct_t {
-  my_struct nested_struct;
+struct nested_struct_t {
+  my_struct inner_struct;
   int id;
 };
-typedef struct outer_struct_t outer_struct;
+typedef struct nested_struct_t nested_struct;
 #endif
 
 UNIFEX_TERM init(UnifexEnv *env);
@@ -90,7 +90,7 @@ UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload);
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_example_message(UnifexEnv *env);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
-UNIFEX_TERM test_outer_struct(UnifexEnv *env, outer_struct in_struct);
+UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
@@ -116,8 +116,8 @@ UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
                                               const char *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
-UNIFEX_TERM test_outer_struct_result_ok(UnifexEnv *env,
-                                        outer_struct out_struct);
+UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
+                                         nested_struct out_struct);
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
@@ -137,8 +137,8 @@ UNIFEX_TERM test_pid_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_example_message_caller(UnifexEnv *env,
                                         UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
-UNIFEX_TERM test_outer_struct_caller(UnifexEnv *env,
-                                     UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
+                                      UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num);
 int handle_main(int argc, char **argv);

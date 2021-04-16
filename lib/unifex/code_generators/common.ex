@@ -3,13 +3,13 @@ defmodule Unifex.CodeGenerators.Common do
   alias Unifex.CodeGenerator.{BaseType, BaseTypes}
 
   @moduledoc """
-  Contains function used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
+  Contains functions used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
   """
 
   @doc """
   Createx ctx passed to functions generating native code
   """
-  def get_ctx(specs) do
+  def create_ctx(specs) do
     structs =
       specs.structs
       |> Enum.map(fn {struct_alias, module_name, fields} ->

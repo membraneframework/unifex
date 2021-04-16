@@ -18,7 +18,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
   @impl CodeGenerator
   def generate_header(specs) do
-    ctx = Common.get_ctx(specs)
+    ctx = Common.create_ctx(specs)
 
     ~g"""
     #pragma once
@@ -112,7 +112,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
   @impl CodeGenerator
   def generate_source(specs) do
-    ctx = Common.get_ctx(specs)
+    ctx = Common.create_ctx(specs)
 
     ~g"""
     #include "#{specs.name}.h"
