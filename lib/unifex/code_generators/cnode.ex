@@ -138,7 +138,8 @@ defmodule Unifex.CodeGenerators.CNode do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      ["UnifexEnv * env" | generate_args_declarations(args, :const, ctx)] |> Enum.join(", ")
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const, ctx)]
+      |> Enum.join(", ")
 
     labels = meta |> Keyword.get_values(:label)
     fun_name = [name, "result" | labels] |> Enum.join("_")
@@ -199,7 +200,11 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp generate_args_declarations(args, mode \\ :default, ctx) do
     Enum.flat_map(args, fn {name, type} ->
-      BaseType.generate_declaration(type, name, mode, CNode, ctx)
+      if Common.is_pointer_on_pointer_type(type, CNode, ctx) do
+        BaseType.generate_declaration(type, name, :default, CNode, ctx)
+      else
+        BaseType.generate_declaration(type, name, mode, CNode, ctx)
+      end
     end)
   end
 

@@ -107,8 +107,7 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
   return out_buff;
 }
 
-UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
-                                           char const *const *out_strings,
+UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
                                            unsigned int out_strings_length) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");

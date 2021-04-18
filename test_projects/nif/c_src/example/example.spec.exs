@@ -14,7 +14,11 @@ spec test_float(in_float :: float) :: {:ok :: label, out_float :: float}
 
 spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
+spec test_string(in_string :: string) :: {:ok :: label, out_string :: string}
+
 spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}
+
+spec test_list_of_strings(in_strings :: [string]) :: {:ok :: label, out_strings :: [string]}
 
 spec test_pid(in_pid :: pid) :: {:ok :: label, out_pid :: pid}
 

@@ -34,6 +34,14 @@ UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
   });
 }
 
+UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
+                                  unifex_string_to_term(env, out_string)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length) {
   return ({
@@ -43,6 +51,24 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
           for (int i = out_list_length - 1; i >= 0; i--) {
             list =
                 enif_make_list_cell(env, enif_make_int(env, out_list[i]), list);
+          }
+          list;
+        })
+
+    };
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
+                                           unsigned int out_strings_length) {
+  return ({
+    const ERL_NIF_TERM terms[] = {
+        enif_make_atom(env, "ok"), ({
+          ERL_NIF_TERM list = enif_make_list(env, 0);
+          for (int i = out_strings_length - 1; i >= 0; i--) {
+            list = enif_make_list_cell(
+                env, unifex_string_to_term(env, out_strings[i]), list);
           }
           list;
         })
@@ -305,6 +331,28 @@ exit_export_test_int:
   return result;
 }
 
+static ERL_NIF_TERM export_test_string(ErlNifEnv *env, int argc,
+                                       const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  char *in_string;
+
+  in_string = NULL;
+
+  if (!unifex_string_from_term(env, argv[0], &in_string)) {
+    result = unifex_raise_args_error(env, "in_string", ":string");
+    goto exit_export_test_string;
+  }
+
+  result = test_string(unifex_env, in_string);
+  goto exit_export_test_string;
+exit_export_test_string:
+  unifex_free(in_string);
+  return result;
+}
+
 static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
                                      const ERL_NIF_TERM argv[]) {
   UNIFEX_MAYBE_UNUSED(argc);
@@ -348,6 +396,57 @@ exit_export_test_list:
     for (unsigned int i = 0; i < in_list_length; i++) {
     }
     unifex_free(in_list);
+  }
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_list_of_strings(ErlNifEnv *env, int argc,
+                                                const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  char **in_strings;
+  unsigned int in_strings_length;
+
+  in_strings = NULL;
+
+  if (!({
+        int get_list_length_result =
+            enif_get_list_length(env, argv[0], &in_strings_length);
+        if (get_list_length_result) {
+          in_strings = (char **)enif_alloc(sizeof(char *) * in_strings_length);
+
+          for (unsigned int i = 0; i < in_strings_length; i++) {
+            in_strings[i] = NULL;
+          }
+
+          ERL_NIF_TERM list = argv[0];
+          for (unsigned int i = 0; i < in_strings_length; i++) {
+            ERL_NIF_TERM elem;
+            enif_get_list_cell(env, list, &elem, &list);
+            if (!unifex_string_from_term(env, elem, &in_strings[i])) {
+              result = unifex_raise_args_error(env, "in_strings",
+                                               "{:list, :string}");
+              goto exit_export_test_list_of_strings;
+            }
+          }
+        }
+        get_list_length_result;
+      })) {
+    result = unifex_raise_args_error(env, "in_strings", "{:list, :string}");
+    goto exit_export_test_list_of_strings;
+  }
+
+  result = test_list_of_strings(unifex_env, in_strings, in_strings_length);
+  goto exit_export_test_list_of_strings;
+exit_export_test_list_of_strings:
+  if (in_strings != NULL) {
+    for (unsigned int i = 0; i < in_strings_length; i++) {
+      unifex_free(in_strings[i]);
+    }
+    unifex_free(in_strings);
   }
 
   return result;
@@ -631,7 +730,9 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_atom", 1, export_test_atom, 0},
     {"unifex_test_float", 1, export_test_float, 0},
     {"unifex_test_int", 1, export_test_int, 0},
+    {"unifex_test_string", 1, export_test_string, 0},
     {"unifex_test_list", 1, export_test_list, 0},
+    {"unifex_test_list_of_strings", 1, export_test_list_of_strings, 0},
     {"unifex_test_pid", 1, export_test_pid, 0},
     {"unifex_test_state", 1, export_test_state, 0},
     {"unifex_test_example_message", 1, export_test_example_message, 0},

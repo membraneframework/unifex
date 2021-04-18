@@ -23,8 +23,17 @@ defmodule ExampleTest do
     assert {:ok, 10} = Example.test_int(10)
   end
 
+  test "string" do
+    assert {:ok, "unifex"} = Example.test_string("unifex")
+  end
+
   test "list" do
     assert {:ok, [1, 2, 3]} = Example.test_list([1, 2, 3])
+  end
+
+  test "list of strings" do
+    l = ["unifex", "is", "really", "cool"]
+    assert {:ok, ^l} = Example.test_list_of_strings(l)
   end
 
   test "pid" do

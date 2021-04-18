@@ -86,8 +86,7 @@ UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
-UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env,
-                                           char const *const *out_strings,
+UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
                                            unsigned int out_strings_length);
 UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
                                          unsigned int const *out_uints,

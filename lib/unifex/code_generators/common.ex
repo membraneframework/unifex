@@ -57,4 +57,17 @@ defmodule Unifex.CodeGenerators.Common do
     #endif
     """
   end
+
+  def is_pointer_on_pointer_type(type, code_generator, ctx) do
+    BaseType.generate_native_type(type, code_generator, ctx)
+    |> Bunch.listify()
+    |> Enum.map(fn
+      {native_type, _sufix} -> native_type
+      native_type -> native_type
+    end)
+    |> Enum.map(fn native_type -> String.replace(native_type, " ", "") end)
+    |> Enum.map(fn native_type -> String.replace(native_type, "const", "") end)
+    |> Enum.find(fn native_type -> String.match?(native_type, ~r"\*\*$") end)
+    |> is_binary()
+  end
 end
