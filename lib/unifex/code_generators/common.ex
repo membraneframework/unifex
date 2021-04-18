@@ -7,7 +7,7 @@ defmodule Unifex.CodeGenerators.Common do
   """
 
   @doc """
-  Createx ctx passed to functions generating native code
+  Creates ctx passed to functions generating native code
   """
   def create_ctx(specs) do
     user_types =
