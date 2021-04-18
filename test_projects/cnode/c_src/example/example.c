@@ -32,20 +32,26 @@ UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, unsigned int list_length) {
   return test_list_result_ok(env, in_list, list_length);
 }
 
-UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings, unsigned int list_length) {
+UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings,
+                                 unsigned int list_length) {
   return test_list_of_strings_result_ok(env, in_strings, list_length);
 }
 
-UNIFEX_TERM test_list_of_uints(UnifexEnv *env, unsigned int *in_uints, unsigned int list_length) {
+UNIFEX_TERM test_list_of_uints(UnifexEnv *env, unsigned int *in_uints,
+                               unsigned int list_length) {
   return test_list_of_uints_result_ok(env, in_uints, list_length);
 }
 
-UNIFEX_TERM test_list_with_other_args(UnifexEnv *env, int *in_list, unsigned int list_length, char *other_param) {
-  return test_list_with_other_args_result_ok(env, in_list, list_length, other_param);
+UNIFEX_TERM test_list_with_other_args(UnifexEnv *env, int *in_list,
+                                      unsigned int list_length,
+                                      char *other_param) {
+  return test_list_with_other_args_result_ok(env, in_list, list_length,
+                                             other_param);
 }
 
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
-  UnifexPayload *out_payload = unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
+  UnifexPayload *out_payload =
+      unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
   memcpy(out_payload->data, in_payload->data, out_payload->size);
   out_payload->data[0]++;
   UNIFEX_TERM result = test_payload_result_ok(env, out_payload);
@@ -64,6 +70,14 @@ UNIFEX_TERM test_example_message(UnifexEnv *env) {
     return test_example_message_result_error(env, "send_failed");
   }
   return test_example_message_result_ok(env);
+}
+
+UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct) {
+  return test_my_struct_result_ok(env, in_struct);
+}
+
+UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct) {
+  return test_nested_struct_result_ok(env, in_struct);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {

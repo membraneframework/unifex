@@ -10,6 +10,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   """
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator
+  alias Unifex.CodeGenerator.BaseTypes
 
   @type t :: atom | {:list, atom}
   @type spec_tuple_t :: {name :: atom(), type :: t}
@@ -67,13 +68,14 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
-  @spec generate_arg_serialize(t, name :: atom, module) :: CodeGenerator.code_t()
-  def generate_arg_serialize(type, name, code_generator) do
+  @spec generate_arg_serialize(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  def generate_arg_serialize(type, name, code_generator, ctx) do
     call(
       type,
       :generate_arg_serialize,
       [name],
-      code_generator
+      code_generator,
+      ctx
     )
   end
 
@@ -83,10 +85,10 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_declaration(t, name :: atom, mode :: :default | :const, module) ::
+  @spec generate_declaration(t, name :: atom, mode :: :default | :const, module, ctx :: map) ::
           [CodeGenerator.code_t()]
-  def generate_declaration(type, name, mode \\ :default, code_generator) do
-    generate_native_type(type, mode, code_generator)
+  def generate_declaration(type, name, mode \\ :default, code_generator, ctx) do
+    generate_native_type(type, mode, code_generator, ctx)
     |> Bunch.listify()
     |> Enum.map(fn
       {type, suffix} -> ~g<#{type} #{name}#{suffix}>
@@ -99,9 +101,9 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide initialization
   """
-  @spec generate_initialization(t, name :: atom, module) :: CodeGenerator.code_t()
-  def generate_initialization(type, name, code_generator) do
-    call(type, :generate_initialization, [name], code_generator)
+  @spec generate_initialization(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  def generate_initialization(type, name, code_generator, ctx) do
+    call(type, :generate_initialization, [name], code_generator, ctx)
   end
 
   @doc """
@@ -109,27 +111,27 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide destructor
   """
-  @spec generate_destruction(t, name :: atom, module) :: CodeGenerator.code_t()
-  def generate_destruction(type, name, code_generator) do
-    call(type, :generate_destruction, [name], code_generator)
+  @spec generate_destruction(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  def generate_destruction(type, name, code_generator, ctx) do
+    call(type, :generate_destruction, [name], code_generator, ctx)
   end
 
   @doc """
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
-  def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator) do
+  def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator, ctx) do
     call(
       type,
       :generate_arg_parse,
       [argument, name],
       code_generator,
-      %{postproc_fun: postproc_fun}
+      Map.put(ctx, :postproc_fun, postproc_fun)
     )
     |> postproc_fun.()
   end
 
-  def generate_arg_name(type, name, code_generator) do
-    generate_native_type(type, code_generator)
+  def generate_arg_name(type, name, code_generator, ctx) do
+    generate_native_type(type, code_generator, ctx)
     |> Bunch.listify()
     |> Enum.map(fn
       {_type, suffix} -> ~g<#{name}#{suffix}>
@@ -137,31 +139,41 @@ defmodule Unifex.CodeGenerator.BaseType do
     end)
   end
 
-  def generate_native_type(type, mode \\ :default, code_generator) do
-    call(type, :generate_native_type, [], code_generator, %{mode: mode})
+  def generate_native_type(type, mode \\ :default, code_generator, ctx) do
+    call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
   end
 
-  defp call(full_type, callback, args, code_generator, ctx \\ %{}) do
+  defp call(full_type, callback, args, code_generator, ctx) do
     {type, subtype} =
       case full_type do
         {type, subtype} -> {type, subtype}
         type -> {type, nil}
       end
 
+    ctx =
+      with %{user_types: %{^type => type_spec}} <- ctx do
+        Map.put(ctx, :type_spec, type_spec)
+      else
+        _ -> ctx
+      end
+
     module =
-      Module.concat(Unifex.CodeGenerator.BaseTypes, type |> to_string() |> String.capitalize())
+      with %{user_types: %{^type => _type_spec}} <- ctx do
+        BaseTypes.Struct
+      else
+        _ -> Module.concat(BaseTypes, type |> to_string() |> String.capitalize())
+      end
 
     gen_aware_module = Module.concat(module, code_generator)
 
-    default_gen_aware_module =
-      Module.concat(Unifex.CodeGenerator.BaseTypes.Default, code_generator)
+    default_gen_aware_module = Module.concat(BaseTypes.Default, code_generator)
 
     args =
-      args ++ [Map.merge(%{generator: code_generator, type: full_type, subtype: subtype}, ctx)]
+      args ++ [Map.merge(ctx, %{generator: code_generator, type: full_type, subtype: subtype})]
 
     [gen_aware_module, module, default_gen_aware_module]
     |> Enum.find(
-      Unifex.CodeGenerator.BaseTypes.Default,
+      BaseTypes.Default,
       &(Code.ensure_loaded?(&1) and function_exported?(&1, callback, length(args)))
     )
     |> apply(callback, args)

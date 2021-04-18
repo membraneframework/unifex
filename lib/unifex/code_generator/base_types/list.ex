@@ -15,7 +15,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
 
     [
-      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator)} #{optional_const}*",
+      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator, ctx)} #{
+        optional_const
+      }*",
       {"unsigned int", "_length"}
     ]
   end
@@ -30,7 +32,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     ~g"""
     if(#{name} != NULL) {
       for(unsigned int i = 0; i < #{name}_length; i++) {
-        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i]", ctx.generator)}
+        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)}
       }
       unifex_free(#{name});
     }
@@ -50,7 +52,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         for(int i = #{name}_length-1; i >= 0; i--) {
           list = enif_make_list_cell(
             env,
-            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator)},
+            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)},
             list
           );
         }
@@ -63,7 +65,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     def generate_arg_parse(arg, var_name, ctx) do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"
-      native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator)
+      native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
 
       ~g"""
@@ -73,14 +75,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         #{var_name} = (#{native_type} *) enif_alloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
-          #{BaseType.generate_initialization(subtype, elem_name, generator)}
+          #{BaseType.generate_initialization(subtype, elem_name, generator, ctx)}
         }
 
         ERL_NIF_TERM list = #{arg};
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           ERL_NIF_TERM elem;
           enif_get_list_cell(env, list, &elem, &list);
-          #{BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator)}
+          #{
+        BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)
+      }
         }
       }
       get_list_length_result;
@@ -100,7 +104,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ({
         ei_x_encode_list_header(out_buff, #{name}_length);
         for(unsigned int i = 0; i < #{name}_length; i++) {
-          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator)}
+          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)}
         }
         ei_x_encode_empty_list(out_buff);
       });
@@ -111,7 +115,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     def generate_arg_parse(arg, var_name, ctx) do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"
-      native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator)
+      native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
 
       ~g"""
@@ -138,7 +142,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         #{var_name} = (#{native_type} *)malloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
-          #{BaseType.generate_initialization(subtype, elem_name, generator)}
+          #{BaseType.generate_initialization(subtype, elem_name, generator, ctx)}
         }
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
@@ -148,7 +152,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
           elem_name,
           "unifex_buff_ptr",
           postproc_fun,
-          generator
+          generator,
+          ctx
         )
       }
         }
