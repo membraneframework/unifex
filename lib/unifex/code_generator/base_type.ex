@@ -85,7 +85,13 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Uses `type` as fallback for `c:generate_native_type/1`
   """
-  @spec generate_declaration(t, name :: atom, mode :: :default | :const | :optional_const, module, ctx :: map) ::
+  @spec generate_declaration(
+          t,
+          name :: atom,
+          mode :: :default | :const | :optional_const,
+          module,
+          ctx :: map
+        ) ::
           [CodeGenerator.code_t()]
   def generate_declaration(type, name, mode \\ :default, code_generator, ctx) do
     mode =
@@ -99,7 +105,6 @@ defmodule Unifex.CodeGenerator.BaseType do
         true ->
           :const
       end
-
 
     generate_native_type(type, mode, code_generator, ctx)
     |> Bunch.listify()
