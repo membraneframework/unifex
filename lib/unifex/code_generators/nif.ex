@@ -133,11 +133,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
   defp generate_args_declarations(args, mode, ctx) do
     Enum.flat_map(args, fn {name, type} ->
-      if Common.is_pointer_on_pointer_type(type, NIF, ctx) do
-        BaseType.generate_declaration(type, name, :default, NIF, ctx)
-      else
-        BaseType.generate_declaration(type, name, mode, NIF, ctx)
-      end
+      BaseType.generate_declaration(type, name, mode, NIF, ctx)
     end)
   end
 
@@ -158,7 +154,7 @@ defmodule Unifex.CodeGenerators.NIF do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      [~g<UnifexEnv* env> | generate_args_declarations(args, :const, ctx)]
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :optional_const, ctx)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -186,7 +182,7 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexEnv* env>,
         ~g<UnifexPid pid>,
         ~g<int flags>
-        | generate_args_declarations(args, :const, ctx)
+        | generate_args_declarations(args, :optional_const, ctx)
       ]
       |> Enum.join(", ")
 
