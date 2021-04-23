@@ -79,7 +79,7 @@ UNIFEX_TERM test_example_message(UnifexEnv *env);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
-UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint);
@@ -94,12 +94,12 @@ UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
 UNIFEX_TERM test_list_with_other_args_result_ok(UnifexEnv *env,
                                                 int const *out_list,
                                                 unsigned int out_list_length,
-                                                const char *other_param);
+                                                char const *other_param);
 UNIFEX_TERM test_payload_result_ok(UnifexEnv *env, UnifexPayload *out_payload);
 UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
 UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
-                                              const char *reason);
+                                              char const *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);

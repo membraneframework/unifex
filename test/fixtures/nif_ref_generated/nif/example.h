@@ -109,7 +109,7 @@ int handle_load(UnifexEnv *env, void **priv_data);
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state);
-UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
@@ -121,7 +121,7 @@ UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
 UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
-                                              const char *reason);
+                                              char const *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);

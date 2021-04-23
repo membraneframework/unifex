@@ -88,24 +88,12 @@ defmodule Unifex.CodeGenerator.BaseType do
   @spec generate_declaration(
           t,
           name :: atom,
-          mode :: :default | :const | :optional_const,
+          mode :: :default | :const | :const_if_not_ptr_on_ptr,
           module,
           ctx :: map
         ) ::
           [CodeGenerator.code_t()]
   def generate_declaration(type, name, mode \\ :default, code_generator, ctx) do
-    mode =
-      cond do
-        mode in [:default, :const] ->
-          mode
-
-        is_pointer_on_pointer_type(type, code_generator, ctx) ->
-          :default
-
-        true ->
-          :const
-      end
-
     generate_native_type(type, mode, code_generator, ctx)
     |> Bunch.listify()
     |> Enum.map(fn
@@ -159,19 +147,6 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   def generate_native_type(type, mode \\ :default, code_generator, ctx) do
     call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
-  end
-
-  defp is_pointer_on_pointer_type(type, code_generator, ctx) do
-    generate_native_type(type, code_generator, ctx)
-    |> Bunch.listify()
-    |> Enum.map(fn
-      {native_type, _sufix} -> native_type
-      native_type -> native_type
-    end)
-    |> Enum.map(fn native_type -> String.replace(native_type, " ", "") end)
-    |> Enum.map(fn native_type -> String.replace(native_type, "const", "") end)
-    |> Enum.find(fn native_type -> String.match?(native_type, ~r"\*\*$") end)
-    |> is_binary()
   end
 
   defp call(full_type, callback, args, code_generator, ctx) do

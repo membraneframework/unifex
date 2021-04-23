@@ -11,7 +11,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
 
   @impl BaseType
   def generate_native_type(ctx) do
-    optional_const = if ctx.mode == :const, do: "const ", else: ""
+    optional_const = if ctx.mode in [:const, :const_if_not_ptr_on_ptr], do: "const ", else: ""
     ~g<char #{optional_const}*>
   end
 

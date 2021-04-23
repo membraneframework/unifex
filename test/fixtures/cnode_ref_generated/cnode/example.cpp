@@ -28,7 +28,7 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   return out_buff;
 }
 
-UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom) {
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
@@ -150,7 +150,7 @@ UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
 UNIFEX_TERM test_list_with_other_args_result_ok(UnifexEnv *env,
                                                 int const *out_list,
                                                 unsigned int out_list_length,
-                                                const char *other_param) {
+                                                char const *other_param) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 
@@ -205,7 +205,7 @@ UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env) {
 }
 
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
-                                              const char *reason) {
+                                              char const *reason) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
 

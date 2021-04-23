@@ -10,7 +10,7 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
   });
 }
 
-UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom) {
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
                                   enif_make_atom(env, out_atom)};
@@ -102,7 +102,7 @@ UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env) {
 }
 
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
-                                              const char *reason) {
+                                              char const *reason) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "error"),
                                   enif_make_atom(env, reason)};
