@@ -50,7 +50,7 @@ defmodule ExampleTest do
     assert {:ok, ^nested_struct} = Example.test_nested_struct(nested_struct)
 
     invalid_struct = %Nested.Struct{id: 3, inner_struct: "Unifex"}
-    assert_raise ErlangError, "Erlang error: {:unifex_parse_arg, {:in_struct, ':nested_struct'}}", fn ->
+    assert_raise ErlangError, ~r/unifex_parse_arg.*in_struct.*nested_struct/i, fn ->
       Example.test_nested_struct(invalid_struct)
     end
   end
@@ -59,5 +59,9 @@ defmodule ExampleTest do
     assert {:ok, :option_one} = Example.test_my_enum(:option_one)
     assert {:ok, :option_two} = Example.test_my_enum(:option_two)
     assert {:ok, :option_three} = Example.test_my_enum(:option_three)
+
+    assert_raise ErlangError, ~r/unifex_parse_arg.*in_enum.*my_enum/i, fn ->
+      Example.test_my_enum(:option_not_mentioned)
+    end
   end
 end

@@ -125,6 +125,10 @@ defmodule ExampleTest do
     assert {:ok, :option_one} = Unifex.CNode.call(cnode, :test_my_enum, [:option_one])
     assert {:ok, :option_two} = Unifex.CNode.call(cnode, :test_my_enum, [:option_two])
     assert {:ok, :option_three} = Unifex.CNode.call(cnode, :test_my_enum, [:option_three])
+
+    assert_raise RuntimeError, ~r/argument.*in_enum.*my_enum/i, fn ->
+      Unifex.CNode.call(cnode, :test_my_enum, [:option_not_mentioned])
+    end
   end
 
   test "example message", context do

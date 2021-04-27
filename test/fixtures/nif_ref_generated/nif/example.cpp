@@ -689,6 +689,8 @@ static ERL_NIF_TERM export_test_my_enum(ErlNifEnv *env, int argc,
           res = 1;
         }
 
+        unifex_free((void *)enum_as_string);
+
         res;
       })) {
     result = unifex_raise_args_error(env, "in_enum", ":my_enum");

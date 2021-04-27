@@ -1241,6 +1241,8 @@ UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
           res = 0;
         }
 
+        unifex_free((void *)enum_as_string);
+
         res;
       })) {
     result = unifex_raise(

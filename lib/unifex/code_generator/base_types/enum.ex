@@ -92,6 +92,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
         #{if_statements}
 
+        unifex_free((void *) enum_as_string);
+
         res;
       })
       """
@@ -104,42 +106,40 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
     @impl BaseType
     def generate_arg_serialize(name, ctx) do
-      last_type =
-        ctx.type_spec.types
-        |> List.last()
-        |> Atom.to_string()
+      {last_type, types} = List.pop_at(ctx.type_spec.types, -1)
+      last_type = Atom.to_string(last_type)
 
       if_statements =
-        ctx.type_spec.types
+        types
         |> Enum.map(&Atom.to_string/1)
         |> Enum.map(fn type ->
-          if_condition =
-            if type != last_type do
-              ~g"if (#{name} == #{type |> String.upcase()})"
-            else
-              ""
-            end
-
           ~g"""
-          #{if_condition} {
-            char* enum_as_string = "#{type}";
-            #{
-            BaseType.generate_arg_serialize(
-              :atom,
-              :enum_as_string,
-              ctx.generator,
-              ctx
-            )
-          }
+          if (#{name} == #{type |> String.upcase()}) {
+            #{do_serialize(type, ctx)}
           }
           """
         end)
+        |> Enum.concat(["{ #{do_serialize(last_type, ctx)} }"])
         |> Enum.join(" else ")
 
       ~g"""
       ({
         #{if_statements}
       });
+      """
+    end
+
+    defp do_serialize(type, ctx) do
+      ~g"""
+      char* enum_as_string = "#{type}";
+      #{
+        BaseType.generate_arg_serialize(
+          :atom,
+          :enum_as_string,
+          ctx.generator,
+          ctx
+        )
+      }\
       """
     end
 
@@ -175,6 +175,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
       }
 
         #{if_statements}
+
+        unifex_free((void *) enum_as_string);
 
         res;
       })
