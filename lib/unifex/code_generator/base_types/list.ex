@@ -11,25 +11,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
   alias Unifex.CodeGenerator.BaseType
 
   @impl BaseType
-  def generate_native_type(ctx)
-
-  def generate_native_type(%{mode: :const_if_not_ptr_on_ptr} = ctx) do
-    ptr? =
-      BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator, %{ctx | mode: :default})
-      |> String.replace(" ", "")
-      |> String.match?(~r"\*$")
-
-    mode = if not ptr?, do: :const, else: :default
-    ctx = %{ctx | mode: mode}
-
-    [
-      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator, ctx)} #{
-        if not ptr?, do: "const"
-      }*",
-      {"unsigned int", "_length"}
-    ]
+  def ptr_level(ctx) do
+    BaseType.ptr_level(ctx.subtype, ctx.generator, ctx) + 1
   end
 
+  @impl BaseType
   def generate_native_type(ctx) do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
 

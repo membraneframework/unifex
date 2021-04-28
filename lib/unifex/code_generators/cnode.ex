@@ -138,7 +138,7 @@ defmodule Unifex.CodeGenerators.CNode do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_if_not_ptr_on_ptr, ctx)]
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
       |> Enum.join(", ")
 
     labels = meta |> Keyword.get_values(:label)
@@ -170,7 +170,7 @@ defmodule Unifex.CodeGenerators.CNode do
       [
         ~g<UnifexEnv * env>,
         ~g<UnifexPid pid>,
-        ~g<int flags> | generate_args_declarations(args, :const_if_not_ptr_on_ptr, ctx)
+        ~g<int flags> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)
       ]
       |> Enum.join(", ")
 

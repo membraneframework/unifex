@@ -154,7 +154,7 @@ defmodule Unifex.CodeGenerators.NIF do
     labels = meta |> Keyword.get_values(:label)
 
     args_declarations =
-      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_if_not_ptr_on_ptr, ctx)]
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
@@ -182,7 +182,7 @@ defmodule Unifex.CodeGenerators.NIF do
         ~g<UnifexEnv* env>,
         ~g<UnifexPid pid>,
         ~g<int flags>
-        | generate_args_declarations(args, :const_if_not_ptr_on_ptr, ctx)
+        | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)
       ]
       |> Enum.join(", ")
 
