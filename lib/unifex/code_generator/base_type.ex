@@ -92,7 +92,11 @@ defmodule Unifex.CodeGenerator.BaseType do
   Uses `type` as fallback for `c:generate_native_type/1`
 
   When mode is set to :const_unless_ptr_on_ptr, function will choose to behave like it would be set to :default or :const,
-  depending on value returned by `ptr_level(type, code_generator, ctx)`
+  depending on value returned by `ptr_level(type, code_generator, ctx)`.
+  This mode can be used in places, when in general, you want to have declaration of variable with const type, but using :const
+  mode would generate code, that would require explicit cast to avoid generating warnings during compilation - e.g. in C,
+  passing argument of type `char **` to function, that expects argument of type `char const * const *` without any explicit cast,
+  will generate such a warning
   """
   @spec generate_declaration(
           t,
@@ -165,6 +169,7 @@ defmodule Unifex.CodeGenerator.BaseType do
     call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
   end
 
+  @spec ptr_level(t, module, ctx :: map) :: integer
   def ptr_level(type, code_generator, ctx) do
     call(type, :ptr_level, [], code_generator, ctx)
   end
