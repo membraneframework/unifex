@@ -29,8 +29,17 @@ UNIFEX_TERM test_int(UnifexEnv *env, int in_int) {
   return test_int_result_ok(env, in_int);
 }
 
+UNIFEX_TERM test_string(UnifexEnv *env, char *str) {
+  return test_string_result_ok(env, str);
+}
+
 UNIFEX_TERM test_list(UnifexEnv *env, int *in_list, unsigned int list_length) {
   return test_list_result_ok(env, in_list, list_length);
+}
+
+UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings,
+                                 unsigned int list_length) {
+  return test_list_of_strings_result_ok(env, in_strings, list_length);
 }
 
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid) {

@@ -11,6 +11,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
   alias Unifex.CodeGenerator.BaseType
 
   @impl BaseType
+  def ptr_level(ctx) do
+    BaseType.ptr_level(ctx.subtype, ctx.generator, ctx) + 1
+  end
+
+  @impl BaseType
   def generate_native_type(ctx) do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
 

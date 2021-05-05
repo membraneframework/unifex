@@ -50,11 +50,17 @@ defmodule Unifex.CodeGenerator.BaseType do
             ) ::
               CodeGenerator.code_t()
 
+  @doc """
+  Returns level of pointer nesting of native type.
+  """
+  @callback ptr_level(ctx :: map) :: integer()
+
   @optional_callbacks generate_arg_serialize: 2,
                       generate_initialization: 2,
                       generate_destruction: 2,
                       generate_native_type: 1,
-                      generate_arg_parse: 3
+                      generate_arg_parse: 3,
+                      ptr_level: 1
 
   defmacro __using__(_args) do
     quote do
@@ -84,10 +90,30 @@ defmodule Unifex.CodeGenerator.BaseType do
   provided `name`.
 
   Uses `type` as fallback for `c:generate_native_type/1`
+
+  When mode is set to :const_unless_ptr_on_ptr, function will choose to behave like it would be set to :default or :const,
+  depending on value returned by `ptr_level(type, code_generator, ctx)`.
+  This mode can be used in places, when in general, you want to have declaration of variable with const type, but using :const
+  mode would generate code, that would require explicit cast to avoid generating warnings during compilation - e.g. in C,
+  passing argument of type `char **` to function, that expects argument of type `char const * const *` without any explicit cast,
+  will generate such a warning
   """
-  @spec generate_declaration(t, name :: atom, mode :: :default | :const, module, ctx :: map) ::
+  @spec generate_declaration(
+          t,
+          name :: atom,
+          mode :: :default | :const | :const_unless_ptr_on_ptr,
+          module,
+          ctx :: map
+        ) ::
           [CodeGenerator.code_t()]
-  def generate_declaration(type, name, mode \\ :default, code_generator, ctx) do
+  def generate_declaration(type, name, mode \\ :default, code_generator, ctx)
+
+  def generate_declaration(type, name, :const_unless_ptr_on_ptr, code_generator, ctx) do
+    mode = if ptr_level(type, code_generator, ctx) < 2, do: :const, else: :default
+    generate_declaration(type, name, mode, code_generator, ctx)
+  end
+
+  def generate_declaration(type, name, mode, code_generator, ctx) do
     generate_native_type(type, mode, code_generator, ctx)
     |> Bunch.listify()
     |> Enum.map(fn
@@ -141,6 +167,11 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   def generate_native_type(type, mode \\ :default, code_generator, ctx) do
     call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
+  end
+
+  @spec ptr_level(t, module, ctx :: map) :: integer
+  def ptr_level(type, code_generator, ctx) do
+    call(type, :ptr_level, [], code_generator, ctx)
   end
 
   defp call(full_type, callback, args, code_generator, ctx) do

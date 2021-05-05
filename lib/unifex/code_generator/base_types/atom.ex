@@ -10,9 +10,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.Atom do
   alias Unifex.CodeGenerator.BaseType
 
   @impl BaseType
+  def ptr_level(_ctx), do: 1
+
+  @impl BaseType
   def generate_native_type(ctx) do
-    prefix = if ctx.mode == :const, do: "const ", else: ""
-    ~g<#{prefix} char*>
+    optional_const = if ctx.mode == :const, do: "const ", else: ""
+    ~g<char #{optional_const} *>
   end
 
   @impl BaseType

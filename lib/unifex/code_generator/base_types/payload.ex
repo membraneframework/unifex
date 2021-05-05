@@ -8,6 +8,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
   alias Unifex.CodeGenerator.BaseType
 
   @impl BaseType
+  def ptr_level(_ctx), do: 1
+
+  @impl BaseType
   def generate_native_type(_ctx) do
     ~g<UnifexPayload *>
   end

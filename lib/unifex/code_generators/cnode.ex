@@ -138,7 +138,8 @@ defmodule Unifex.CodeGenerators.CNode do
     args = meta |> Keyword.get_values(:arg)
 
     args_declarations =
-      ["UnifexEnv * env" | generate_args_declarations(args, :const, ctx)] |> Enum.join(", ")
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+      |> Enum.join(", ")
 
     labels = meta |> Keyword.get_values(:label)
     fun_name = [name, "result" | labels] |> Enum.join("_")
@@ -169,7 +170,7 @@ defmodule Unifex.CodeGenerators.CNode do
       [
         ~g<UnifexEnv * env>,
         ~g<UnifexPid pid>,
-        ~g<int flags> | generate_args_declarations(args, :const, ctx)
+        ~g<int flags> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)
       ]
       |> Enum.join(", ")
 

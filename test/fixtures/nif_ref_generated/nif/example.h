@@ -84,8 +84,11 @@ UNIFEX_TERM init(UnifexEnv *env);
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
 UNIFEX_TERM test_float(UnifexEnv *env, double in_float);
 UNIFEX_TERM test_int(UnifexEnv *env, int in_int);
+UNIFEX_TERM test_string(UnifexEnv *env, char *in_string);
 UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
                       unsigned int in_list_length);
+UNIFEX_TERM test_list_of_strings(UnifexEnv *env, char **in_strings,
+                                 unsigned int in_strings_length);
 UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
@@ -106,16 +109,19 @@ int handle_load(UnifexEnv *env, void **priv_data);
 
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state);
-UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, const char *out_atom);
+UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
+UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
+UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
+                                           unsigned int out_strings_length);
 UNIFEX_TERM test_pid_result_ok(UnifexEnv *env, UnifexPid out_pid);
 UNIFEX_TERM test_state_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
-                                              const char *reason);
+                                              char const *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);

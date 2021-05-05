@@ -3,16 +3,17 @@ defmodule Example.BundlexProject do
 
   def project() do
     [
-      cnodes: cnodes(Bundlex.platform())
+      natives: natives(Bundlex.platform())
     ]
   end
 
-  def cnodes(_platform) do
+  def natives(_platform) do
     [
       example: [
         src_base: "example",
         sources: ["example.c"],
-        preprocessor: Unifex
+        preprocessor: Unifex,
+        interface: :cnode
       ]
     ]
   end
