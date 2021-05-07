@@ -30,32 +30,6 @@ defmodule Unifex.Specs.DSL do
 
       sends {:example_msg :: label, number :: int}
 
-
-
-
-
-
-            type my_struct :: %My.Struct{
-        field1: type1,
-        field2: type2,
-        ...
-      }
-
-  The enum specification should be in the form of
-
-      type my_enum :: :option_one | :option_two | :option_three | ...
-
-  Struct or enums specified in such way can be used in like any other supported type, E.g.
-
-      spec my_function(in_enum :: my_enum) :: {:ok :: label, out_struct :: my_struct}
-
-
-
-
-
-
-
-
   According to this specification, module `Membrane.Element.Mad.Decoder.Native` should contain 2 functions: `create/0`
   and `decode_frame/3` (which is a cpu-bound dirty NIF). The module should use `Unifex.Loader` to provide access to
   these functions. What is more, messages of the form `{:example_msg, integer}` can be sent from the native code to

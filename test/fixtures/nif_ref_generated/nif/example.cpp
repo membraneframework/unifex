@@ -664,32 +664,31 @@ static ERL_NIF_TERM export_test_my_enum(ErlNifEnv *env, int argc,
   MyEnum in_enum;
 
   if (!({
-        char *enum_as_string;
+        char *enum_as_string = NULL;
         int res = 0;
 
-        if (!unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
-          result = unifex_raise_args_error(env, "in_enum", ":my_enum");
-          goto exit_export_test_my_enum;
-        };
+        if (unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
+          if (strcmp(enum_as_string, "option_one") == 0) {
+            in_enum = OPTION_ONE;
+            res = 1;
+          } else if (strcmp(enum_as_string, "option_two") == 0) {
+            in_enum = OPTION_TWO;
+            res = 1;
+          } else if (strcmp(enum_as_string, "option_three") == 0) {
+            in_enum = OPTION_THREE;
+            res = 1;
+          } else if (strcmp(enum_as_string, "option_four") == 0) {
+            in_enum = OPTION_FOUR;
+            res = 1;
+          } else if (strcmp(enum_as_string, "option_five") == 0) {
+            in_enum = OPTION_FIVE;
+            res = 1;
+          }
 
-        if (strcmp(enum_as_string, "option_one") == 0) {
-          in_enum = OPTION_ONE;
-          res = 1;
-        } else if (strcmp(enum_as_string, "option_two") == 0) {
-          in_enum = OPTION_TWO;
-          res = 1;
-        } else if (strcmp(enum_as_string, "option_three") == 0) {
-          in_enum = OPTION_THREE;
-          res = 1;
-        } else if (strcmp(enum_as_string, "option_four") == 0) {
-          in_enum = OPTION_FOUR;
-          res = 1;
-        } else if (strcmp(enum_as_string, "option_five") == 0) {
-          in_enum = OPTION_FIVE;
-          res = 1;
+          if (enum_as_string != NULL) {
+            unifex_free((void *)enum_as_string);
+          }
         }
-
-        unifex_free((void *)enum_as_string);
 
         res;
       })) {

@@ -1210,38 +1210,37 @@ UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
 
   if (({
         int res = 1;
-        char *enum_as_string;
-        if (({
+        char *enum_as_string = NULL;
+
+        if (!({
               enum_as_string = (char *)unifex_alloc(MAXATOMLEN);
               ei_decode_atom(in_buff->buff, in_buff->index, enum_as_string);
             })) {
-          result = unifex_raise(env, "Unifex CNode: cannot parse argument "
-                                     "'in_enum' of type ':my_enum'");
-          goto exit_test_my_enum_caller;
-        }
+          if (strcmp(enum_as_string, "option_one") == 0) {
+            in_enum = OPTION_ONE;
+            res = 0;
+          }
+          if (strcmp(enum_as_string, "option_two") == 0) {
+            in_enum = OPTION_TWO;
+            res = 0;
+          }
+          if (strcmp(enum_as_string, "option_three") == 0) {
+            in_enum = OPTION_THREE;
+            res = 0;
+          }
+          if (strcmp(enum_as_string, "option_four") == 0) {
+            in_enum = OPTION_FOUR;
+            res = 0;
+          }
+          if (strcmp(enum_as_string, "option_five") == 0) {
+            in_enum = OPTION_FIVE;
+            res = 0;
+          }
 
-        if (strcmp(enum_as_string, "option_one") == 0) {
-          in_enum = OPTION_ONE;
-          res = 0;
+          if (enum_as_string != NULL) {
+            unifex_free((void *)enum_as_string);
+          }
         }
-        if (strcmp(enum_as_string, "option_two") == 0) {
-          in_enum = OPTION_TWO;
-          res = 0;
-        }
-        if (strcmp(enum_as_string, "option_three") == 0) {
-          in_enum = OPTION_THREE;
-          res = 0;
-        }
-        if (strcmp(enum_as_string, "option_four") == 0) {
-          in_enum = OPTION_FOUR;
-          res = 0;
-        }
-        if (strcmp(enum_as_string, "option_five") == 0) {
-          in_enum = OPTION_FIVE;
-          res = 0;
-        }
-
-        unifex_free((void *)enum_as_string);
 
         res;
       })) {

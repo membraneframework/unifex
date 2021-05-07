@@ -1,6 +1,6 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Enum do
   use Unifex.CodeGenerator.BaseType
-  alias Unifex.CodeGenerator.BaseType
+  alias Unifex.CodeGenerator.{BaseType, BaseTypes}
 
   @enforce_keys [:name, :types]
   defstruct @enforce_keys
@@ -59,8 +59,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
     @impl BaseType
     def generate_arg_parse(arg, var_name, ctx) do
-      %{postproc_fun: postproc_fun, generator: generator} = ctx
-
       if_statements =
         ctx.type_spec.types
         |> Enum.map(&Atom.to_string/1)
@@ -76,23 +74,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
       ~g"""
       ({
-        char* enum_as_string;
+        char* enum_as_string = NULL;
         int res = 0;
 
-        #{
-        BaseType.generate_arg_parse(
-          :atom,
-          :enum_as_string,
-          arg,
-          postproc_fun,
-          generator,
-          ctx
-        )
-      };
+        if (#{BaseTypes.Atom.NIF.generate_arg_parse(arg, :enum_as_string, ctx)}) {
+          #{if_statements}
 
-        #{if_statements}
-
-        unifex_free((void *) enum_as_string);
+          if (enum_as_string != NULL) {
+            unifex_free((void *) enum_as_string);
+          }
+        }
 
         res;
       })
@@ -145,8 +136,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
     @impl BaseType
     def generate_arg_parse(arg, var_name, ctx) do
-      %{postproc_fun: postproc_fun, generator: generator} = ctx
-
       if_statements =
         ctx.type_spec.types
         |> Enum.map(&Atom.to_string/1)
@@ -162,21 +151,15 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
       ~g"""
       ({
         int res = 1;
-        char* enum_as_string;
-        #{
-        BaseType.generate_arg_parse(
-          :atom,
-          :enum_as_string,
-          arg,
-          postproc_fun,
-          generator,
-          ctx
-        )
-      }
+        char* enum_as_string = NULL;
 
-        #{if_statements}
+        if (!#{BaseTypes.Atom.CNode.generate_arg_parse(arg, :enum_as_string, ctx)}) {
+          #{if_statements}
 
-        unifex_free((void *) enum_as_string);
+          if (enum_as_string != NULL) {
+            unifex_free((void *) enum_as_string);
+          }
+        }
 
         res;
       })
