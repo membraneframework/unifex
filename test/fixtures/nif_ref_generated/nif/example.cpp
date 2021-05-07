@@ -183,20 +183,23 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
                                     if (out_enum == OPTION_ONE) {
                                       char *enum_as_string = "option_one";
                                       res = enif_make_atom(env, enum_as_string);
+
                                     } else if (out_enum == OPTION_TWO) {
                                       char *enum_as_string = "option_two";
                                       res = enif_make_atom(env, enum_as_string);
+
                                     } else if (out_enum == OPTION_THREE) {
                                       char *enum_as_string = "option_three";
                                       res = enif_make_atom(env, enum_as_string);
+
                                     } else if (out_enum == OPTION_FOUR) {
                                       char *enum_as_string = "option_four";
                                       res = enif_make_atom(env, enum_as_string);
+
                                     } else {
                                       char *enum_as_string = "option_five";
                                       res = enif_make_atom(env, enum_as_string);
                                     }
-
                                     res;
                                   })
 
@@ -664,8 +667,8 @@ static ERL_NIF_TERM export_test_my_enum(ErlNifEnv *env, int argc,
   MyEnum in_enum;
 
   if (!({
-        char *enum_as_string = NULL;
         int res = 0;
+        char *enum_as_string = NULL;
 
         if (unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
           if (strcmp(enum_as_string, "option_one") == 0) {

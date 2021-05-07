@@ -50,6 +50,7 @@ defmodule ExampleTest do
     assert {:ok, ^nested_struct} = Example.test_nested_struct(nested_struct)
 
     invalid_struct = %Nested.Struct{id: 3, inner_struct: "Unifex"}
+
     assert_raise ErlangError, ~r/unifex_parse_arg.*in_struct.*nested_struct/i, fn ->
       Example.test_nested_struct(invalid_struct)
     end
