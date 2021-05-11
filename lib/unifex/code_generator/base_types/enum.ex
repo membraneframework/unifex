@@ -22,7 +22,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
           char* enum_as_string = "#{type}";
           res = #{
             BaseTypes.Default.NIF.generate_arg_serialize(:enum_as_string, %{ctx | type: :atom})
-          };
+          };\
           """
         end)
 
