@@ -29,6 +29,19 @@ void unifex_release_state(UnifexEnv *env, UnifexState *state);
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
 #ifdef __cplusplus
+enum MyEnum { OPTION_ONE, OPTION_TWO, OPTION_THREE, OPTION_FOUR, OPTION_FIVE };
+#else
+enum MyEnum_t {
+  OPTION_ONE,
+  OPTION_TWO,
+  OPTION_THREE,
+  OPTION_FOUR,
+  OPTION_FIVE
+};
+typedef enum MyEnum_t MyEnum;
+#endif
+
+#ifdef __cplusplus
 struct my_struct {
   int id;
   int *data;
@@ -78,6 +91,7 @@ UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_example_message(UnifexEnv *env);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
+UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool);
@@ -103,6 +117,7 @@ UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);
+UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
@@ -123,6 +138,7 @@ UNIFEX_TERM test_example_message_caller(UnifexEnv *env,
 UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
                                       UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num);
 int handle_main(int argc, char **argv);
 

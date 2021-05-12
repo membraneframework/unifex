@@ -34,7 +34,6 @@ type my_struct :: %My.Struct{
   name: string
 }
 
-
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
 
 type nested_struct :: %Nested.Struct{
@@ -43,3 +42,7 @@ type nested_struct :: %Nested.Struct{
 }
 
 spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}
+
+type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
+
+spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}

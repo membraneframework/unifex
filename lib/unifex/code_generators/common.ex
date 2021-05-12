@@ -1,6 +1,6 @@
 defmodule Unifex.CodeGenerators.Common do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
-  alias Unifex.CodeGenerator.BaseType
+  alias Unifex.CodeGenerator.{BaseType, BaseTypes}
 
   @moduledoc """
   Contains functions used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
@@ -10,17 +10,33 @@ defmodule Unifex.CodeGenerators.Common do
   Creates ctx passed to functions generating native code
   """
   def create_ctx(specs) do
-    user_types =
+    structs =
       specs.structs
-      |> Map.new(fn {struct_alias, struct_module_name, struct_fields} ->
-        {
-          struct_alias,
-          %{
-            struct_alias: struct_alias,
-            struct_module_name: struct_module_name,
-            struct_fields: struct_fields
-          }
+      |> Enum.map(fn {struct_alias, module_name, fields} ->
+        %BaseTypes.Struct{
+          struct_alias: struct_alias,
+          module_name: module_name,
+          fields: fields
         }
+      end)
+
+    enums =
+      specs.enums
+      |> Enum.map(fn {name, types} ->
+        %BaseTypes.Enum{
+          name: name,
+          types: types
+        }
+      end)
+
+    user_types =
+      (structs ++ enums)
+      |> Map.new(fn
+        %BaseTypes.Struct{} = struct ->
+          {struct.struct_alias, struct}
+
+        %BaseTypes.Enum{} = enum ->
+          {enum.name, enum}
       end)
 
     %{user_types: user_types}
@@ -54,6 +70,32 @@ defmodule Unifex.CodeGenerators.Common do
         #{struct_fields_definition}
       };
       typedef struct #{struct_type_name}_t #{struct_type_name};
+    #endif
+    """
+  end
+
+  def generate_enum_native_definition({enum_name, enum_types}, _ctx) do
+    enum_name =
+      enum_name
+      |> Atom.to_string()
+      |> Macro.camelize()
+
+    enum_types =
+      enum_types
+      |> Enum.map(&Atom.to_string/1)
+      |> Enum.map(&String.upcase/1)
+      |> Enum.join(",\n")
+
+    ~g"""
+    #ifdef __cplusplus
+      enum #{enum_name}{
+        #{enum_types}
+      };
+    #else
+      enum #{enum_name}_t{
+        #{enum_types}
+      };
+      typedef enum #{enum_name}_t #{enum_name};
     #endif
     """
   end

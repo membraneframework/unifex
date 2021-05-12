@@ -46,6 +46,19 @@ void unifex_keep_state(UnifexEnv *env, UnifexState *state);
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
 #ifdef __cplusplus
+enum MyEnum { OPTION_ONE, OPTION_TWO, OPTION_THREE, OPTION_FOUR, OPTION_FIVE };
+#else
+enum MyEnum_t {
+  OPTION_ONE,
+  OPTION_TWO,
+  OPTION_THREE,
+  OPTION_FOUR,
+  OPTION_FIVE
+};
+typedef enum MyEnum_t MyEnum;
+#endif
+
+#ifdef __cplusplus
 struct my_struct {
   int id;
   int *data;
@@ -94,6 +107,7 @@ UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
+UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
 
 /*
  * Callbacks for nif lifecycle hooks.
@@ -125,6 +139,7 @@ UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);
+UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
 
 /*
  * Functions that send the defined messages from Nif.
