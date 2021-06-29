@@ -80,6 +80,8 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
+You can see, that we used function `foo_result_ok` in implementation above. For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is atom with type `label` in returned tuple. Type of first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on numer and types of rest of elements in returned tuple (see the table below).
+
 It is a very simple C code that always returns the same number it gets.
 
 At this moment the project should successfully compile. 
