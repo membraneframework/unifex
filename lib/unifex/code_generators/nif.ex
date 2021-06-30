@@ -42,34 +42,22 @@ defmodule Unifex.CodeGenerators.NIF do
 
     #{generate_state_related_declarations(specs)}
 
-    #{
-      Utils.generate_enums_definitions(
-        specs.enums,
-        &Common.generate_enum_native_definition/2,
-        ctx
-      )
-    }
+    #{Utils.generate_enums_definitions(specs.enums,
+    &Common.generate_enum_native_definition/2,
+    ctx)}
 
-    #{
-      Utils.generate_structs_definitions(
-        specs.structs,
-        &generate_struct_native_definition/2,
-        ctx
-      )
-    }
+    #{Utils.generate_structs_definitions(specs.structs,
+    &generate_struct_native_definition/2,
+    ctx)}
 
     /*
      * Declaration of native functions for module #{specs.module}.
      * The implementation have to be provided by the user.
      */
 
-    #{
-      Utils.generate_functions_declarations(
-        specs.functions_args,
-        &generate_implemented_function_declaration/2,
-        ctx
-      )
-    }
+    #{Utils.generate_functions_declarations(specs.functions_args,
+    &generate_implemented_function_declaration/2,
+    ctx)}
 
     /*
      * Callbacks for nif lifecycle hooks.
@@ -83,26 +71,18 @@ defmodule Unifex.CodeGenerators.NIF do
      * They are automatically generated and don't need to be implemented.
      */
 
-    #{
-      Utils.generate_functions_declarations(
-        specs.functions_results,
-        &generate_result_function_declaration/2,
-        ctx
-      )
-    }
+    #{Utils.generate_functions_declarations(specs.functions_results,
+    &generate_result_function_declaration/2,
+    ctx)}
 
     /*
      * Functions that send the defined messages from Nif.
      * They are automatically generated and don't need to be implemented.
      */
 
-    #{
-      Utils.generate_functions_declarations(
-        specs.sends,
-        &generate_send_function_declaration/2,
-        ctx
-      )
-    }
+    #{Utils.generate_functions_declarations(specs.sends,
+    &generate_send_function_declaration/2,
+    ctx)}
 
     #ifdef __cplusplus
     }

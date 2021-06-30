@@ -318,19 +318,19 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   ei_x_encode_tuple_header(out_buff, 2);
   ei_x_encode_atom(out_buff, "ok");
   ({
-    if (out_enum == OPTION_ONE) {
+    if (out_enum == MY_ENUM_OPTION_ONE) {
       char *enum_as_string = "option_one";
       ei_x_encode_atom(out_buff, enum_as_string);
 
-    } else if (out_enum == OPTION_TWO) {
+    } else if (out_enum == MY_ENUM_OPTION_TWO) {
       char *enum_as_string = "option_two";
       ei_x_encode_atom(out_buff, enum_as_string);
 
-    } else if (out_enum == OPTION_THREE) {
+    } else if (out_enum == MY_ENUM_OPTION_THREE) {
       char *enum_as_string = "option_three";
       ei_x_encode_atom(out_buff, enum_as_string);
 
-    } else if (out_enum == OPTION_FOUR) {
+    } else if (out_enum == MY_ENUM_OPTION_FOUR) {
       char *enum_as_string = "option_four";
       ei_x_encode_atom(out_buff, enum_as_string);
 
@@ -1220,19 +1220,19 @@ UNIFEX_TERM test_my_enum_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
               ei_decode_atom(in_buff->buff, in_buff->index, enum_as_string);
             })) {
           if (strcmp(enum_as_string, "option_one") == 0) {
-            in_enum = OPTION_ONE;
+            in_enum = MY_ENUM_OPTION_ONE;
             res = 0;
           } else if (strcmp(enum_as_string, "option_two") == 0) {
-            in_enum = OPTION_TWO;
+            in_enum = MY_ENUM_OPTION_TWO;
             res = 0;
           } else if (strcmp(enum_as_string, "option_three") == 0) {
-            in_enum = OPTION_THREE;
+            in_enum = MY_ENUM_OPTION_THREE;
             res = 0;
           } else if (strcmp(enum_as_string, "option_four") == 0) {
-            in_enum = OPTION_FOUR;
+            in_enum = MY_ENUM_OPTION_FOUR;
             res = 0;
           } else if (strcmp(enum_as_string, "option_five") == 0) {
-            in_enum = OPTION_FIVE;
+            in_enum = MY_ENUM_OPTION_FIVE;
             res = 0;
           }
 

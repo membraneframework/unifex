@@ -20,9 +20,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
 
     [
-      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator, ctx)} #{
-        optional_const
-      }*",
+      "#{BaseType.generate_native_type(ctx.subtype, ctx.mode, ctx.generator, ctx)} #{optional_const}*",
       {"unsigned int", "_length"}
     ]
   end
@@ -87,9 +85,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           ERL_NIF_TERM elem;
           enif_get_list_cell(env, list, &elem, &list);
-          #{
-        BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)
-      }
+          #{BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)}
         }
       }
       get_list_length_result;
@@ -151,16 +147,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         }
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
-          #{
-        BaseType.generate_arg_parse(
-          subtype,
-          elem_name,
-          "unifex_buff_ptr",
-          postproc_fun,
-          generator,
-          ctx
-        )
-      }
+          #{BaseType.generate_arg_parse(subtype,
+      elem_name,
+      "unifex_buff_ptr",
+      postproc_fun,
+      generator,
+      ctx)}
         }
         if(#{len_var_name}) {
           header_res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);

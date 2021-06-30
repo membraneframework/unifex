@@ -75,16 +75,15 @@ defmodule Unifex.CodeGenerators.Common do
   end
 
   def generate_enum_native_definition({enum_name, enum_types}, _ctx) do
+    enum_types =
+      enum_types
+      |> Enum.map(fn type -> String.upcase("#{enum_name}_#{type}") end)
+      |> Enum.join(",\n")
+
     enum_name =
       enum_name
       |> Atom.to_string()
       |> Macro.camelize()
-
-    enum_types =
-      enum_types
-      |> Enum.map(&Atom.to_string/1)
-      |> Enum.map(&String.upcase/1)
-      |> Enum.join(",\n")
 
     ~g"""
     #ifdef __cplusplus

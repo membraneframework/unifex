@@ -29,14 +29,20 @@ void unifex_release_state(UnifexEnv *env, UnifexState *state);
 void handle_destroy_state(UnifexEnv *env, UnifexState *state);
 
 #ifdef __cplusplus
-enum MyEnum { OPTION_ONE, OPTION_TWO, OPTION_THREE, OPTION_FOUR, OPTION_FIVE };
+enum MyEnum {
+  MY_ENUM_OPTION_ONE,
+  MY_ENUM_OPTION_TWO,
+  MY_ENUM_OPTION_THREE,
+  MY_ENUM_OPTION_FOUR,
+  MY_ENUM_OPTION_FIVE
+};
 #else
 enum MyEnum_t {
-  OPTION_ONE,
-  OPTION_TWO,
-  OPTION_THREE,
-  OPTION_FOUR,
-  OPTION_FIVE
+  MY_ENUM_OPTION_ONE,
+  MY_ENUM_OPTION_TWO,
+  MY_ENUM_OPTION_THREE,
+  MY_ENUM_OPTION_FOUR,
+  MY_ENUM_OPTION_FIVE
 };
 typedef enum MyEnum_t MyEnum;
 #endif
