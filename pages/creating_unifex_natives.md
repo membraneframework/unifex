@@ -80,7 +80,7 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
-You can see, that we used function `foo_result_ok` in implementation above. For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is atom with type `label` in returned tuple. Type of first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on numer and types of rest of elements in returned tuple (see the table below).
+You can see, that we used function `foo_result_ok` in the implementation above. For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is atom with type `label` in returned tuple. Type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on number and types of rest of elements in the returned tuple (see the table below).
 
 It is a very simple C code that always returns the same number it gets.
 
@@ -90,7 +90,7 @@ In `c_src/_generated/` directory there should appear files both for usage as NIF
 
 ### Types
 
-We support few of built in Elixir data types. Below there is list of examples, how specific type in `*.spec.exs` will be translated onto native side
+We support a few built-in Elixir data types. Below there is a list of examples, how specific type in `*.spec.exs` will be translated onto native side
 
 Elixir type | Native type
 --- | ---
@@ -107,9 +107,9 @@ Elixir type | Native type
 `unsigned` | `unsigned int`
 `[int]` | `int *`, `unsigned int`
 
-As you can see, type `[int]` will be translated into two types - it is because, if function in `*.spec.exs` file receives list of ints as argument, corresponding function on native side will receive two arguments: first will be pointer to beggining of list of ints, second will be length of this list. `atom` and `string` will be translated only into a basic C-string terminated with 0.
+As you can see, type `[int]` will be translated into two types - it is because, if function in `*.spec.exs` file receives a list of ints as an argument, the corresponding function on the native side will receive two arguments: first will be a pointer to the beginning of the list of ints, second will be the length of this list. `atom` and `string` will be translated only into a basic C-string terminated with 0.
 
-With Unifex you can also define your own custom types. Currently, we support defining enums and structs. If you want to add structs or enums to API of your native functions, you have to define them in the `*.spec.exs` file. There is example of this:
+With Unifex you can also define your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
 
 ```elixir
 type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
@@ -126,7 +126,7 @@ type nested_struct :: %Nested.Struct{
 }
 ```
 
-Then, we will generate 2 versions of native declarations of our custom types, each for `C` and `C++`. Example of version for `C` is posted below
+Then, we will generate two versions of native declarations of our custom types, each for `C` and `C++`. An example of version for `C` is posted below
 
 ```cpp
 enum MyEnum_t {
@@ -153,11 +153,11 @@ struct nested_struct_t {
 typedef struct nested_struct_t nested_struct;
 ```
 
-Name of enum will be translated to PascalCase, specific options will be translated to MACRO_CASE.
+The name of enum will be translated to PascalCase, specific options will be translated to MACRO_CASE.
 
-Remember, that in `C` it is forbidden to make cyclic chain of containment in the way, that it was made above.
+Remember, that in `C` it is forbidden to make a cyclic chain of containment in the way, that it was made above.
 
-Now, you can use you own custom types, like basic ones, e.g.
+Now, you can use your custom types, like basic ones, e.g.
 
 ```elixir
 spec example_function(my_enum in_enum, nested_struct in_struct) :: {:ok :: label, out_struct :: my_struct} | {:error :: label, reason :: atom}
@@ -172,7 +172,7 @@ UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_st
 }
 ```
 
-If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, result of Unifex function returning enum will be visible as atom on Elixir side. What is important, declaration of specific struct in `*.spec.exs` will not automaticaly make it available in your Elixir code - you are responsible for providing struct module on your own.
+If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
 
 ## Running code
 
