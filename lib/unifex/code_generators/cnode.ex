@@ -47,50 +47,26 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_state_related_declarations(specs)}
 
-    #{
-      Utils.generate_enums_definitions(
-        specs.enums,
-        &Common.generate_enum_native_definition/2,
-        ctx
-      )
-    }
+    #{Utils.generate_enums_definitions(specs.enums,
+    &Common.generate_enum_native_definition/2,
+    ctx)}
 
-    #{
-      Utils.generate_structs_definitions(
-        specs.structs,
-        &generate_struct_native_definition/2,
-        ctx
-      )
-    }
+    #{Utils.generate_structs_definitions(specs.structs,
+    &generate_struct_native_definition/2,
+    ctx)}
 
-    #{
-      Utils.generate_functions_declarations(
-        specs.functions_args,
-        &generate_implemented_function_declaration/2,
-        ctx
-      )
-    }
-    #{
-      Utils.generate_functions_declarations(
-        specs.functions_results,
-        &generate_result_function_declaration/2,
-        ctx
-      )
-    }
-    #{
-      Utils.generate_functions_declarations(
-        specs.functions_args,
-        &generate_caller_function_declaration/2,
-        ctx
-      )
-    }
-    #{
-      Utils.generate_functions_declarations(
-        specs.sends,
-        &generate_send_function_declaration/2,
-        ctx
-      )
-    }
+    #{Utils.generate_functions_declarations(specs.functions_args,
+    &generate_implemented_function_declaration/2,
+    ctx)}
+    #{Utils.generate_functions_declarations(specs.functions_results,
+    &generate_result_function_declaration/2,
+    ctx)}
+    #{Utils.generate_functions_declarations(specs.functions_args,
+    &generate_caller_function_declaration/2,
+    ctx)}
+    #{Utils.generate_functions_declarations(specs.sends,
+    &generate_send_function_declaration/2,
+    ctx)}
     #{generate_main_function_declaration(specs.callbacks)}
 
     #ifdef __cplusplus

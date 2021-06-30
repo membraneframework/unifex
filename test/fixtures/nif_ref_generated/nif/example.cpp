@@ -204,26 +204,31 @@ UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
 
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   return ({
-    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"), ({
-                                    ERL_NIF_TERM res;
-                                    if (out_enum == OPTION_ONE) {
-                                      char *enum_as_string = "option_one";
-                                      res = enif_make_atom(env, enum_as_string);
-                                    } else if (out_enum == OPTION_TWO) {
-                                      char *enum_as_string = "option_two";
-                                      res = enif_make_atom(env, enum_as_string);
-                                    } else if (out_enum == OPTION_THREE) {
-                                      char *enum_as_string = "option_three";
-                                      res = enif_make_atom(env, enum_as_string);
-                                    } else if (out_enum == OPTION_FOUR) {
-                                      char *enum_as_string = "option_four";
-                                      res = enif_make_atom(env, enum_as_string);
-                                    } else {
-                                      char *enum_as_string = "option_five";
-                                      res = enif_make_atom(env, enum_as_string);
-                                    }
-                                    res;
-                                  })
+    const ERL_NIF_TERM terms[] = {
+        enif_make_atom(env, "ok"), ({
+          ERL_NIF_TERM res;
+          if (out_enum == MY_ENUM_OPTION_ONE) {
+            char *enum_as_string = "option_one";
+            res = enif_make_atom(env, enum_as_string);
+
+          } else if (out_enum == MY_ENUM_OPTION_TWO) {
+            char *enum_as_string = "option_two";
+            res = enif_make_atom(env, enum_as_string);
+
+          } else if (out_enum == MY_ENUM_OPTION_THREE) {
+            char *enum_as_string = "option_three";
+            res = enif_make_atom(env, enum_as_string);
+
+          } else if (out_enum == MY_ENUM_OPTION_FOUR) {
+            char *enum_as_string = "option_four";
+            res = enif_make_atom(env, enum_as_string);
+
+          } else {
+            char *enum_as_string = "option_five";
+            res = enif_make_atom(env, enum_as_string);
+          }
+          res;
+        })
 
     };
     enif_make_tuple_from_array(env, terms, 2);
@@ -767,19 +772,19 @@ static ERL_NIF_TERM export_test_my_enum(ErlNifEnv *env, int argc,
 
         if (unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
           if (strcmp(enum_as_string, "option_one") == 0) {
-            in_enum = OPTION_ONE;
+            in_enum = MY_ENUM_OPTION_ONE;
             res = 1;
           } else if (strcmp(enum_as_string, "option_two") == 0) {
-            in_enum = OPTION_TWO;
+            in_enum = MY_ENUM_OPTION_TWO;
             res = 1;
           } else if (strcmp(enum_as_string, "option_three") == 0) {
-            in_enum = OPTION_THREE;
+            in_enum = MY_ENUM_OPTION_THREE;
             res = 1;
           } else if (strcmp(enum_as_string, "option_four") == 0) {
-            in_enum = OPTION_FOUR;
+            in_enum = MY_ENUM_OPTION_FOUR;
             res = 1;
           } else if (strcmp(enum_as_string, "option_five") == 0) {
-            in_enum = OPTION_FIVE;
+            in_enum = MY_ENUM_OPTION_FIVE;
             res = 1;
           }
 
