@@ -80,11 +80,99 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
+You can see, that we used function `foo_result_ok` in the implementation above. For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is atom with type `label` in returned tuple. Type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on number and types of rest of elements in the returned tuple (see the table below).
+
 It is a very simple C code that always returns the same number it gets.
 
 At this moment the project should successfully compile. 
 Run `mix deps.get && mix compile` to make sure everything is fine.
 In `c_src/_generated/` directory there should appear files both for usage as NIF and CNode.
+
+### Types
+
+We support a few built-in Elixir data types. Below there is a list of examples, how specific type in `*.spec.exs` will be translated onto native side
+
+Elixir type | Native type
+--- | ---
+`atom` | `char *`
+`bool` | `int`
+`float` | `double`
+`int` | `int`
+`int64` | `int64_t`
+`payload` | `UnifexPayload`
+`pid` | `UnifexPid`
+`state` | `UnifexState *`
+`string` | `char *`
+`uint64` | `uint64_t`
+`unsigned` | `unsigned int`
+`[int]` | `int *`, `unsigned int`
+
+As you can see, type `[int]` will be translated into two types - it is because, if function in `*.spec.exs` file receives a list of ints as an argument, the corresponding function on the native side will receive two arguments: first will be a pointer to the beginning of the list of ints, second will be the length of this list. `atom` and `string` will be translated only into a basic C-string terminated with 0.
+
+With Unifex you can also define your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
+
+```elixir
+type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
+
+type my_struct :: %My.Struct{
+  id: int,
+  data: [int],
+  name: string
+}
+
+type nested_struct :: %Nested.Struct{
+  inner_struct: my_struct,
+  id: int
+}
+```
+
+Then, we will generate two versions of native declarations of our custom types, each for `C` and `C++`. An example of version for `C` is posted below
+
+```cpp
+enum MyEnum_t {
+  OPTION_ONE,
+  OPTION_TWO,
+  OPTION_THREE,
+  OPTION_FOUR,
+  OPTION_FIVE
+};
+typedef enum MyEnum_t MyEnum;
+
+struct my_struct_t {
+  int id;
+  int *data;
+  unsigned int data_length;
+  char *name;
+};
+typedef struct my_struct_t my_struct;
+
+struct nested_struct_t {
+  my_struct inner_struct;
+  int id;
+};
+typedef struct nested_struct_t nested_struct;
+```
+
+The name of enum will be translated to PascalCase, specific options will be translated to MACRO_CASE.
+
+Remember, that in `C` it is forbidden to make a cyclic chain of containment in the way, that it was made above.
+
+Now, you can use your custom types, like basic ones, e.g.
+
+```elixir
+spec example_function(my_enum in_enum, nested_struct in_struct) :: {:ok :: label, out_struct :: my_struct} | {:error :: label, reason :: atom}
+```
+
+```cpp
+UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_struct) {
+  if (in_enum == OPTION_ONE) {
+    return example_function_result_error(env, "failed");
+  }
+  return example_function_result_ok(env, in_struct.inner_struct);
+}
+```
+
+If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
 
 ## Running code
 
