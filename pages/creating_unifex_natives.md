@@ -130,11 +130,11 @@ Then, we will generate two versions of native declarations of our custom types, 
 
 ```cpp
 enum MyEnum_t {
-  OPTION_ONE,
-  OPTION_TWO,
-  OPTION_THREE,
-  OPTION_FOUR,
-  OPTION_FIVE
+  MY_ENUM_OPTION_ONE,
+  MY_ENUM_OPTION_TWO,
+  MY_ENUM_OPTION_THREE,
+  MY_ENUM_OPTION_FOUR,
+  MY_ENUM_OPTION_FIVE
 };
 typedef enum MyEnum_t MyEnum;
 
@@ -153,7 +153,7 @@ struct nested_struct_t {
 typedef struct nested_struct_t nested_struct;
 ```
 
-The name of enum will be translated to PascalCase, specific options will be translated to MACRO_CASE.
+The name of enum will be translated to PascalCase, specific options will be prefixed with enum name and translated to MACRO_CASE.
 
 Remember, that in `C` it is forbidden to make a cyclic chain of containment in the way, that it was made above.
 
@@ -165,7 +165,7 @@ spec example_function(my_enum in_enum, nested_struct in_struct) :: {:ok :: label
 
 ```cpp
 UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_struct) {
-  if (in_enum == OPTION_ONE) {
+  if (in_enum == MY_ENUM_OPTION_ONE) {
     return example_function_result_error(env, "failed");
   }
   return example_function_result_ok(env, in_struct.inner_struct);
