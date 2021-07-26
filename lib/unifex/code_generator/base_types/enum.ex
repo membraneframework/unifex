@@ -20,9 +20,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
         BaseTypes.Enum.do_generate_arg_serialize_if_statements(name, ctx, fn type, ctx ->
           ~g"""
           char* enum_as_string = "#{type}";
-          res = #{
-            BaseTypes.Default.NIF.generate_arg_serialize(:enum_as_string, %{ctx | type: :atom})
-          };\
+          res = #{BaseTypes.Default.NIF.generate_arg_serialize(:enum_as_string, %{ctx | type: :atom})};\
           """
         end)
 

@@ -39,14 +39,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
         |> Enum.map(fn {{field_name, field_type}, idx} ->
           ~g"""
           keys[#{idx}] = enif_make_atom(env, "#{field_name}");
-          values[#{idx}] = #{
-            BaseType.generate_arg_serialize(
-              field_type,
-              :"#{name}.#{field_name}",
-              ctx.generator,
-              ctx
-            )
-          };
+          values[#{idx}] = #{BaseType.generate_arg_serialize(field_type,
+          :"#{name}.#{field_name}",
+          ctx.generator,
+          ctx)};
           """
         end)
         |> Enum.join("\n")
@@ -58,9 +54,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
 
         #{fields_serialization}
         keys[#{fields_number}] = enif_make_atom(env, "__struct__");
-        values[#{fields_number}] = enif_make_atom(env, "Elixir.#{
-        ctx.type_spec.module_name |> Atom.to_string()
-      }");
+        values[#{fields_number}] = enif_make_atom(env, "Elixir.#{ctx.type_spec.module_name |> Atom.to_string()}");
 
         ERL_NIF_TERM result;
         enif_make_map_from_arrays(env, keys, values, #{fields_number + 1}, &result);
@@ -83,20 +77,14 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
         |> Enum.map(fn {field_name, field_type} ->
           ~g"""
           key_#{unique_sufix} = enif_make_atom(env, "#{field_name}");
-          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_sufix}, &value_#{
-            unique_sufix
-          });
+          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_sufix}, &value_#{unique_sufix});
           if (get_#{field_name}_result) {
-            #{
-            BaseType.generate_arg_parse(
-              field_type,
-              :"#{var_name}.#{field_name}",
-              ~g<value_#{unique_sufix}>,
-              postproc_fun,
-              generator,
-              ctx
-            )
-          }
+            #{BaseType.generate_arg_parse(field_type,
+          :"#{var_name}.#{field_name}",
+          ~g<value_#{unique_sufix}>,
+          postproc_fun,
+          generator,
+          ctx)}
           }
           """
         end)
@@ -130,14 +118,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
         |> Enum.map(fn {field_name, field_type} ->
           ~g"""
           ei_x_encode_atom(out_buff, "#{field_name}");
-          #{
-            BaseType.generate_arg_serialize(
-              field_type,
-              :"#{name}.#{field_name}",
-              ctx.generator,
-              ctx
-            )
-          };
+          #{BaseType.generate_arg_serialize(field_type,
+          :"#{name}.#{field_name}",
+          ctx.generator,
+          ctx)};
           """
         end)
         |> Enum.join("\n")
@@ -161,16 +145,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
         |> Enum.map(fn {field_name, field_type} ->
           ~g"""
           if (strcmp(key, "#{field_name}") == 0) {
-            #{
-            BaseType.generate_arg_parse(
-              field_type,
-              :"#{var_name}.#{field_name}",
-              arg,
-              postproc_fun,
-              generator,
-              ctx
-            )
-          }
+            #{BaseType.generate_arg_parse(field_type,
+          :"#{var_name}.#{field_name}",
+          arg,
+          postproc_fun,
+          generator,
+          ctx)}
           }
           """
         end)
@@ -178,16 +158,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
           ~g"""
           if (strcmp(key, "__struct__") == 0) {
             char* elixir_module_name;
-            #{
-            BaseType.generate_arg_parse(
-              :atom,
-              :elixir_module_name,
-              arg,
-              postproc_fun,
-              generator,
-              ctx
-            )
-          }
+            #{BaseType.generate_arg_parse(:atom,
+          :elixir_module_name,
+          arg,
+          postproc_fun,
+          generator,
+          ctx)}
             #{BaseType.generate_destruction(:atom, :elixir_module_name, generator, ctx)}
           }
           """
