@@ -12,4 +12,5 @@ jobs:
       - run: mix deps.get
       - run: mix format --check-formatted
       - run: mix compile --force --warnings-as-errors
+      - run: mix dialyzer
       - run: mix test

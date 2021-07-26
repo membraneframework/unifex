@@ -44,6 +44,7 @@ defmodule Unifex.MixProject do
       main: "readme",
       extras: [
         "README.md",
+        "LICENSE",
         "pages/creating_unifex_natives.md",
         "pages/creating_unifex_nif.md",
         "pages/supported_types.md"
@@ -66,7 +67,7 @@ defmodule Unifex.MixProject do
       {:bunch, "~> 1.0"},
       {:shmex, "~> 0.4.0"},
       {:bundlex, "~> 0.5.0"},
-      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false}
     ]
   end
 end

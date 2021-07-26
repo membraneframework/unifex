@@ -25,12 +25,12 @@ defmodule Unifex.CodeGenerator.BaseType do
   @callback generate_arg_serialize(name :: atom, ctx :: map) :: CodeGenerator.code_t()
 
   @doc """
-  Generates an initialization of variable content. Should be paired with `c:generate_destruction/1`
+  Generates an initialization of variable content. Should be paired with `c:generate_destruction/2`
   """
   @callback generate_initialization(name :: atom, ctx :: map) :: CodeGenerator.code_t()
 
   @doc """
-  Generates a destruction of variable content. Should be paired with `c:generate_initialization/1`
+  Generates a destruction of variable content. Should be paired with `c:generate_initialization/2`
   """
   @callback generate_destruction(name :: atom, ctx :: map) :: CodeGenerator.code_t()
 
@@ -86,7 +86,7 @@ defmodule Unifex.CodeGenerator.BaseType do
   end
 
   @doc """
-  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/0` and
+  Generates a declaration of parameter (to be placed in function header) based on `c:generate_native_type/1` and
   provided `name`.
 
   Uses `type` as fallback for `c:generate_native_type/1`
