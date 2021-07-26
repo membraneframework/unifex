@@ -118,7 +118,7 @@ int unifex_cnode_receive(UnifexEnv *env) {
 }
 
 static int validate_args(int argc, char **argv) {
-  if (argc != 6) {
+  if (argc != 5) {
     return 1;
   }
   for (int i = 1; i < argc; i++) {
@@ -184,9 +184,8 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   char alive_name[256];
   strcpy(alive_name, argv[2]);
   strcpy(env->node_name, argv[3]);
-  char cookie[256];
-  strcpy(cookie, argv[4]);
-  short creation = (short)atoi(argv[5]);
+  short creation = (short)atoi(argv[4]);
+  char *cookie = getenv("BUNDLEX_ERLANG_COOKIE");
 
   int port;
   if (listen_sock(&env->listen_fd, &port)) {

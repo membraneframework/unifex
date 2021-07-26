@@ -64,8 +64,8 @@ defmodule Unifex.MixProject do
     [
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:bunch, "~> 1.0"},
-      {:shmex, "~> 0.3.0"},
-      {:bundlex, "~> 0.4.0"},
+      {:shmex, "~> 0.4.0"},
+      {:bundlex, "~> 0.5.0"},
       {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false}
     ]
   end
