@@ -1,10 +1,6 @@
 #include "unifex.h"
 #include "cnode.h"
 
-void *unifex_alloc(size_t size) { return malloc(size); }
-
-void unifex_free(void *pointer) { free(pointer); }
-
 UNIFEX_TERM unifex_raise(UnifexEnv *env, const char *message) {
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "raise");
