@@ -3,6 +3,11 @@
 #include <string.h>
 #include <time.h>
 
+UnifexEnv *unifex_alloc_env(UnifexEnv *_env) {
+  UNIFEX_UNUSED(_env);
+  return enif_alloc_env();
+}
+
 UNIFEX_TERM unifex_raise(ErlNifEnv *env, const char *description) {
   return enif_raise_exception(env, unifex_string_to_term(env, description));
 }
