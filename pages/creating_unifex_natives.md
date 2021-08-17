@@ -89,9 +89,7 @@ Run `mix deps.get && mix compile` to make sure everything is fine.
 In `c_src/_generated/` directory there should appear files both for usage as NIF and CNode.
 
 ### Types
-With Unifex, you can use some of build-in Elixir types (see more in [documentation](https://hexdocs.pm/unifex/supported_types.html)), as well as your own custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
-
-With Unifex you can also define your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
+With Unifex, you can use some of built-in Elixir types (see more in [documentation](https://hexdocs.pm/unifex/supported_types.html)), as well as your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
 
 ```elixir
 type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
@@ -154,8 +152,7 @@ UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_st
 }
 ```
 
-If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
-
+If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, the result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
 ## Running code
 
 ### NIF
