@@ -40,8 +40,20 @@ typedef struct UnifexCNodeContext {
   UNIFEX_TERM error;
 } UnifexEnv;
 
-void *unifex_alloc(size_t size);
-void unifex_free(void *pointer);
+static inline void *unifex_alloc(size_t size) { return malloc(size); }
+
+static inline void unifex_free(void *pointer) { free(pointer); }
+
+static inline UnifexEnv *unifex_alloc_env(UnifexEnv *env) { return env; }
+
+static inline void unifex_clear_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
+
+static inline void unifex_free_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
+
+static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
+  return (UnifexPid *) memcpy(pid, env->reply_to, sizeof(UnifexPid));
+};
+
 UNIFEX_TERM unifex_raise(UnifexEnv *env, const char *message);
 
 #ifdef __cplusplus

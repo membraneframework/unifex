@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.4.0"
+  @version "0.5.0"
   @github_link "https://github.com/membraneframework/unifex"
 
   def project do
@@ -44,6 +44,7 @@ defmodule Unifex.MixProject do
       main: "readme",
       extras: [
         "README.md",
+        "LICENSE",
         "pages/creating_unifex_natives.md",
         "pages/creating_unifex_nif.md",
         "pages/supported_types.md"
@@ -64,9 +65,9 @@ defmodule Unifex.MixProject do
     [
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:bunch, "~> 1.0"},
-      {:shmex, "~> 0.3.0"},
-      {:bundlex, "~> 0.4.0"},
-      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false}
+      {:shmex, "~> 0.4.0"},
+      {:bundlex, "~> 0.5.0"},
+      {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false}
     ]
   end
 end

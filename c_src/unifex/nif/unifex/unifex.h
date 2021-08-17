@@ -30,7 +30,7 @@ static inline void *unifex_realloc(void *ptr, size_t size) {
 
 static inline void unifex_free(void *ptr) { enif_free(ptr); }
 
-static inline UnifexEnv *unifex_alloc_env() { return enif_alloc_env(); }
+UnifexEnv *unifex_alloc_env(UnifexEnv *env);
 
 static inline void unifex_clear_env(UnifexEnv *env) { enif_clear_env(env); }
 
