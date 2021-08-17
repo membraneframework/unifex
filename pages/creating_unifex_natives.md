@@ -80,9 +80,7 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
-For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is an atom with type `label` in returned tuple. The type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on the number and types of rest of elements in the returned tuple (see the table below).
-
-It is a very simple C code that always returns the same number it gets.
+The provided `foo` implementation returns the passed argument, by using `foo_result_ok`. For every tuple, that might be returned from our Unifex function, there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is an atom with type `label` in returned tuple. The type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on the number and types of rest of elements in the returned tuple
 
 At this moment the project should successfully compile. 
 Run `mix deps.get && mix compile` to make sure everything is fine.
