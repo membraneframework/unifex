@@ -97,12 +97,14 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
   end
 
   def do_generate_arg_parse_if_statements(var_name, result_success_value, ctx) do
+    enum_name = ctx.type_spec.name
+
     ctx.type_spec.types
     |> Enum.map(&Atom.to_string/1)
     |> Enum.map(fn type ->
       ~g"""
       if (strcmp(enum_as_string, "#{type}") == 0) {
-        #{var_name} = #{type |> String.upcase()};
+        #{var_name} = #{String.upcase("#{enum_name}_#{type}")};
         res = #{result_success_value};
       }
       """
@@ -113,12 +115,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
   def do_generate_arg_serialize_if_statements(name, ctx, serializator) do
     {last_type, types} = List.pop_at(ctx.type_spec.types, -1)
     last_type = Atom.to_string(last_type)
+    enum_name = ctx.type_spec.name
 
     types
     |> Enum.map(&Atom.to_string/1)
     |> Enum.map(fn type ->
       ~g"""
-      if (#{name} == #{type |> String.upcase()}) {
+      if (#{name} == #{String.upcase("#{enum_name}_#{type}")}) {
         #{serializator.(type, ctx)}
       }
       """

@@ -80,12 +80,77 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
-It is a very simple C code that always returns the same number it gets.
+The provided `foo` implementation returns the passed argument, by using `foo_result_ok`. For every tuple, that might be returned from our Unifex function, there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is an atom with type `label` in returned tuple. The type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on the number and types of rest of elements in the returned tuple
 
 At this moment the project should successfully compile. 
 Run `mix deps.get && mix compile` to make sure everything is fine.
 In `c_src/_generated/` directory there should appear files both for usage as NIF and CNode.
 
+### Types
+With Unifex, you can use some of built-in Elixir types (see more in [documentation](https://hexdocs.pm/unifex/supported_types.html)), as well as your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
+
+```elixir
+type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
+
+type my_struct :: %My.Struct{
+  id: int,
+  data: [int],
+  name: string
+}
+
+type nested_struct :: %Nested.Struct{
+  inner_struct: my_struct,
+  id: int
+}
+```
+
+Then, we will generate two versions of native declarations of our custom types, each for `C` and `C++`. An example of version for `C` is posted below
+
+```cpp
+enum MyEnum_t {
+  MY_ENUM_OPTION_ONE,
+  MY_ENUM_OPTION_TWO,
+  MY_ENUM_OPTION_THREE,
+  MY_ENUM_OPTION_FOUR,
+  MY_ENUM_OPTION_FIVE
+};
+typedef enum MyEnum_t MyEnum;
+
+struct my_struct_t {
+  int id;
+  int *data;
+  unsigned int data_length;
+  char *name;
+};
+typedef struct my_struct_t my_struct;
+
+struct nested_struct_t {
+  my_struct inner_struct;
+  int id;
+};
+typedef struct nested_struct_t nested_struct;
+```
+
+The name of enum will be translated to PascalCase, specific options will be prefixed with enum name and translated to MACRO_CASE.
+
+Remember, that in `C` it is forbidden to make a cyclic chain of containment in the way, that it was made above.
+
+Now, you can use your custom types, like basic ones, e.g.
+
+```elixir
+spec example_function(my_enum in_enum, nested_struct in_struct) :: {:ok :: label, out_struct :: my_struct} | {:error :: label, reason :: atom}
+```
+
+```cpp
+UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_struct) {
+  if (in_enum == MY_ENUM_OPTION_ONE) {
+    return example_function_result_error(env, "failed");
+  }
+  return example_function_result_ok(env, in_struct.inner_struct);
+}
+```
+
+If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, the result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
 ## Running code
 
 ### NIF
