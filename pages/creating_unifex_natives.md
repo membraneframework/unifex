@@ -80,7 +80,7 @@ UNIFEX_TERM foo(UnifexEnv* env, int num) {
   return foo_result_ok(env, num);
 }
 ```
-You can see, that we used function `foo_result_ok` in the implementation above. For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is atom with type `label` in returned tuple. Type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on number and types of rest of elements in the returned tuple (see the table below).
+For every tuple, that might be returned from our Unifex function (in this case, it is `foo`), there will be generated implementation of result function named `[orginal_function_name]_result_[label]`, where `label` is an atom with type `label` in returned tuple. The type of the first argument of this function will be `UnifexEnv*`, number and types of the rest of the arguments will depend on the number and types of rest of elements in the returned tuple (see the table below).
 
 It is a very simple C code that always returns the same number it gets.
 
@@ -89,25 +89,7 @@ Run `mix deps.get && mix compile` to make sure everything is fine.
 In `c_src/_generated/` directory there should appear files both for usage as NIF and CNode.
 
 ### Types
-
-We support a few built-in Elixir data types. Below there is a list of examples, how specific type in `*.spec.exs` will be translated onto native side
-
-Elixir type | Native type
---- | ---
-`atom` | `char *`
-`bool` | `int`
-`float` | `double`
-`int` | `int`
-`int64` | `int64_t`
-`payload` | `UnifexPayload`
-`pid` | `UnifexPid`
-`state` | `UnifexState *`
-`string` | `char *`
-`uint64` | `uint64_t`
-`unsigned` | `unsigned int`
-`[int]` | `int *`, `unsigned int`
-
-As you can see, type `[int]` will be translated into two types - it is because, if function in `*.spec.exs` file receives a list of ints as an argument, the corresponding function on the native side will receive two arguments: first will be a pointer to the beginning of the list of ints, second will be the length of this list. `atom` and `string` will be translated only into a basic C-string terminated with 0.
+With Unifex, you can use some of build-in Elixir types (see more in [documentation](https://hexdocs.pm/unifex/supported_types.html)), as well as your own custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
 
 With Unifex you can also define your custom types. Currently, we support defining enums and structs. If you want to add structs or enums to the API of your native functions, you have to define them in the `*.spec.exs` file. There is an example of this:
 
