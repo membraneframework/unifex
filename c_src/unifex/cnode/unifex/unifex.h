@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 // required for ei.h to work
 #ifndef _REENTRANT
@@ -53,6 +54,21 @@ static inline void unifex_free_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
 static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
   return (UnifexPid *) memcpy(pid, env->reply_to, sizeof(UnifexPid));
 };
+
+// Threads
+typedef pthread_t UnifexTid;
+static inline int unifex_thread_create(char *name, UnifexTid *tid, void *(*func)(void *), void *args) {
+  UNIFEX_UNUSED(name);
+  return pthread_create(tid, NULL, func, args);
+}
+
+static inline void unifex_thread_exit(void *exit_val) {
+  pthread_exit(exit_val);
+}
+
+static inline int unifex_thread_join(UnifexTid tid, void **exit_val) {
+  return pthread_join(tid, exit_val);
+}
 
 UNIFEX_TERM unifex_raise(UnifexEnv *env, const char *message);
 
