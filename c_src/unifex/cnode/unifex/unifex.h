@@ -45,30 +45,38 @@ static inline void *unifex_alloc(size_t size) { return malloc(size); }
 
 static inline void unifex_free(void *pointer) { free(pointer); }
 
+/**
+ * Env
+ * 
+ * These functions are introduced to achieve interoperability between NIF and C node.
+ * They does nothing.
+*/
 static inline UnifexEnv *unifex_alloc_env(UnifexEnv *env) { return env; }
-
 static inline void unifex_clear_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
-
 static inline void unifex_free_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
 
-static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
-  return (UnifexPid *) memcpy(pid, env->reply_to, sizeof(UnifexPid));
-};
-
-// Threads
+/** 
+ * Threads
+ * 
+ * To use these functions compile and link with -pthread.
+ * Refer to bundlex project documentation to see how to do it.
+*/
 typedef pthread_t UnifexTid;
 static inline int unifex_thread_create(char *name, UnifexTid *tid, void *(*func)(void *), void *args) {
   UNIFEX_UNUSED(name);
   return pthread_create(tid, NULL, func, args);
 }
-
 static inline void unifex_thread_exit(void *exit_val) {
   pthread_exit(exit_val);
 }
-
 static inline int unifex_thread_join(UnifexTid tid, void **exit_val) {
   return pthread_join(tid, exit_val);
 }
+
+// pid
+static inline UnifexPid *unifex_self(UnifexEnv *env, UnifexPid *pid) {
+  return (UnifexPid *) memcpy(pid, env->reply_to, sizeof(UnifexPid));
+};
 
 UNIFEX_TERM unifex_raise(UnifexEnv *env, const char *message);
 
