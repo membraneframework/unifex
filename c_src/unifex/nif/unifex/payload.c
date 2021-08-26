@@ -28,7 +28,9 @@ UNIFEX_TERM unifex_payload_to_term(ErlNifEnv *env, UnifexPayload *payload) {
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
     payload->owned = 0;
-    return enif_make_binary(env, &payload->payload_struct.binary);
+    ErlNifBinary* bin_tmp_ptr = (ErlNifBinary*) enif_alloc(sizeof(ErlNifBinary));
+    *bin_tmp_ptr = payload->payload_struct.binary;
+    return enif_make_binary(env, bin_tmp_ptr);
   case UNIFEX_PAYLOAD_SHM:
     return shmex_make_term(env, &payload->payload_struct.shm);
   }
