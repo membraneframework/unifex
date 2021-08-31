@@ -800,6 +800,7 @@ exit_test_payload_caller:
   if (in_payload && !in_payload->owned) {
     unifex_payload_release(in_payload);
   }
+  unifex_free(in_payload);
 
   return result;
 }

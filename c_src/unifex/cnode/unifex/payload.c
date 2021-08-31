@@ -30,20 +30,24 @@ void unifex_payload_encode(UnifexEnv *env, UNIFEX_TERM buff,
   env->error = unifex_raise(env, "unifex_payload_encode");
 }
 
-UnifexPayload *unifex_payload_alloc(UnifexEnv *_env, UnifexPayloadType type,
-                                    unsigned int size) {
+int unifex_payload_alloc(UnifexEnv *_env, UnifexPayloadType type,
+                                    unsigned int size, UnifexPayload *payload) {
   UNIFEX_UNUSED(_env);
-  UnifexPayload *payload = unifex_alloc(sizeof(UnifexPayload));
-  payload->type = type;
-  payload->size = size;
-  payload->owned = 1;
 
   switch (type) {
   case UNIFEX_PAYLOAD_BINARY:
     payload->data = unifex_alloc(size);
+    if (!payload->data) {
+      return 0;
+    }
     break;
   }
-  return payload;
+
+  payload->type = type;
+  payload->size = size;
+  payload->owned = 1;
+
+  return 1;
 }
 
 void unifex_payload_release(UnifexPayload *payload) {
@@ -58,6 +62,4 @@ void unifex_payload_release(UnifexPayload *payload) {
     }
     break;
   }
-
-  unifex_free(payload);
 }
