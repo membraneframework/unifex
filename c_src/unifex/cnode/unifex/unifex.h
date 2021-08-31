@@ -45,22 +45,12 @@ static inline void *unifex_alloc(size_t size) { return malloc(size); }
 
 static inline void unifex_free(void *pointer) { free(pointer); }
 
-/**
- * Env
- * 
- * These functions are introduced to achieve interoperability between NIF and C node.
- * They does nothing.
-*/
+// Env
 static inline UnifexEnv *unifex_alloc_env(UnifexEnv *env) { return env; }
 static inline void unifex_clear_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
 static inline void unifex_free_env(UnifexEnv *_env) { UNIFEX_UNUSED(_env); }
 
-/** 
- * Threads
- * 
- * To use these functions compile and link with -pthread.
- * Refer to bundlex project documentation to see how to do it.
-*/
+// Threads
 typedef pthread_t UnifexTid;
 static inline int unifex_thread_create(char *name, UnifexTid *tid, void *(*func)(void *), void *args) {
   UNIFEX_UNUSED(name);
