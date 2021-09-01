@@ -50,12 +50,12 @@ UNIFEX_TERM test_list_with_other_args(UnifexEnv *env, int *in_list,
 }
 
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
-  UnifexPayload *out_payload =
-      unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size);
-  memcpy(out_payload->data, in_payload->data, out_payload->size);
-  out_payload->data[0]++;
-  UNIFEX_TERM result = test_payload_result_ok(env, out_payload);
-  unifex_payload_release(out_payload);
+  UnifexPayload out_payload;
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size, &out_payload);
+  memcpy(out_payload.data, in_payload->data, out_payload.size);
+  out_payload.data[0]++;
+  UNIFEX_TERM result = test_payload_result_ok(env, &out_payload);
+  unifex_payload_release(&out_payload);
   return result;
 }
 

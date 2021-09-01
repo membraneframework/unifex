@@ -37,7 +37,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
 
     @impl BaseType
     def generate_destruction(name, _ctx) do
-      ~g<unifex_payload_release_ptr(&#{name});>
+      ~g"""
+      unifex_payload_release(#{name});
+      unifex_free(#{name});
+      """
     end
   end
 
@@ -67,6 +70,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Payload do
       if(#{name} && !#{name}->owned) {
         unifex_payload_release(#{name});
       }
+      unifex_free(#{name});
       """
     end
   end

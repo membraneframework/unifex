@@ -18,6 +18,7 @@ defmodule Unifex.BundlexProject do
       unifex: [
         src_base: "unifex/cnode/unifex",
         sources: ["unifex.c", "cnode.c", "payload.c"],
+        libs: ["pthread"],
         interface: :cnode
       ]
     ]

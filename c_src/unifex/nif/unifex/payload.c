@@ -37,18 +37,16 @@ UNIFEX_TERM unifex_payload_to_term(ErlNifEnv *env, UnifexPayload *payload) {
                               enif_make_atom(env, "unifex_payload_to_term"));
 }
 
-UnifexPayload *unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
-                                    unsigned int size) {
-  UnifexPayload *payload = enif_alloc(sizeof(UnifexPayload));
-  payload->size = size;
-  payload->type = type;
-  payload->owned = 1;
+int unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
+                                    unsigned int size, UnifexPayload *payload) {
   Shmex *p_struct;
   ShmexLibResult result;
 
   switch (type) {
   case UNIFEX_PAYLOAD_BINARY:
-    enif_alloc_binary(size, &payload->payload_struct.binary);
+    if (enif_alloc_binary(size, &payload->payload_struct.binary) != 1) {
+        return 0;
+    }
     payload->data = payload->payload_struct.binary.data;
     break;
   case UNIFEX_PAYLOAD_SHM:
@@ -56,19 +54,23 @@ UnifexPayload *unifex_payload_alloc(UnifexEnv *env, UnifexPayloadType type,
     shmex_init(env, p_struct, size);
     result = shmex_allocate(env, UNIFEX_PAYLOAD_GUARD_RESOURCE_TYPE, p_struct);
     if (SHMEX_RES_OK != result) {
-      return NULL;
+      return 0;
     }
     result = shmex_open_and_mmap(p_struct);
     if (SHMEX_RES_OK != result) {
       shmex_release(p_struct);
-      return NULL;
+      return 0;
     }
-    p_struct->size = payload->size;
+    p_struct->size = size;
     payload->data = p_struct->mapped_memory;
     break;
   }
 
-  return payload;
+  payload->size = size;
+  payload->type = type;
+  payload->owned = 1;
+
+  return 1;
 }
 
 void unifex_payload_guard_destructor(UnifexEnv *env, void *resource) {
@@ -114,14 +116,4 @@ void unifex_payload_release(UnifexPayload *payload) {
     shmex_release(&payload->payload_struct.shm);
     break;
   }
-}
-
-void unifex_payload_release_ptr(UnifexPayload **payload) {
-  if (*payload == NULL) {
-    return;
-  }
-
-  unifex_payload_release(*payload);
-  enif_free(*payload);
-  *payload = NULL;
 }
