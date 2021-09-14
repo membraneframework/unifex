@@ -138,7 +138,7 @@ Remember, that in `C` it is forbidden to make a cyclic chain of containment in t
 Now, you can use your custom types, like basic ones, e.g.
 
 ```elixir
-spec example_function(my_enum in_enum, nested_struct in_struct) :: {:ok :: label, out_struct :: my_struct} | {:error :: label, reason :: atom}
+spec example_function(in_enum :: my_enum, in_struct :: nested_struct) :: {:ok :: label, out_struct :: my_struct} | {:error :: label, reason :: atom}
 ```
 
 ```cpp
