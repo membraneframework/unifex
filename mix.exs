@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.7.0"
+  @version "0.7.1"
   @github_link "https://github.com/membraneframework/unifex"
 
   def project do
@@ -30,7 +30,7 @@ defmodule Unifex.MixProject do
   defp package do
     [
       maintainers: ["Membrane Team"],
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       files: ["lib", "c_src", "mix.exs", "README*", "LICENSE*", ".formatter.exs", "bundlex.exs"],
       links: %{
         "GitHub" => @github_link,
@@ -63,11 +63,11 @@ defmodule Unifex.MixProject do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:bunch, "~> 1.0"},
       {:shmex, "~> 0.4.0"},
       {:bundlex, "~> 0.5.0"},
-      {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
 end
