@@ -87,6 +87,10 @@ int unifex_payload_realloc(UnifexPayload *payload, unsigned int size) {
   case UNIFEX_PAYLOAD_BINARY:
     old_binary = &payload->payload_struct.binary;
     res = enif_realloc_binary(&payload->payload_struct.binary, size);
+    if (!res) {
+      return 0;
+    }
+
     if (payload->owned) {
       enif_release_binary(old_binary);
     }
