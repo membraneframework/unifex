@@ -81,11 +81,16 @@ int unifex_payload_realloc(UnifexPayload *payload, unsigned int size) {
   int res = 1;
   payload->size = size;
   Shmex *shmex;
+  ErlNifBinary *old_binary;
 
   switch (payload->type) {
   case UNIFEX_PAYLOAD_BINARY:
-    payload->owned = 1;
+    old_binary = &payload->payload_struct.binary;
     res = enif_realloc_binary(&payload->payload_struct.binary, size);
+    if (payload->owned) {
+      enif_release_binary(old_binary);
+    }
+    payload->owned = 1;
     payload->data = payload->payload_struct.binary.data;
     break;
   case UNIFEX_PAYLOAD_SHM:
