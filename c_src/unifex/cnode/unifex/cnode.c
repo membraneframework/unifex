@@ -1,4 +1,8 @@
 #include "cnode.h"
+#if defined(__FreeBSD__)
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
 #include <arpa/inet.h>
 #include <unistd.h>
 
