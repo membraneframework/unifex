@@ -7,11 +7,10 @@ You can also refer to [#42](https://github.com/membraneframework/unifex/issues/4
 state of work on remaining types.
 
 ## NIF
-| type    | as function parameter | as return type  |
-| ------- | :-------------------: | :-------------: |
+| type      | as function parameter | as return type  |
+| --------- | :-------------------: | :-------------: |
 | `atom`    | yes                   | yes             |
 | `bool`    | yes                   | yes             |
-| `uint`    | yes                   | yes             |
 | `uint64`  | yes                   | yes             |
 | `int`     | yes                   | yes             |
 | `int64`   | yes                   | yes             |
@@ -22,11 +21,10 @@ state of work on remaining types.
 | `string`  | yes                   | yes             |
 
 ## CNode
-| type    | as function parameter | as return type  |
-| ------- | :-------------------: | :-------------: |
+| type      | as function parameter | as return type  |
+| --------- | :-------------------: | :-------------: |
 | `atom`    | yes                   | yes             |
 | `bool`    | yes                   | yes             |
-| `uint`    | yes                   | yes             |
 | `uint64`  | no                    | no              |
 | `int`     | yes                   | yes             |
 | `int64`   | no                    | no              |
