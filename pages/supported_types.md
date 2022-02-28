@@ -11,6 +11,7 @@ state of work on remaining types.
 | --------- | :-------------------: | :-------------: |
 | `atom`    | yes                   | yes             |
 | `bool`    | yes                   | yes             |
+| `unsigned`| yes                   | yes             |
 | `uint64`  | yes                   | yes             |
 | `int`     | yes                   | yes             |
 | `int64`   | yes                   | yes             |
@@ -25,6 +26,7 @@ state of work on remaining types.
 | --------- | :-------------------: | :-------------: |
 | `atom`    | yes                   | yes             |
 | `bool`    | yes                   | yes             |
+| `unsigned`| yes                   | yes             |
 | `uint64`  | no                    | no              |
 | `int`     | yes                   | yes             |
 | `int64`   | no                    | no              |
