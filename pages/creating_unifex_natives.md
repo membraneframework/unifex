@@ -8,7 +8,7 @@ In this tutorial, you will learn how to use Unifex natives to write native code 
 In order to start working, you need to prepare a few things:
 
 1. First, you have to add unifex to your dependencies as well as unifex and bundlex compilers.
-   Please refer to [Instalation](https://hexdocs.pm/unifex/readme.html#instalation) section to see how to do it. 
+   Please refer to [Installation](https://hexdocs.pm/unifex/readme.html#installation) section to see how to do it. 
 2. After successful installation we should take a look at [Bundlex](https://github.com/membraneframework/bundlex).
    Unifex uses Bundlex to compile the native code. 
    You can think of Bundlex as a tool that generates build scripts responsible for including proper libs compiling your native code and linking it with mentioned libs.
