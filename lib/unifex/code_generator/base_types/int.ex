@@ -7,10 +7,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
 
   defmodule CNode do
     @moduledoc false
-    alias Unifex.CodeGenerator.BaseType
-    use BaseType
+    use Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       ({
@@ -22,7 +21,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       ({

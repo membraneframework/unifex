@@ -7,23 +7,22 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
-  alias Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def ptr_level(_ctx), do: 1
 
-  @impl BaseType
+  @impl true
   def generate_native_type(ctx) do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
     ~g<char #{optional_const}*>
   end
 
-  @impl BaseType
+  @impl true
   def generate_initialization(name, _ctx) do
     ~g<#{name} = NULL;>
   end
 
-  @impl BaseType
+  @impl true
   def generate_destruction(name, _ctx) do
     ~g<unifex_free(#{name});>
   end
@@ -31,14 +30,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   defmodule NIF do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
-
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<unifex_string_to_term(env, #{name})>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g<unifex_string_from_term(env, #{arg}, &#{var_name})>
     end
@@ -47,14 +44,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.String do
   defmodule CNode do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<ei_x_encode_binary(out_buff, #{name}, strlen(#{name}));>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g"""
       ({

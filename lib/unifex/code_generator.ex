@@ -5,8 +5,9 @@ defmodule Unifex.CodeGenerator do
 
   alias Unifex.Specs
 
+  @type t :: module
   @type code_t :: String.t()
-  @type generated_code_t :: {header :: code_t, source :: code_t, generator :: module()}
+  @type generated_code_t :: {header :: code_t, source :: code_t, generator :: t}
 
   @callback identification_constant() :: String.t()
   @callback interface_io_name() :: String.t()
@@ -25,7 +26,7 @@ defmodule Unifex.CodeGenerator do
     end
   end
 
-  @spec get_generators(Specs.t()) :: [module()]
+  @spec get_generators(Specs.t()) :: [t]
   defp get_generators(%Specs{name: name, interface: nil}) do
     {:ok, bundlex_project} = Bundlex.Project.get()
     config = bundlex_project.config
@@ -41,7 +42,7 @@ defmodule Unifex.CodeGenerator do
     case generators do
       [] -> raise "Interface for native #{name} is not specified.
         Please specify it in your *.spec.exs or bundlex.exs file."
-      _ -> generators
+      generators -> generators
     end
   end
 
@@ -56,7 +57,7 @@ defmodule Unifex.CodeGenerator do
   def bundlex_interface(:nif), do: NIF
   def bundlex_interface(:port), do: Port
 
-  @spec interface_generator(Specs.interface_t()) :: module()
+  @spec interface_generator(Specs.interface_t()) :: t
   def interface_generator(interface) do
     generator = Module.concat(Unifex.CodeGenerators, interface)
 

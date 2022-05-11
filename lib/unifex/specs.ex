@@ -5,6 +5,8 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
+  alias Unifex.CodeGenerator
+
   @typedoc """
   Name of interface generated for the native library.
   Must be a suffix of code generator module in `Unifex.CodeGenerators` namespace.
@@ -13,9 +15,17 @@ defmodule Unifex.Specs do
   """
   @type interface_t :: atom()
 
+  @type native_name_t :: atom()
+
+  @type struct_t ::
+          {struct_alias :: atom, struct_module_name :: atom,
+           [{field_name :: atom, field_type :: {atom | {:list, atom}}}]}
+
+  @type enum_t :: {enum_name :: atom, [enum_field :: atom]}
+
   @type t :: %__MODULE__{
-          name: atom,
-          module: module() | nil,
+          name: native_name_t,
+          module: CodeGenerator.t() | nil,
           functions_args: [{function_name :: atom, [arg_type :: {atom | {:list, atom}}]}],
           functions_results: [{function_name :: atom, return_type :: Macro.t()}],
           sends: [{send_name :: atom, send_term_type :: Macro.t()}],
@@ -27,11 +37,8 @@ defmodule Unifex.Specs do
           },
           interface: [interface_t()] | interface_t() | nil,
           state_type: String.t() | nil,
-          enums: [{enum_name :: atom, [enum_field :: atom]}],
-          structs: [
-            {struct_alias :: atom, struct_module_name :: atom,
-             [{field_name :: atom, field_type :: {atom | {:list, atom}}}]}
-          ]
+          enums: [],
+          structs: [struct_t()]
         }
 
   @enforce_keys [
@@ -53,7 +60,7 @@ defmodule Unifex.Specs do
   @doc """
   Parses Unifex specs of native functions.
   """
-  @spec parse(specs_file :: Path.t(), name :: atom) :: t()
+  @spec parse(specs_file :: String.t(), native_name_t) :: t()
   def parse(specs_file, name) do
     specs_code = File.read!(specs_file)
     {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env(specs_file))

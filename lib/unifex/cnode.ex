@@ -1,5 +1,5 @@
 defmodule Unifex.CNode do
-  @doc """
+  @moduledoc """
   Wraps Bundlex.CNode functionalities to support Unifex-specific CNode behaviours
   """
 
@@ -50,7 +50,7 @@ defmodule Unifex.CNode do
 
   For details, see `Bundlex.CNode.start_link/2`.
   """
-  @spec start_link(app :: atom, native_name :: atom) :: on_start_t
+  @spec start_link(app :: Application.app(), Unifex.Specs.native_name_t()) :: on_start_t
   def start_link(app, native_name) do
     Bundlex.CNode.start_link(app, native_name) |> wrap_start_result()
   end
@@ -59,7 +59,7 @@ defmodule Unifex.CNode do
   Works the same way as `start_link/2`, but does not link to CNode's associated
   server.
   """
-  @spec start(app :: atom, native_name :: atom) :: on_start_t
+  @spec start(app :: Application.app(), Unifex.Specs.native_name_t()) :: on_start_t
   def start(app, native_name) do
     Bundlex.CNode.start(app, native_name) |> wrap_start_result()
   end
@@ -98,6 +98,7 @@ defmodule Unifex.CNode do
   end
 
   @doc false
+  @spec wrap_start_result(Bundlex.CNode.on_start_t()) :: {:ok, t} | Bundlex.CNode.on_start_t()
   def wrap_start_result({:ok, %Bundlex.CNode{} = bundlex_cnode}) do
     {:ok,
      %__MODULE__{

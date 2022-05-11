@@ -27,6 +27,7 @@ defmodule Unifex.Loader do
           defnifp unquote(wrapped_name)(unquote_splicing(arg_names))
 
           @compile {:inline, [unquote({name, length(args)})]}
+          # credo:disable-for-next-line Credo.Check.Readability.Specs
           def unquote(name)(unquote_splicing(arg_names)) do
             unquote({wrapped_name, [], arg_names})
           end

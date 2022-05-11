@@ -1,14 +1,17 @@
 defmodule Unifex.CodeGenerators.Common do
-  import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
-  alias Unifex.CodeGenerator.{BaseType, BaseTypes}
+  @moduledoc false
+  # Contains functions used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
 
-  @moduledoc """
-  Contains functions used in both Unifex.CodeGenerators.NIF and Unifex.CodeGenerators.CNode modules
-  """
+  import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
+
+  alias Unifex.CodeGenerator
+  alias Unifex.CodeGenerator.{BaseType, BaseTypes}
+  alias Unifex.Specs
 
   @doc """
   Creates ctx passed to functions generating native code
   """
+  @spec create_ctx(Specs.t()) :: map
   def create_ctx(specs) do
     structs =
       specs.structs
@@ -45,6 +48,8 @@ defmodule Unifex.CodeGenerators.Common do
   @doc """
   Generates native definition of struct
   """
+  @spec generate_struct_native_definition(Specs.struct_t(), CodeGenerator.t(), map) ::
+          CodeGenerator.code_t()
   def generate_struct_native_definition(
         {struct_type_name, _struct_module_name, struct_fields},
         code_generator,
@@ -57,8 +62,7 @@ defmodule Unifex.CodeGenerators.Common do
       end)
       |> Enum.map(&Bunch.listify/1)
       |> Enum.flat_map(fn x -> x end)
-      |> Enum.map(fn declaration -> ~g<#{declaration};> end)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", fn declaration -> ~g<#{declaration};> end)
 
     ~g"""
     #ifdef __cplusplus
@@ -74,11 +78,10 @@ defmodule Unifex.CodeGenerators.Common do
     """
   end
 
+  @spec generate_enum_native_definition(Specs.enum_t(), map) :: CodeGenerator.code_t()
   def generate_enum_native_definition({enum_name, enum_types}, _ctx) do
     enum_types =
-      enum_types
-      |> Enum.map(fn type -> String.upcase("#{enum_name}_#{type}") end)
-      |> Enum.join(",\n")
+      Enum.map_join(enum_types, ",\n", fn type -> String.upcase("#{enum_name}_#{type}") end)
 
     enum_name =
       enum_name

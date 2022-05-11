@@ -5,12 +5,13 @@ defmodule Unifex do
   When added to a native configuration in `Bundlex.Project`, equips the native with
   the Unifex native dependency and generated sources.
   """
+
+  @behaviour Bundlex.Project.Preprocessor
+
   alias Bundlex.Native
   alias Bundlex.Project.Preprocessor
   alias Unifex.CodeGenerator
   alias Unifex.InterfaceIO
-
-  @behaviour Preprocessor
 
   @impl Preprocessor
   def preprocess_native_config(_name, _app, config) do

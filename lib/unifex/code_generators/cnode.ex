@@ -1,14 +1,14 @@
 defmodule Unifex.CodeGenerators.CNode do
   @moduledoc """
-  Generates NIF boilerplate based on `Unifex.Specs`.
+  Generates C node boilerplate based on `Unifex.Specs`.
   """
+
+  @behaviour Unifex.CodeGenerator
 
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerator, InterfaceIO, Specs}
   alias Unifex.CodeGenerator.{BaseType, Utils}
   alias Unifex.CodeGenerators.Common
-
-  @behaviour CodeGenerator
 
   @impl CodeGenerator
   def identification_constant(), do: "BUNDLEX_CNODE"
@@ -219,18 +219,15 @@ defmodule Unifex.CodeGenerators.CNode do
     exit_label = "exit_#{name}_caller"
 
     maybe_unused_args = Utils.generate_maybe_unused_args_statements(["in_buff"])
-
-    args_declaration =
-      args |> generate_args_declarations(ctx) |> Enum.map(&~g<#{&1};>) |> Enum.join("\n")
+    args_declaration = args |> generate_args_declarations(ctx) |> Enum.map_join("\n", &~g<#{&1};>)
 
     args_initialization =
-      args
-      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, CNode, ctx) end)
-      |> Enum.join("\n")
+      Enum.map_join(args, "\n", fn {name, type} ->
+        BaseType.generate_initialization(type, name, CNode, ctx)
+      end)
 
     args_parsing =
-      args
-      |> Enum.map(fn {name, type} ->
+      Enum.map_join(args, "\n", fn {name, type} ->
         postproc_fun = fn arg_getter ->
           ~g"""
           if(#{arg_getter}) {
@@ -243,7 +240,6 @@ defmodule Unifex.CodeGenerators.CNode do
 
         BaseType.generate_arg_parse(type, name, "in_buff", postproc_fun, CNode, ctx)
       end)
-      |> Enum.join("\n")
 
     implemented_fun_args =
       [
