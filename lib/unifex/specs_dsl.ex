@@ -10,7 +10,7 @@ defmodule Unifex.Specs.DSL do
 
       type personal_data :: %PersonalData{
         age: int,
-        expirience: int,
+        experience: int,
         name: string
       }
 
@@ -47,13 +47,13 @@ defmodule Unifex.Specs.DSL do
       #ifdef __cplusplus
       struct personal_data {
         int age;
-        int expirience;
+        int experience;
         char *name;
       };
       #else
       struct personal_data_t {
         int age;
-        int expirience;
+        int experience;
         char *name;
       };
       typedef struct personal_data_t personal_data;
