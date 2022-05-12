@@ -13,4 +13,5 @@ jobs:
       - run: mix format --check-formatted
       - run: mix compile --force --warnings-as-errors
       - run: mix dialyzer
+      - run: mix credo
       - run: mix test
