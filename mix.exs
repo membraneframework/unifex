@@ -65,7 +65,8 @@ defmodule Unifex.MixProject do
     [
       {:bunch, "~> 1.0"},
       {:shmex, "~> 0.4.0"},
-      {:bundlex, "~> 0.5.0"},
+      # {:bundlex, "~> 0.5.0"},
+      {:bundlex, path: "../bundlex", override: true},
       {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:credo, "~> 1.6", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
