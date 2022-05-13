@@ -6,10 +6,9 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int64 do
 
   Implemented only for NIF as function parameter as well as return type.
   """
-  alias Unifex.CodeGenerator.BaseType
-  use BaseType
+  use Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def generate_native_type(_ctx) do
     ~g<int64_t>
   end

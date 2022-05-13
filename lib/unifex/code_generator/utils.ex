@@ -28,50 +28,59 @@ defmodule Unifex.CodeGenerator.Utils do
         ) ::
           {output, [{:label, atom} | {:arg, {name :: atom, type :: BaseType.t()}}]}
         when output: term
-  def generate_serialization(ast, serializers) do
-    ast
-    |> case do
-      {:__aliases__, [alias: als], atoms} ->
-        generate_serialization(als || Module.concat(atoms), serializers)
 
-      atom when is_atom(atom) ->
-        {serializers.arg_serializer.(:atom, :"\"#{atom}\""), []}
+  def generate_serialization({:__aliases__, [alias: als], atoms}, serializers) do
+    generate_serialization(als || Module.concat(atoms), serializers)
+  end
 
-      {:"::", _, [name, {:label, _, _}]} when is_atom(name) ->
-        {serializers.arg_serializer.(:atom, :"\"#{name}\""), label: name}
+  def generate_serialization(atom, serializers) when is_atom(atom) do
+    {serializers.arg_serializer.(:atom, :"\"#{atom}\""), []}
+  end
 
-      {:"::", _, [{name, _, _}, {type, _, _}]} ->
-        {serializers.arg_serializer.(type, name), arg: {name, type}}
+  def generate_serialization({:"::", _meta, [name, {:label, _meta2, _args}]}, serializers)
+      when is_atom(name) do
+    {serializers.arg_serializer.(:atom, :"\"#{name}\""), label: name}
+  end
 
-      {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]} ->
-        generate_serialization(
-          {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]},
-          serializers
-        )
+  def generate_serialization(
+        {:"::", _meta, [{name, _meta2, _args}, {type, _meta3, _args2}]},
+        serializers
+      ) do
+    {serializers.arg_serializer.(type, name), arg: {name, type}}
+  end
 
-      {a, b} ->
-        generate_serialization({:{}, [], [a, b]}, serializers)
+  def generate_serialization(
+        {:"::", meta, [name_var, [{type, type_meta, type_ctx}]]},
+        serializers
+      ) do
+    generate_serialization(
+      {:"::", meta, [name_var, {{:list, type}, type_meta, type_ctx}]},
+      serializers
+    )
+  end
 
-      {:{}, _, content} ->
-        {results, meta} =
-          content
-          |> Enum.map(fn ast -> generate_serialization(ast, serializers) end)
-          |> Enum.unzip()
+  def generate_serialization({a, b}, serializers) do
+    generate_serialization({:{}, [], [a, b]}, serializers)
+  end
 
-        {serializers.tuple_serializer.(results), meta}
+  def generate_serialization({:{}, _meta, content}, serializers) do
+    {results, meta} =
+      content
+      |> Enum.map(fn ast -> generate_serialization(ast, serializers) end)
+      |> Enum.unzip()
 
-      [{_name, _, _} = name_var] ->
-        generate_serialization(
-          {:"::", [], [name_var, [name_var]]},
-          serializers
-        )
+    {serializers.tuple_serializer.(results), List.flatten(meta)}
+  end
 
-      {_name, _, _} = name_var ->
-        generate_serialization({:"::", [], [name_var, name_var]}, serializers)
-    end
-    |> case do
-      {result, meta} -> {result, List.flatten(meta)}
-    end
+  def generate_serialization([{_name, _meta, _args} = name_var], serializers) do
+    generate_serialization(
+      {:"::", [], [name_var, [name_var]]},
+      serializers
+    )
+  end
+
+  def generate_serialization({_name, _meta, _args} = name_var, serializers) do
+    generate_serialization({:"::", [], [name_var, name_var]}, serializers)
   end
 
   @spec generate_functions(
@@ -119,7 +128,6 @@ defmodule Unifex.CodeGenerator.Utils do
     config
     |> Enum.map(fn c -> generator.(c, ctx) end)
     |> Enum.filter(&(&1 != ""))
-    |> Enum.map(mapper)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", mapper)
   end
 end

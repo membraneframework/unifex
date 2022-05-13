@@ -1,17 +1,18 @@
 defmodule Unifex.InterfaceIO do
   @moduledoc false
 
-  alias Unifex.CodeGenerator
+  alias Unifex.{CodeGenerator, Specs}
 
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
 
+  @spec user_header_path(Specs.native_name_t()) :: String.t()
   def user_header_path(name) do
     "../../#{name}.h"
   end
 
-  @spec get_interfaces_specs!(dir :: Path.t()) :: [
-          {name :: String.t(), dir :: String.t(), file :: String.t()}
+  @spec get_interfaces_specs!(dir :: String.t()) :: [
+          {Specs.native_name_t(), dir :: String.t(), file :: String.t()}
         ]
   def get_interfaces_specs!(dir) do
     dir
@@ -26,16 +27,23 @@ defmodule Unifex.InterfaceIO do
     end)
   end
 
+  @spec out_path(
+          Specs.native_name_t(),
+          dir :: String.t(),
+          CodeGenerator.t(),
+          extension :: String.t()
+        ) :: String.t()
   def out_path(name, dir, generator, extension \\ "") do
     Path.join(out_dir(dir, generator), "#{name}#{extension}")
   end
 
+  @spec out_dir(base_dir :: String.t(), CodeGenerator.t()) :: String.t()
   def out_dir(base_dir, generator) do
     Path.join([base_dir, @generated_dir_name, generator.interface_io_name()])
   end
 
   @spec store_interface!(
-          name :: String.t(),
+          Specs.native_name_t(),
           dir :: String.t(),
           code :: CodeGenerator.generated_code_t()
         ) :: :ok
@@ -54,15 +62,17 @@ defmodule Unifex.InterfaceIO do
     :ok
   end
 
+  @spec store_tie_header!(Specs.native_name_t(), dir :: String.t(), CodeGenerator.code_t()) ::
+          :ok
   def store_tie_header!(name, dir, code) do
     out_dir_name = Path.join(dir, @generated_dir_name)
     File.mkdir_p!(out_dir_name)
     out_base_path = Path.join(out_dir_name, "#{name}.h")
     File.write!(out_base_path, code)
-
     :ok
   end
 
+  @spec store_gitignore!(String.t()) :: :ok
   def store_gitignore!(dir) do
     out_dir_name = Path.join(dir, @generated_dir_name)
     File.mkdir_p!(out_dir_name)

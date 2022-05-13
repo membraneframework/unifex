@@ -5,9 +5,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
   Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
-  alias Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def generate_native_type(_ctx) do
     ~g<unsigned int>
   end
@@ -15,14 +14,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
   defmodule NIF do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<enif_make_uint(env, #{name})>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg_term, var_name, _ctx) do
       ~g<enif_get_uint(env, #{arg_term}, &#{var_name})>
     end
@@ -31,9 +29,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
   defmodule CNode do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       ({
@@ -43,7 +40,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Unsigned do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(argument, name, _ctx) do
       ~g"""
       ({

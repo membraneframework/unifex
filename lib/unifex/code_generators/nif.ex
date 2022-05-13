@@ -3,12 +3,12 @@ defmodule Unifex.CodeGenerators.NIF do
   Generates NIF boilerplate based on `Unifex.Specs`.
   """
 
+  @behaviour Unifex.CodeGenerator
+
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.{CodeGenerator, InterfaceIO, Specs}
   alias Unifex.CodeGenerator.{BaseType, Utils}
   alias Unifex.CodeGenerators.Common
-
-  @behaviour CodeGenerator
 
   @impl CodeGenerator
   def identification_constant(), do: "BUNDLEX_NIF"
@@ -187,18 +187,17 @@ defmodule Unifex.CodeGenerators.NIF do
     args_declaration =
       args
       |> Enum.flat_map(fn {name, type} -> BaseType.generate_declaration(type, name, NIF, ctx) end)
-      |> Enum.map(&~g<#{&1};>)
-      |> Enum.join("\n")
+      |> Enum.map_join("\n", &~g<#{&1};>)
 
     args_initialization =
-      args
-      |> Enum.map(fn {name, type} -> BaseType.generate_initialization(type, name, NIF, ctx) end)
-      |> Enum.join("\n")
+      Enum.map_join(args, "\n", fn {name, type} ->
+        BaseType.generate_initialization(type, name, NIF, ctx)
+      end)
 
     args_parsing =
       args
       |> Enum.with_index()
-      |> Enum.map(fn {{name, type}, i} ->
+      |> Enum.map_join("\n", fn {{name, type}, i} ->
         postproc_fun = fn arg_getter ->
           ~g"""
           if(!#{arg_getter}) {
@@ -210,7 +209,6 @@ defmodule Unifex.CodeGenerators.NIF do
 
         BaseType.generate_arg_parse(type, name, "argv[#{i}]", postproc_fun, NIF, ctx)
       end)
-      |> Enum.join("\n")
 
     args_destruction =
       args
@@ -219,8 +217,7 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.join("\n")
 
     args_names =
-      args
-      |> Enum.flat_map(fn {name, type} -> BaseType.generate_arg_name(type, name, NIF, ctx) end)
+      Enum.flat_map(args, fn {name, type} -> BaseType.generate_arg_name(type, name, NIF, ctx) end)
 
     ~g"""
     static ERL_NIF_TERM export_#{name}(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]){
@@ -398,7 +395,7 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_erlang_boilerplate(specs) do
     printed_funcs =
       specs.functions_args
-      |> Enum.map(fn {name, args} ->
+      |> Enum.map_join(",\n", fn {name, args} ->
         arity = length(args)
 
         flags =
@@ -410,7 +407,6 @@ defmodule Unifex.CodeGenerators.NIF do
 
         ~g<{"unifex_#{name}", #{arity}, export_#{name}, #{flags}}>
       end)
-      |> Enum.join(",\n")
 
     # Erlang used to have reload callback. It is unsupported from OTP 20
     # Its entry in ERL_NIF_INIT parameters is always NULL
@@ -419,7 +415,7 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.map_join(", ", fn hook ->
         case specs.callbacks[hook] do
           nil -> "NULL"
-          _ -> "unifex_#{hook}_nif"
+          _callback -> "unifex_#{hook}_nif"
         end
       end)
 

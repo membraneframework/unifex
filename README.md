@@ -13,6 +13,10 @@ Unifex is a tool for generating interfaces between native C code and Elixir, tha
 
 API documentation is available at [HexDocs](https://hexdocs.pm/unifex/).
 
+Unifex uses [Bundlex](https://github.com/membraneframework/bundlex) to compile and load the native code. See there for supported platforms & details.
+
+This tool is maintained by the [Membrane Framework](https://membraneframework.org/) team.
+
 ## Installation
 
 To install, you need to configure Mix project as follows:

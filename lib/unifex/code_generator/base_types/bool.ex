@@ -7,9 +7,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
   Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
-  alias Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def generate_native_type(_ctx) do
     ~g<int>
   end
@@ -17,14 +16,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
   defmodule NIF do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<enif_make_atom(env, #{name} ? "true" : "false")>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg_term, var_name, _ctx) do
       ~g<unifex_parse_bool(env, #{arg_term}, &#{var_name})>
     end
@@ -33,14 +31,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.Bool do
   defmodule CNode do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<ei_x_encode_atom(out_buff, #{name} ? "true" : "false");>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g"""
       ({

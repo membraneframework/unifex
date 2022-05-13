@@ -10,12 +10,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def ptr_level(ctx) do
     BaseType.ptr_level(ctx.subtype, ctx.generator, ctx) + 1
   end
 
-  @impl BaseType
+  @impl true
   def generate_native_type(ctx) do
     optional_const = if ctx.mode == :const, do: "const ", else: ""
 
@@ -25,12 +25,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     ]
   end
 
-  @impl BaseType
+  @impl true
   def generate_initialization(name, _ctx) do
     ~g<#{name} = NULL;>
   end
 
-  @impl BaseType
+  @impl true
   def generate_destruction(name, ctx) do
     ~g"""
     if(#{name} != NULL) {
@@ -47,7 +47,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, ctx) do
       ~g"""
       ({
@@ -64,7 +64,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, ctx) do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"
@@ -99,7 +99,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, ctx) do
       ~g"""
       ({
@@ -112,7 +112,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, ctx) do
       elem_name = :"#{var_name}[i]"
       len_var_name = "#{var_name}_length"

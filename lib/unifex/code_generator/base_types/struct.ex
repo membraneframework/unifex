@@ -1,11 +1,19 @@
 defmodule Unifex.CodeGenerator.BaseTypes.Struct do
+  @moduledoc """
+  Module implementing `Unifex.CodeGenerator.BaseType` behaviour for structs.
+
+  Elixir structs in native code are represented by C structs.
+
+  Implemented both for NIF and CNode.
+  """
+
   use Unifex.CodeGenerator.BaseType
   alias Unifex.CodeGenerator.BaseType
 
   @enforce_keys [:struct_alias, :module_name, :fields]
   defstruct @enforce_keys
 
-  @impl BaseType
+  @impl true
   def generate_initialization(name, ctx) do
     ctx.type_spec.fields
     |> Enum.map(fn {field_name, field_type} ->
@@ -15,7 +23,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
     |> Enum.join("\n")
   end
 
-  @impl BaseType
+  @impl true
   def generate_destruction(name, ctx) do
     ctx.type_spec.fields
     |> Enum.map(fn {field_name, field_type} ->
@@ -26,17 +34,19 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
   end
 
   defmodule NIF do
+    @moduledoc false
+
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, ctx) do
       fields_number = length(ctx.type_spec.fields)
 
       fields_serialization =
         ctx.type_spec.fields
         |> Enum.zip(0..(fields_number - 1))
-        |> Enum.map(fn {{field_name, field_type}, idx} ->
+        |> Enum.map_join("\n", fn {{field_name, field_type}, idx} ->
           ~g"""
           keys[#{idx}] = enif_make_atom(env, "#{field_name}");
           values[#{idx}] = #{BaseType.generate_arg_serialize(field_type,
@@ -45,7 +55,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
           ctx)};
           """
         end)
-        |> Enum.join("\n")
 
       ~g"""
       ({
@@ -63,7 +72,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, ctx) do
       %{postproc_fun: postproc_fun, generator: generator} = ctx
 
@@ -71,7 +80,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
 
       fields_parsing =
         ctx.type_spec.fields
-        |> Enum.map(fn {field_name, field_type} ->
+        |> Enum.map_join("\n", fn {field_name, field_type} ->
           ~g"""
           key_#{unique_sufix} = enif_make_atom(env, "#{field_name}");
           int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_sufix}, &value_#{unique_sufix});
@@ -85,12 +94,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
           }
           """
         end)
-        |> Enum.join("\n")
 
       result =
         ctx.type_spec.fields
-        |> Enum.map(fn {field_name, _field_type} -> ~g<get_#{field_name}_result> end)
-        |> Enum.join(" && ")
+        |> Enum.map_join(" && ", fn {field_name, _field_type} -> ~g<get_#{field_name}_result> end)
 
       ~g"""
       ({
@@ -105,14 +112,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
   end
 
   defmodule CNode do
+    @moduledoc false
+
     use Unifex.CodeGenerator.BaseType
     alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, ctx) do
       fields_serialization =
         ctx.type_spec.fields
-        |> Enum.map(fn {field_name, field_type} ->
+        |> Enum.map_join("\n", fn {field_name, field_type} ->
           ~g"""
           ei_x_encode_atom(out_buff, "#{field_name}");
           #{BaseType.generate_arg_serialize(field_type,
@@ -121,7 +130,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
           ctx)};
           """
         end)
-        |> Enum.join("\n")
 
       ~g"""
       ({
@@ -133,7 +141,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, ctx) do
       %{postproc_fun: postproc_fun, generator: generator} = ctx
 

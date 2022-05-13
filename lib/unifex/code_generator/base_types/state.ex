@@ -5,12 +5,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
   To use it, specify the state type with `Unifex.Specs.DSL.state_type/1`.
   """
   use Unifex.CodeGenerator.BaseType
-  alias Unifex.CodeGenerator.BaseType
 
-  @impl BaseType
+  @impl true
   def ptr_level(_ctx), do: 1
 
-  @impl BaseType
+  @impl true
   def generate_native_type(_ctx) do
     ~g<UnifexState*>
   end
@@ -18,14 +17,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
   defmodule NIF do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g<unifex_make_resource(env, #{name})>
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(arg, var_name, _ctx) do
       ~g<enif_get_resource(env, #{arg}, STATE_RESOURCE_TYPE, (void **)&#{var_name})>
     end
@@ -34,9 +32,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
   defmodule CNode do
     @moduledoc false
     use Unifex.CodeGenerator.BaseType
-    alias Unifex.CodeGenerator.BaseType
 
-    @impl BaseType
+    @impl true
     def generate_arg_parse(_argument, variable, _ctx) do
       ~g"""
       ({
@@ -46,7 +43,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.State do
       """
     end
 
-    @impl BaseType
+    @impl true
     def generate_arg_serialize(name, _ctx) do
       ~g"""
       {

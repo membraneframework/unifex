@@ -13,7 +13,6 @@ defmodule Unifex.CodeGenerator.BaseType do
   alias Unifex.CodeGenerator.BaseTypes
 
   @type t :: atom | {:list, atom}
-  @type spec_tuple_t :: {name :: atom(), type :: t}
   @type arg_parse_ctx_t :: %{
           result_var: CodeGenerator.code_t(),
           exit_label: CodeGenerator.code_t()
@@ -44,8 +43,8 @@ defmodule Unifex.CodeGenerator.BaseType do
   return boolean value.
   """
   @callback generate_arg_parse(
-              argument :: String.t(),
-              variable :: String.t(),
+              argument :: CodeGenerator.code_t(),
+              variable :: CodeGenerator.code_t(),
               ctx :: map
             ) ::
               CodeGenerator.code_t()
@@ -74,7 +73,8 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Tries to get value from type-specific module, uses `enif_make_\#\{type}` as fallback value.
   """
-  @spec generate_arg_serialize(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  @spec generate_arg_serialize(t, name :: atom, CodeGenerator.t(), ctx :: map) ::
+          CodeGenerator.code_t()
   def generate_arg_serialize(type, name, code_generator, ctx) do
     call(
       type,
@@ -102,7 +102,7 @@ defmodule Unifex.CodeGenerator.BaseType do
           t,
           name :: atom,
           mode :: :default | :const | :const_unless_ptr_on_ptr,
-          module,
+          CodeGenerator.t(),
           ctx :: map
         ) ::
           [CodeGenerator.code_t()]
@@ -127,7 +127,8 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide initialization
   """
-  @spec generate_initialization(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  @spec generate_initialization(t, name :: atom, CodeGenerator.t(), ctx :: map) ::
+          CodeGenerator.code_t()
   def generate_initialization(type, name, code_generator, ctx) do
     call(type, :generate_initialization, [name], code_generator, ctx)
   end
@@ -137,7 +138,8 @@ defmodule Unifex.CodeGenerator.BaseType do
 
   Returns an empty string if the type does not provide destructor
   """
-  @spec generate_destruction(t, name :: atom, module, ctx :: map) :: CodeGenerator.code_t()
+  @spec generate_destruction(t, name :: atom, CodeGenerator.t(), ctx :: map) ::
+          CodeGenerator.code_t()
   def generate_destruction(type, name, code_generator, ctx) do
     call(type, :generate_destruction, [name], code_generator, ctx)
   end
@@ -145,6 +147,14 @@ defmodule Unifex.CodeGenerator.BaseType do
   @doc """
   Generates parsing of UNIFEX_TERM `argument` into the native variable
   """
+  @spec generate_arg_parse(
+          t,
+          name :: atom,
+          argument :: CodeGenerator.code_t(),
+          (CodeGenerator.code_t() -> CodeGenerator.code_t()),
+          CodeGenerator.t(),
+          map
+        ) :: CodeGenerator.code_t()
   def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator, ctx) do
     call(
       type,
@@ -156,6 +166,7 @@ defmodule Unifex.CodeGenerator.BaseType do
     |> postproc_fun.()
   end
 
+  @spec generate_arg_name(t, name :: atom, CodeGenerator.t(), map) :: [CodeGenerator.code_t()]
   def generate_arg_name(type, name, code_generator, ctx) do
     generate_native_type(type, code_generator, ctx)
     |> Bunch.listify()
@@ -165,11 +176,13 @@ defmodule Unifex.CodeGenerator.BaseType do
     end)
   end
 
+  @spec generate_native_type(t, :const | :default, CodeGenerator.t(), map) ::
+          CodeGenerator.code_t()
   def generate_native_type(type, mode \\ :default, code_generator, ctx) do
     call(type, :generate_native_type, [], code_generator, Map.put(ctx, :mode, mode))
   end
 
-  @spec ptr_level(t, module, ctx :: map) :: integer
+  @spec ptr_level(t, CodeGenerator.t(), ctx :: map) :: integer
   def ptr_level(type, code_generator, ctx) do
     call(type, :ptr_level, [], code_generator, ctx)
   end
@@ -185,14 +198,14 @@ defmodule Unifex.CodeGenerator.BaseType do
       with %{user_types: %{^type => type_spec}} <- ctx do
         Map.put(ctx, :type_spec, type_spec)
       else
-        _ -> ctx
+        ctx -> ctx
       end
 
     module =
       with %{user_types: %{^type => %{__struct__: module}}} <- ctx do
         module
       else
-        _ -> Module.concat(BaseTypes, type |> to_string() |> String.capitalize())
+        _ctx -> Module.concat(BaseTypes, type |> to_string() |> String.capitalize())
       end
 
     gen_aware_module = Module.concat(module, code_generator)
