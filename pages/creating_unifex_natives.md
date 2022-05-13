@@ -13,27 +13,28 @@ In order to start working, you need to prepare a few things:
    Unifex uses Bundlex to compile the native code. 
    You can think of Bundlex as a tool that generates build scripts responsible for including proper libs compiling your native code and linking it with mentioned libs.
    To make it work, create the `bundlex.exs` file in the project's root directory with the following content:
-    ```elixir
-    defmodule Example.BundlexProject do
-      use Bundlex.Project
+```elixir
+defmodule Example.BundlexProject do
+  use Bundlex.Project
 
-      def project() do
-        [
-          natives: natives(Bundlex.platform())
-        ]
-      end
+  def project() do
+    [
+      natives: natives(Bundlex.platform())
+    ]
+  end
 
-      def natives(_platform) do
-        [
-          example: [
-            sources: ["example.c"],
-            interface: [:nif, :cnode],
-            preprocessor: Unifex
-          ]
-        ]
-      end
-    end
-    ```
+  def natives(_platform) do
+    [
+      example: [
+        sources: ["example.c"],
+        interface: [:nif, :cnode],
+        preprocessor: Unifex
+      ]
+    ]
+  end
+end
+```
+
    This defines a native called `example`, that should be implemented in the `example.c` file. We'll also need `example.spec.exs` file, that Unifex needs to generate boilerplate code for compiling the native as NIF and CNode. Both files should be located in the `c_src/example` folder. Setting `Unifex` as a preprocessor lets it extend the configuration with the generated code.
    More details on how to use bundlex can be found in its [documentation](https://hexdocs.pm/bundlex).
 
