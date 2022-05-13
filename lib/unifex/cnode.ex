@@ -98,7 +98,7 @@ defmodule Unifex.CNode do
   end
 
   @doc false
-  @spec wrap_start_result(Bundlex.CNode.on_start_t()) :: {:ok, t} | Bundlex.CNode.on_start_t()
+  @spec wrap_start_result(Bundlex.CNode.on_start_t()) :: on_start_t
   def wrap_start_result({:ok, %Bundlex.CNode{} = bundlex_cnode}) do
     {:ok,
      %__MODULE__{
