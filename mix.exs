@@ -1,7 +1,7 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "0.7.3"
+  @version "1.0.0"
   @github_url "https://github.com/membraneframework/unifex"
 
   def project do
