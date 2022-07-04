@@ -76,7 +76,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
     def generate_arg_parse(arg, var_name, ctx) do
       %{postproc_fun: postproc_fun, generator: generator} = ctx
 
-      unique_sufix = String.replace("#{var_name}", ".", "_")
+      unique_sufix =
+        "#{var_name}"
+        # replace array naming
+        |> String.replace("[i]", "")
+        |> String.replace(".", "_")
 
       fields_parsing =
         ctx.type_spec.fields
