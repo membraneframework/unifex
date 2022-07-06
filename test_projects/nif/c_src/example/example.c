@@ -70,6 +70,10 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct) {
   return test_nested_struct_result_ok(env, in_struct);
 }
 
+UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct* structs, unsigned int structs_length) {
+  return test_list_of_structs_result_ok(env, structs, structs_length);
+}
+
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
   state->a = 0;
