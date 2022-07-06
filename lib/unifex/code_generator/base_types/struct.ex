@@ -76,22 +76,18 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
     def generate_arg_parse(arg, var_name, ctx) do
       %{postproc_fun: postproc_fun, generator: generator} = ctx
 
-      unique_sufix =
-        "#{var_name}"
-        # replace array naming
-        |> String.replace("[i]", "")
-        |> String.replace(".", "_")
+      unique_suffix = Unifex.CodeGenerator.Utils.sanitize_var_name("#{var_name}")
 
       fields_parsing =
         ctx.type_spec.fields
         |> Enum.map_join("\n", fn {field_name, field_type} ->
           ~g"""
-          key_#{unique_sufix} = enif_make_atom(env, "#{field_name}");
-          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_sufix}, &value_#{unique_sufix});
+          key_#{unique_suffix} = enif_make_atom(env, "#{field_name}");
+          int get_#{field_name}_result = enif_get_map_value(env, #{arg}, key_#{unique_suffix}, &value_#{unique_suffix});
           if (get_#{field_name}_result) {
             #{BaseType.generate_arg_parse(field_type,
           :"#{var_name}.#{field_name}",
-          ~g<value_#{unique_sufix}>,
+          ~g<value_#{unique_suffix}>,
           postproc_fun,
           generator,
           ctx)}
@@ -105,8 +101,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.Struct do
 
       ~g"""
       ({
-        ERL_NIF_TERM key_#{unique_sufix};
-        ERL_NIF_TERM value_#{unique_sufix};
+        ERL_NIF_TERM key_#{unique_suffix};
+        ERL_NIF_TERM value_#{unique_suffix};
 
         #{fields_parsing}
         #{result};

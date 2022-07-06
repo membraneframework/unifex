@@ -66,7 +66,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
-      elem_name = :"#{var_name}[i]"
+      elem_name = :"#{Unifex.CodeGenerator.Utils.sanitize_var_name("#{var_name}")}_i"
+
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
@@ -78,14 +79,16 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         #{var_name} = (#{native_type} *) enif_alloc(sizeof(#{native_type}) * #{len_var_name});
 
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
-          #{BaseType.generate_initialization(subtype, elem_name, generator, ctx)}
+          #{BaseType.generate_initialization(subtype, :"#{var_name}[i]", generator, ctx)}
         }
 
         ERL_NIF_TERM list = #{arg};
         for(unsigned int i = 0; i < #{len_var_name}; i++) {
           ERL_NIF_TERM elem;
           enif_get_list_cell(env, list, &elem, &list);
+          #{native_type} #{elem_name} = #{var_name}[i];
           #{BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)}
+          #{var_name}[i] = #{elem_name};
         }
       }
       get_list_length_result;

@@ -16,6 +16,22 @@ defmodule Unifex.CodeGenerator.Utils do
   end
 
   @doc """
+  Replaces special characters such as: `.`, `->` and array brackets e.g. `var_name[i]`
+  with underscores.
+
+  In case of arrays `var_name[i]` results in `var_name_i`.
+  """
+  @spec sanitize_var_name(String.t()) :: String.t()
+  def sanitize_var_name(var_name) do
+    var_name =
+      var_name
+      |> String.replace(".", "_")
+      |> String.replace("->", "_")
+
+    Regex.replace(~r/\[(.*)\]/, var_name, "_\\1")
+  end
+
+  @doc """
   Traverses Elixir specification AST and creates C data types serialization
   with `serializers`.
   """

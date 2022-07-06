@@ -410,10 +410,13 @@ static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
           for (unsigned int i = 0; i < in_list_length; i++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            if (!enif_get_int(env, elem, &in_list[i])) {
+            int in_list_i = in_list[i];
+            if (!enif_get_int(env, elem, &in_list_i)) {
               result = unifex_raise_args_error(env, "in_list", "{:list, :int}");
               goto exit_export_test_list;
             }
+
+            in_list[i] = in_list_i;
           }
         }
         get_list_length_result;
@@ -459,11 +462,14 @@ static ERL_NIF_TERM export_test_list_of_strings(ErlNifEnv *env, int argc,
           for (unsigned int i = 0; i < in_strings_length; i++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            if (!unifex_string_from_term(env, elem, &in_strings[i])) {
+            char *in_strings_i = in_strings[i];
+            if (!unifex_string_from_term(env, elem, &in_strings_i)) {
               result = unifex_raise_args_error(env, "in_strings",
                                                "{:list, :string}");
               goto exit_export_test_list_of_strings;
             }
+
+            in_strings[i] = in_strings_i;
           }
         }
         get_list_length_result;
@@ -588,11 +594,14 @@ static ERL_NIF_TERM export_test_my_struct(ErlNifEnv *env, int argc,
                   for (unsigned int i = 0; i < in_struct.data_length; i++) {
                     ERL_NIF_TERM elem;
                     enif_get_list_cell(env, list, &elem, &list);
-                    if (!enif_get_int(env, elem, &in_struct.data[i])) {
+                    int in_struct_data_i = in_struct.data[i];
+                    if (!enif_get_int(env, elem, &in_struct_data_i)) {
                       result = unifex_raise_args_error(env, "in_struct",
                                                        ":my_struct");
                       goto exit_export_test_my_struct;
                     }
+
+                    in_struct.data[i] = in_struct_data_i;
                   }
                 }
                 get_list_length_result;
@@ -689,13 +698,17 @@ static ERL_NIF_TERM export_test_nested_struct(ErlNifEnv *env, int argc,
                                i < in_struct.inner_struct.data_length; i++) {
                             ERL_NIF_TERM elem;
                             enif_get_list_cell(env, list, &elem, &list);
-                            if (!enif_get_int(
-                                    env, elem,
-                                    &in_struct.inner_struct.data[i])) {
+                            int in_struct_inner_struct_data_i =
+                                in_struct.inner_struct.data[i];
+                            if (!enif_get_int(env, elem,
+                                              &in_struct_inner_struct_data_i)) {
                               result = unifex_raise_args_error(
                                   env, "in_struct", ":nested_struct");
                               goto exit_export_test_nested_struct;
                             }
+
+                            in_struct.inner_struct.data[i] =
+                                in_struct_inner_struct_data_i;
                           }
                         }
                         get_list_length_result;
