@@ -82,6 +82,19 @@ typedef struct my_struct_t my_struct;
 #endif
 
 #ifdef __cplusplus
+struct simple_struct {
+  int id;
+  char *name;
+};
+#else
+struct simple_struct_t {
+  int id;
+  char *name;
+};
+typedef struct simple_struct_t simple_struct;
+#endif
+
+#ifdef __cplusplus
 struct nested_struct {
   my_struct inner_struct;
   int id;
@@ -113,6 +126,8 @@ UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
+UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct *struct_list,
+                                 unsigned int struct_list_length);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
 
 /*
@@ -145,6 +160,9 @@ UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);
+UNIFEX_TERM test_list_of_structs_result_ok(UnifexEnv *env,
+                                           simple_struct const *out_struct_list,
+                                           unsigned int out_struct_list_length);
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
 
 /*

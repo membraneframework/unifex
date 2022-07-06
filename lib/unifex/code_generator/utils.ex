@@ -23,12 +23,9 @@ defmodule Unifex.CodeGenerator.Utils do
   """
   @spec sanitize_var_name(String.t()) :: String.t()
   def sanitize_var_name(var_name) do
-    var_name =
-      var_name
-      |> String.replace(".", "_")
-      |> String.replace("->", "_")
-
-    Regex.replace(~r/\[(.*)\]/, var_name, "_\\1")
+    var_name
+    |> String.replace([".", "->"], "_")
+    |> String.replace(~r/\[(.*)\]/, "_\\1")
   end
 
   @doc """

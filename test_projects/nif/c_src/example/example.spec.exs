@@ -34,6 +34,11 @@ type my_struct :: %My.Struct{
   name: string
 }
 
+type simple_struct :: %SimpleStruct{
+  id: int,
+  name: string
+}
+
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
 
 type nested_struct :: %Nested.Struct{
@@ -42,6 +47,8 @@ type nested_struct :: %Nested.Struct{
 }
 
 spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}
+
+spec test_list_of_structs(struct_list :: [simple_struct]) :: {:ok :: label, out_struct_list :: [simple_struct]}
 
 type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
 
