@@ -2,32 +2,41 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "NIF test project" do
-    test_project("nif", :nif)
+    test_project("nif", :nif, :c)
+    test_project("nif", :nif, :cpp)
   end
 
   test "CNode test project" do
-    test_project("cnode", :cnode)
+    test_project("cnode", :cnode, :c)
+    test_project("cnode", :cnode, :cpp)
   end
 
   test "unified (NIF) test project" do
-    test_project("unified", :nif)
+    test_project("unified", :nif, :c)
+    test_project("unified", :nif, :cpp)
   end
 
   test "unified (CNode) test project" do
-    test_project("unified", :cnode)
+    test_project("unified", :cnode, :c)
+    test_project("unified", :cnode, :cpp)
   end
 
   test "bundlex.exs specified interface (NIF) test project" do
-    test_project("bundlex_exs", :nif)
+    test_project("bundlex_exs", :nif, :c)
+    test_project("bundlex_exs", :nif, :cpp)
   end
 
   test "bundlex.exs specified interface (CNode) test project" do
-    test_project("bundlex_exs", :cnode)
+    test_project("bundlex_exs", :cnode, :c)
+    test_project("bundlex_exs", :cnode, :cpp)
   end
 
-  defp test_project(project, interface) do
+  defp test_project(project, interface, language) do
     assert {_output, 0} =
-             System.cmd("bash", ["-c", "mix test 1>&2"], cd: "test_projects/#{project}")
+             System.cmd("bash", ["-c", "mix test 1>&2"],
+               cd: "test_projects/#{project}",
+               env: [{"UNIFEX_TEST_LANG", "#{language}"}]
+             )
 
     # clang-format is required to format the generated code
     # it won't match the reference files otherwise
