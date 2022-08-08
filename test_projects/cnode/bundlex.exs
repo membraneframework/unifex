@@ -13,7 +13,8 @@ defmodule Example.BundlexProject do
         src_base: "example",
         sources: ["example.c"],
         preprocessor: Unifex,
-        interface: :cnode
+        interface: :cnode,
+        language: System.get_env("UNIFEX_TEST_LANG") |> String.to_atom()
       ]
     ]
   end
