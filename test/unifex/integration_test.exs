@@ -2,33 +2,57 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "NIF test project" do
+    generate_cpp_code("nif")
+
     test_project("nif", :nif, :c)
     test_project("nif", :nif, :cpp)
+
+    delete_cpp_code("nif")
   end
 
   test "CNode test project" do
+    generate_cpp_code("cnode")
+
     test_project("cnode", :cnode, :c)
     test_project("cnode", :cnode, :cpp)
+
+    delete_cpp_code("cnode")
   end
 
   test "unified (NIF) test project" do
+    generate_cpp_code("unified")
+
     test_project("unified", :nif, :c)
     test_project("unified", :nif, :cpp)
+
+    delete_cpp_code("unified")
   end
 
   test "unified (CNode) test project" do
+    generate_cpp_code("unified")
+
     test_project("unified", :cnode, :c)
     test_project("unified", :cnode, :cpp)
+
+    delete_cpp_code("unified")
   end
 
   test "bundlex.exs specified interface (NIF) test project" do
+    generate_cpp_code("bundlex_exs")
+
     test_project("bundlex_exs", :nif, :c)
     test_project("bundlex_exs", :nif, :cpp)
+
+    delete_cpp_code("bundlex_exs")
   end
 
   test "bundlex.exs specified interface (CNode) test project" do
+    generate_cpp_code("bundlex_exs")
+
     test_project("bundlex_exs", :cnode, :c)
     test_project("bundlex_exs", :cnode, :cpp)
+
+    delete_cpp_code("bundlex_exs")
   end
 
   defp test_project(project, interface, language) do
@@ -74,5 +98,13 @@ defmodule Unifex.IntegrationTest do
       assert File.read!("test_projects/#{project}/c_src/example/_generated/#{interface}/#{ref}") ==
                File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
     end)
+  end
+
+  defp generate_cpp_code(project) do
+    System.cmd("cp", ["example.c", "example.cpp"], cd: "test_projects/#{project}/c_src/example")
+  end
+
+  defp delete_cpp_code(project) do
+    System.cmd("rm", ["example.cpp"], cd: "test_projects/#{project}/c_src/example")
   end
 end
