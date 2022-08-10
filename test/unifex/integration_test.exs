@@ -2,60 +2,40 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "NIF test project" do
-    generate_cpp_code("nif")
-
-    test_project("nif", :nif, :c)
-    test_project("nif", :nif, :cpp)
-
-    delete_cpp_code("nif")
+    test_project("nif", :nif)
   end
 
   test "CNode test project" do
-    generate_cpp_code("cnode")
-
-    test_project("cnode", :cnode, :c)
-    test_project("cnode", :cnode, :cpp)
-
-    delete_cpp_code("cnode")
+    test_project("cnode", :cnode)
   end
 
   test "unified (NIF) test project" do
-    generate_cpp_code("unified")
-
-    test_project("unified", :nif, :c)
-    test_project("unified", :nif, :cpp)
-
-    delete_cpp_code("unified")
+    test_project("unified", :nif)
   end
 
   test "unified (CNode) test project" do
-    generate_cpp_code("unified")
-
-    test_project("unified", :cnode, :c)
-    test_project("unified", :cnode, :cpp)
-
-    delete_cpp_code("unified")
+    test_project("unified", :cnode)
   end
 
   test "bundlex.exs specified interface (NIF) test project" do
-    generate_cpp_code("bundlex_exs")
-
-    test_project("bundlex_exs", :nif, :c)
-    test_project("bundlex_exs", :nif, :cpp)
-
-    delete_cpp_code("bundlex_exs")
+    test_project("bundlex_exs", :nif)
   end
 
   test "bundlex.exs specified interface (CNode) test project" do
-    generate_cpp_code("bundlex_exs")
-
-    test_project("bundlex_exs", :cnode, :c)
-    test_project("bundlex_exs", :cnode, :cpp)
-
-    delete_cpp_code("bundlex_exs")
+    test_project("bundlex_exs", :cnode)
   end
 
-  defp test_project(project, interface, language) do
+  defp test_project(project, interface) do
+    generate_cpp_code(project)
+
+    for language <- [:c, :cpp] do
+      do_test_project(project, interface, language)
+    end
+
+    delete_cpp_code(project)
+  end
+
+  defp do_test_project(project, interface, language) do
     assert {_output, 0} =
              System.cmd("bash", ["-c", "mix test 1>&2"],
                cd: "test_projects/#{project}",
