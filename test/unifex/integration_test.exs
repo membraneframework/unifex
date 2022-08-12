@@ -81,10 +81,12 @@ defmodule Unifex.IntegrationTest do
   end
 
   defp generate_cpp_code(project) do
-    System.cmd("cp", ["example.c", "example.cpp"], cd: "test_projects/#{project}/c_src/example")
+    path_prefix = "test_projects/#{project}/c_src/example"
+    File.cp("#{path_prefix}/example.c", "#{path_prefix}/example.cpp")
   end
 
   defp delete_cpp_code(project) do
-    System.cmd("rm", ["example.cpp"], cd: "test_projects/#{project}/c_src/example")
+    "test_projects/#{project}/c_src/example/example.cpp"
+    |> File.rm()
   end
 end
