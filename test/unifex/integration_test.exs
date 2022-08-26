@@ -1,17 +1,6 @@
 defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
-  setup do
-    on_exit(fn ->
-      ["nif", "cnode", "unified", "bundlex_exs"]
-      |> Enum.map(&"test_projects/#{&1}/c_src/example/example.cpp")
-      |> Enum.filter(&File.exists?/1)
-      |> Enum.each(&File.rm/1)
-    end)
-
-    :ok
-  end
-
   test "NIF test project" do
     test_project("nif", :nif)
   end
@@ -92,5 +81,6 @@ defmodule Unifex.IntegrationTest do
   defp generate_cpp_code(project) do
     path_prefix = "test_projects/#{project}/c_src/example"
     File.cp("#{path_prefix}/example.c", "#{path_prefix}/example.cpp")
+    on_exit(fn -> File.rm!("#{path_prefix}/example.cpp") end)
   end
 end
