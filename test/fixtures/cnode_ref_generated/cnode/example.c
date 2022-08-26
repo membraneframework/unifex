@@ -319,23 +319,23 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   ei_x_encode_atom(out_buff, "ok");
   ({
     if (out_enum == MY_ENUM_OPTION_ONE) {
-      char *enum_as_string = "option_one";
+      const char *enum_as_string = "option_one";
       ei_x_encode_atom(out_buff, enum_as_string);
 
     } else if (out_enum == MY_ENUM_OPTION_TWO) {
-      char *enum_as_string = "option_two";
+      const char *enum_as_string = "option_two";
       ei_x_encode_atom(out_buff, enum_as_string);
 
     } else if (out_enum == MY_ENUM_OPTION_THREE) {
-      char *enum_as_string = "option_three";
+      const char *enum_as_string = "option_three";
       ei_x_encode_atom(out_buff, enum_as_string);
 
     } else if (out_enum == MY_ENUM_OPTION_FOUR) {
-      char *enum_as_string = "option_four";
+      const char *enum_as_string = "option_four";
       ei_x_encode_atom(out_buff, enum_as_string);
 
     } else {
-      char *enum_as_string = "option_five";
+      const char *enum_as_string = "option_five";
       ei_x_encode_atom(out_buff, enum_as_string);
     }
   });

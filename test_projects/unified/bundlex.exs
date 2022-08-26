@@ -8,13 +8,15 @@ defmodule Example.BundlexProject do
   end
 
   def natives(_platform) do
+    language = System.get_env("UNIFEX_TEST_LANG") |> String.to_atom()
+
     [
       example: [
         src_base: "example",
-        sources: ["example.c"],
+        sources: ["example.#{language}"],
         interface: [:nif, :cnode],
         preprocessor: Unifex,
-        language: System.get_env("UNIFEX_TEST_LANG") |> String.to_atom()
+        language: language
       ]
     ]
   end

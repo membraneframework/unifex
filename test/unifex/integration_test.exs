@@ -2,36 +2,38 @@ defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
   test "NIF test project" do
-    test_project("nif", :nif, :c)
-    test_project("nif", :nif, :cpp)
+    test_project("nif", :nif)
   end
 
   test "CNode test project" do
-    test_project("cnode", :cnode, :c)
-    test_project("cnode", :cnode, :cpp)
+    test_project("cnode", :cnode)
   end
 
   test "unified (NIF) test project" do
-    test_project("unified", :nif, :c)
-    test_project("unified", :nif, :cpp)
+    test_project("unified", :nif)
   end
 
   test "unified (CNode) test project" do
-    test_project("unified", :cnode, :c)
-    test_project("unified", :cnode, :cpp)
+    test_project("unified", :cnode)
   end
 
   test "bundlex.exs specified interface (NIF) test project" do
-    test_project("bundlex_exs", :nif, :c)
-    test_project("bundlex_exs", :nif, :cpp)
+    test_project("bundlex_exs", :nif)
   end
 
   test "bundlex.exs specified interface (CNode) test project" do
-    test_project("bundlex_exs", :cnode, :c)
-    test_project("bundlex_exs", :cnode, :cpp)
+    test_project("bundlex_exs", :cnode)
   end
 
-  defp test_project(project, interface, language) do
+  defp test_project(project, interface) do
+    generate_cpp_code(project)
+
+    for language <- [:c, :cpp] do
+      do_test_project(project, interface, language)
+    end
+  end
+
+  defp do_test_project(project, interface, language) do
     assert {_output, 0} =
              System.cmd("bash", ["-c", "mix test 1>&2"],
                cd: "test_projects/#{project}",
@@ -74,5 +76,11 @@ defmodule Unifex.IntegrationTest do
       assert File.read!("test_projects/#{project}/c_src/example/_generated/#{interface}/#{ref}") ==
                File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
     end)
+  end
+
+  defp generate_cpp_code(project) do
+    path_prefix = "test_projects/#{project}/c_src/example"
+    File.cp("#{path_prefix}/example.c", "#{path_prefix}/example.cpp")
+    on_exit(fn -> File.rm!("#{path_prefix}/example.cpp") end)
   end
 end

@@ -246,23 +246,23 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM res;
           if (out_enum == MY_ENUM_OPTION_ONE) {
-            char *enum_as_string = "option_one";
+            const char *enum_as_string = "option_one";
             res = enif_make_atom(env, enum_as_string);
 
           } else if (out_enum == MY_ENUM_OPTION_TWO) {
-            char *enum_as_string = "option_two";
+            const char *enum_as_string = "option_two";
             res = enif_make_atom(env, enum_as_string);
 
           } else if (out_enum == MY_ENUM_OPTION_THREE) {
-            char *enum_as_string = "option_three";
+            const char *enum_as_string = "option_three";
             res = enif_make_atom(env, enum_as_string);
 
           } else if (out_enum == MY_ENUM_OPTION_FOUR) {
-            char *enum_as_string = "option_four";
+            const char *enum_as_string = "option_four";
             res = enif_make_atom(env, enum_as_string);
 
           } else {
-            char *enum_as_string = "option_five";
+            const char *enum_as_string = "option_five";
             res = enif_make_atom(env, enum_as_string);
           }
           res;
