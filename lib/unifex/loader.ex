@@ -17,15 +17,19 @@ defmodule Unifex.Loader do
       |> Enum.map(fn {name, _dir, specs_path} -> {Specs.parse(specs_path, name), specs_path} end)
       |> Enum.find(fn {specs, _specs_path} -> specs.module == __CALLER__.module end)
 
+    functions_docs = Map.new(specs.functions_docs)
+
     funs =
       specs.functions_args
       |> Enum.map(fn {name, args} ->
         wrapped_name = name |> to_string() |> (&"unifex_#{&1}").() |> String.to_atom()
         arg_names = args |> Keyword.keys() |> Enum.map(&Macro.var(&1, nil))
+        doc = Map.get(functions_docs, name)
 
         quote do
           defnifp unquote(wrapped_name)(unquote_splicing(arg_names))
 
+          @doc unquote(doc)
           @compile {:inline, [unquote({name, length(args)})]}
           # credo:disable-for-next-line Credo.Check.Readability.Specs
           def unquote(name)(unquote_splicing(arg_names)) do

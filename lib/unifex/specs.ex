@@ -28,6 +28,7 @@ defmodule Unifex.Specs do
           module: CodeGenerator.t() | nil,
           functions_args: [{function_name :: atom, [arg_type :: {atom | {:list, atom}}]}],
           functions_results: [{function_name :: atom, return_type :: Macro.t()}],
+          functions_docs: [{function_name :: atom, documentation :: String.t() | false}],
           sends: [{send_name :: atom, send_term_type :: Macro.t()}],
           dirty_functions: %{
             {function_name :: atom, function_arity :: non_neg_integer} => :cpu | :io
@@ -46,6 +47,7 @@ defmodule Unifex.Specs do
     :module,
     :functions_args,
     :functions_results,
+    :functions_docs,
     :sends,
     :dirty_functions,
     :callbacks,
@@ -75,11 +77,16 @@ defmodule Unifex.Specs do
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
+    functions_docs = parse_docs(config)
+
+    IO.inspect(functions_docs, label: "functions docs")
+
     %__MODULE__{
       name: name,
       module: Keyword.get(config, :module),
       functions_args: functions_args,
       functions_results: functions_results,
+      functions_docs: functions_docs,
       sends: Keyword.get_values(config, :sends),
       dirty_functions:
         config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
@@ -91,6 +98,25 @@ defmodule Unifex.Specs do
     }
   end
 
+  defp parse_docs(config) do
+    config
+    |> Keyword.filter(fn {key, _value} -> key in [:doc, :function] end)
+
+    # remove all consecutive @doc, keep last one
+    |> Enum.reverse()
+    |> Enum.dedup_by(fn {key, value} -> key == :doc || value end)
+    |> Enum.reverse()
+    #
+    |> Enum.chunk_every(2, 1)
+    |> Enum.reject(&match?([function: _function, doc: _doc], &1))
+    |> Enum.map(fn
+      [doc: doc, function: function] -> {function, doc}
+      [function: _prev_function, function: function] -> {function, false}
+      [function: function] -> {function, false}
+    end)
+    |> Keyword.new(fn {{name, _args, _results}, doc} -> {name, doc} end)
+  end
+
   # Returns a clean __ENV__ with proper functions/macros imported. Useful for invoking
   # user code without possibly misleading macros and aliases from the current scope,
   # while providing needed functions/macros.
@@ -98,6 +124,7 @@ defmodule Unifex.Specs do
     {env, _binds} =
       Code.eval_quoted(
         quote do
+          import Kernel, except: [@: 1]
           import Unifex.Specs.DSL
           %Macro.Env{__ENV__ | file: unquote(file)}
         end
