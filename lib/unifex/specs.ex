@@ -79,8 +79,6 @@ defmodule Unifex.Specs do
 
     functions_docs = parse_docs(config)
 
-    IO.inspect(functions_docs, label: "functions docs")
-
     %__MODULE__{
       name: name,
       module: Keyword.get(config, :module),
@@ -99,20 +97,12 @@ defmodule Unifex.Specs do
   end
 
   defp parse_docs(config) do
-    config
-    |> Keyword.filter(fn {key, _value} -> key in [:doc, :function] end)
-
-    # remove all consecutive @doc, keep last one
-    |> Enum.reverse()
-    |> Enum.dedup_by(fn {key, value} -> key == :doc || value end)
-    |> Enum.reverse()
-    #
+    ([doc: false] ++ config)
     |> Enum.chunk_every(2, 1)
-    |> Enum.reject(&match?([function: _function, doc: _doc], &1))
-    |> Enum.map(fn
-      [doc: doc, function: function] -> {function, doc}
-      [function: _prev_function, function: function] -> {function, false}
-      [function: function] -> {function, false}
+    |> Enum.flat_map(fn
+      [doc: doc, function: function] -> [{function, doc}]
+      [_prev_term, function: function] -> [{function, false}]
+      _else -> []
     end)
     |> Keyword.new(fn {{name, _args, _results}, doc} -> {name, doc} end)
   end
