@@ -25,6 +25,10 @@ defmodule Unifex.IntegrationTest do
     test_project("bundlex_exs", :cnode)
   end
 
+  test "documented (NIF) test project" do
+    run_projects_tests("documented", :c)
+  end
+
   defp test_project(project, interface) do
     generate_cpp_code(project)
 
@@ -33,12 +37,16 @@ defmodule Unifex.IntegrationTest do
     end
   end
 
-  defp do_test_project(project, interface, language) do
+  defp run_projects_tests(project, language) do
     assert {_output, 0} =
              System.cmd("bash", ["-c", "mix test 1>&2"],
                cd: "test_projects/#{project}",
                env: [{"UNIFEX_TEST_LANG", "#{language}"}]
              )
+  end
+
+  defp do_test_project(project, interface, language) do
+    run_projects_tests(project, language)
 
     # clang-format is required to format the generated code
     # it won't match the reference files otherwise
