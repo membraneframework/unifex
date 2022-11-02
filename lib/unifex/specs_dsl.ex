@@ -126,18 +126,17 @@ defmodule Unifex.Specs.DSL do
   end
 
   @doc """
-  Define documentation for a native function
+    Defines native function documentation.
+    Documentation will be visible in the generated docs.
 
-  Documentation will be visible in a final module and in the hexdocs.
+    The documentation should be in the form of
 
-  The specification should be in the form of
-
-      @doc \"\"\"
-      Documentation...
-      \"\"\"
-      spec function_name...
+        @doc \"\"\"
+        Documentation...
+        \"\"\"
+        spec function_name...
   """
-  defmacro @{:doc, [line: _line], [documentation]} do
+  defmacro @{:doc, _meta, [documentation]} do
     store_config(:doc, documentation)
   end
 
