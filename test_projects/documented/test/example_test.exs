@@ -8,31 +8,36 @@ defmodule UnifiedTest do
   end
 
   test "nif functions are documented" do
-    check_doc(:begin_file_documented_function)
-    check_doc(:inside_file_documented_function)
-    check_doc(:invalid_double_documented_function)
-    check_doc_false(:inside_file_undocumented_function)
-    check_doc(:after_undocumented_documented_function)
-    check_doc_false(:undocumented_false_function)
-    check_doc(:end_file_documented_function)
+    docs = get_docs(Example)
+
+    check_doc(docs, :begin_file_documented_function)
+    check_doc(docs, :inside_file_documented_function)
+    check_doc(docs, :invalid_double_documented_function)
+    check_doc_false(docs, :inside_file_undocumented_function)
+    check_doc(docs, :after_undocumented_documented_function)
+    check_doc_false(docs, :undocumented_false_function)
+    check_doc(docs, :end_file_documented_function)
   end
 
-  defp check_doc(fun_atom) do
-    assert get_doc(Example, fun_atom) == "Test #{fun_atom} documentation"
+  defp check_doc(docs, fun_atom) do
+    assert Map.get(docs, fun_atom) == "Test #{fun_atom} documentation\n"
   end
 
-  defp check_doc_false(fun_atom) do
-    assert get_doc(Example, fun_atom) == ""
+  defp check_doc_false(docs, fun_atom) do
+    assert Map.get(docs, fun_atom) == :none
   end
 
-  defp get_doc(mod, func_atom) do
-    %{docs: docs} =
-      Introspection.get_all_docs(
-        {mod, func_atom},
-        :_
-      )
+  defp get_docs(mod) do
+    {_, _, _, _, _, _, docs} = Code.fetch_docs(mod)
 
-    [_function_name | docs] = String.split(docs, "\n")
-    Enum.join(docs, "")
+    docs
+    |> Enum.map(fn
+      {{:function, atom_name, 1}, 2, _name, doc, %{}} ->
+        case doc do
+          %{"en" => doc} -> {atom_name, doc}
+          :none -> {atom_name, :none}
+        end
+    end)
+    |> Map.new()
   end
 end
