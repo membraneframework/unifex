@@ -7,6 +7,8 @@ defmodule Unifex.Specs do
 
   alias Unifex.CodeGenerator
 
+  require Membrane.Logger
+
   @typedoc """
   Name of interface generated for the native library.
   Must be a suffix of code generator module in `Unifex.CodeGenerators` namespace.
@@ -97,12 +99,24 @@ defmodule Unifex.Specs do
   end
 
   defp parse_docs(config) do
-    ([doc: false] ++ config)
+    config
     |> Enum.chunk_every(2, 1)
     |> Enum.flat_map(fn
-      [doc: doc, function: function] -> [{function, doc}]
-      [_prev_term, function: function] -> [{function, false}]
-      _else -> []
+      [doc: doc, function: function] ->
+        [{function, doc}]
+
+      [{:doc, _doc}, {token, _not_a_function}] ->
+        Membrane.Logger.warn(
+          "Only spec functions can be documented with `@doc` decorator. Found `#{token}`."
+        )
+
+        []
+
+      [_prev_term, function: function] ->
+        [{function, false}]
+
+      _else ->
+        []
     end)
     |> Keyword.new(fn {{name, _args, _results}, doc} -> {name, doc} end)
   end
