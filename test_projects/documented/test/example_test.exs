@@ -22,7 +22,7 @@ defmodule UnifiedTest do
   end
 
   defp check_doc_false(fun_atom) do
-    assert get_doc(Example, fun_atom) == "false"
+    assert get_doc(Example, fun_atom) == ""
   end
 
   defp get_doc(mod, func_atom) do
