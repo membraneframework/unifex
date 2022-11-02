@@ -24,8 +24,7 @@ defmodule Unified.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:unifex, path: "../.."},
-      {:elixir_sense, github: "elixir-lsp/elixir_sense", only: :test}
+      {:unifex, path: "../.."}
     ]
   end
 end
