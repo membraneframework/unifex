@@ -5,9 +5,9 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
-  alias Unifex.CodeGenerator
-
   require Membrane.Logger
+
+  alias Unifex.CodeGenerator
 
   @typedoc """
   Name of interface generated for the native library.
