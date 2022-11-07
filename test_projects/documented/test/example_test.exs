@@ -1,8 +1,6 @@
 defmodule UnifiedTest do
   use ExUnit.Case
 
-  alias ElixirSense.Core.Introspection
-
   setup do
     %{}
   end
