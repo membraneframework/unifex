@@ -79,7 +79,7 @@ defmodule Unifex.Specs do
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
-    functions_docs = parse_docs(config)
+    functions_docs = parse_docs(config, specs_file)
 
     %__MODULE__{
       name: name,
@@ -98,27 +98,29 @@ defmodule Unifex.Specs do
     }
   end
 
-  defp parse_docs(config) do
+  defp parse_docs(config, specs_file) do
     config
     |> Enum.chunk_every(2, 1)
     |> Enum.flat_map(fn
       [doc: doc, function: function] ->
         [{function, doc}]
 
-      [{:doc, _doc}, {token, _not_a_function}] ->
+      [{:doc, {meta, _doc}}, _not_a_function] ->
+        line_number = meta[:line]
+
         Membrane.Logger.warn(
-          "Only spec functions can be documented with `@doc` decorator. Found `#{token}`."
+          "Found @doc in file #{specs_file}:#{line_number} that does not correspond to any function."
         )
 
         []
 
       [_prev_term, function: function] ->
-        [{function, false}]
+        [{function, {nil, false}}]
 
       _else ->
         []
     end)
-    |> Keyword.new(fn {{name, _args, _results}, doc} -> {name, doc} end)
+    |> Keyword.new(fn {{name, _args, _results}, {_meta, doc}} -> {name, doc} end)
   end
 
   # Returns a clean __ENV__ with proper functions/macros imported. Useful for invoking

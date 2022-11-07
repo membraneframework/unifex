@@ -136,8 +136,8 @@ defmodule Unifex.Specs.DSL do
         \"\"\"
         spec function_name...
   """
-  defmacro @{:doc, _meta, [documentation]} do
-    store_config(:doc, documentation)
+  defmacro @{:doc, meta, [documentation]} do
+    store_config(:doc, {meta, documentation})
   end
 
   @doc """
