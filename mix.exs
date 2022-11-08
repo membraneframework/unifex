@@ -83,7 +83,6 @@ defmodule Unifex.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.10.2"},
       {:bunch, "~> 1.0"},
       {:shmex, "~> 0.5.0"},
       {:bundlex, "~> 1.0"},

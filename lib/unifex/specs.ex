@@ -5,7 +5,7 @@ defmodule Unifex.Specs do
   For information on how to create such specs, see `Unifex.Specs.DSL` module.
   """
 
-  require Membrane.Logger
+  require Logger
 
   alias Unifex.CodeGenerator
 
@@ -108,7 +108,7 @@ defmodule Unifex.Specs do
       [{:doc, {meta, _doc}}, _not_a_function] ->
         line_number = meta[:line]
 
-        Membrane.Logger.warn(
+        Logger.warning(
           "Found @doc in file #{specs_file}:#{line_number} that does not correspond to any function."
         )
 
