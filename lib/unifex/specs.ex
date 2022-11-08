@@ -102,7 +102,7 @@ defmodule Unifex.Specs do
     config
     |> Enum.chunk_every(2, 1)
     |> Enum.flat_map(fn
-      [doc: doc, function: function] ->
+      [doc: {_meta, doc}, function: function] ->
         [{function, doc}]
 
       [{:doc, {meta, _doc}}, _not_a_function] ->
@@ -115,12 +115,12 @@ defmodule Unifex.Specs do
         []
 
       [_prev_term, function: function] ->
-        [{function, {nil, false}}]
+        [{function, false}]
 
       _else ->
         []
     end)
-    |> Keyword.new(fn {{name, _args, _results}, {_meta, doc}} -> {name, doc} end)
+    |> Keyword.new(fn {{name, _args, _results}, doc} -> {name, doc} end)
   end
 
   # Returns a clean __ENV__ with proper functions/macros imported. Useful for invoking
