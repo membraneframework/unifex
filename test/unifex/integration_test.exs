@@ -25,10 +25,6 @@ defmodule Unifex.IntegrationTest do
     test_project("bundlex_exs", :cnode)
   end
 
-  test "documented (NIF) test project" do
-    run_projects_tests("documented", :c)
-  end
-
   defp test_project(project, interface) do
     generate_cpp_code(project)
 
