@@ -126,6 +126,21 @@ defmodule Unifex.Specs.DSL do
   end
 
   @doc """
+    Defines native function documentation.
+    Documentation will be visible in the generated docs.
+
+    The documentation should be in the form of
+
+        @doc \"\"\"
+        Documentation...
+        \"\"\"
+        spec function_name...
+  """
+  defmacro @{:doc, meta, [documentation]} do
+    store_config(:doc, {meta, documentation})
+  end
+
+  @doc """
   Specifies interface, for example NIF or CNode.
 
   It should be a module name (or list of module names) that will be prepended

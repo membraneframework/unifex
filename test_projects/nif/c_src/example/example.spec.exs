@@ -6,14 +6,24 @@ callback :load
 
 state_type "MyState"
 
+@doc """
+init docs
+"""
 spec init() :: {:ok :: label, was_handle_load_called :: int, state}
 
+@doc """
+test_atom docs
+"""
 spec test_atom(in_atom :: atom) :: {:ok :: label, out_atom :: atom}
 
+@doc false
 spec test_float(in_float :: float) :: {:ok :: label, out_float :: float}
 
 spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
+@doc """
+test_string docs
+"""
 spec test_string(in_string :: string) :: {:ok :: label, out_string :: string}
 
 spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}
@@ -52,4 +62,7 @@ spec test_list_of_structs(struct_list :: [simple_struct]) :: {:ok :: label, out_
 
 type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
 
+@doc """
+test_my_enum docs
+"""
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
