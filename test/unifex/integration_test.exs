@@ -44,10 +44,6 @@ defmodule Unifex.IntegrationTest do
   defp do_test_project(project, interface, language) do
     run_projects_tests(project, language)
 
-    # clang-format is required to format the generated code
-    # it won't match the reference files otherwise
-    assert {_output, 0} = System.cmd("clang-format", ~w(--version))
-
     test_common(project)
     test_particular(project, interface)
   end
