@@ -1,6 +1,7 @@
 # clang-format is required to format the generated code
 # it won't match the reference files otherwise
-case System.cmd("clang-format", ~w(--version)) do
-  {_result, 0} -> ExUnit.start()
-  {_result, 1} -> raise "clang-format not found"
+if Unifex.Utils.clang_format_installed?() do
+  ExUnit.start()
+else
+  raise "clang-format has to be installed on the system to run Unifex tests."
 end

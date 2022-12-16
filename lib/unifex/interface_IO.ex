@@ -55,10 +55,16 @@ defmodule Unifex.InterfaceIO do
     File.write!("#{out_base_path}.cpp", source)
 
     # Format generated code only when clang-format is available
-    if Mix.shell().cmd("whereis clang-format") == 0 do
-      Mix.shell().cmd(
-        "clang-format -style=\"{BasedOnStyle: llvm, IndentWidth: 2}\" -i " <>
-          "#{out_base_path}.h #{out_base_path}.c #{out_base_path}.cpp"
+    if Unifex.Utils.clang_format_installed?() do
+      System.cmd(
+        "clang-format",
+        [
+          "-style={BasedOnStyle: llvm, IndentWidth: 2}",
+          "-i",
+          "#{out_base_path}.h",
+          "#{out_base_path}.c",
+          "#{out_base_path}.cpp"
+        ]
       )
     end
 
