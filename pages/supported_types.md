@@ -7,7 +7,7 @@ You can also refer to [#42](https://github.com/membraneframework/unifex/issues/4
 state of work on remaining types.
 
 ## Supported types
-| Elixir type | Native type                     | NIF as a function parameter | NIF as a return type | CNode as a function parameter | CNode as a return type  |
+| Elixir type | Native type                     | in NIF as a function parameter | in NIF as a return type | in CNode as a function parameter | in CNode as a return type  |
 | ---------   | :-----------------------------: | :-------------------------: | :------------------: | :---------------------------: | :---------------------: |
 | `atom`      | `char *`                        | ✅                          | ✅                    | ✅                            | ✅                      |
 | `bool`      | `int`                           | ✅                          | ✅                    | ✅                            | ✅                      |
