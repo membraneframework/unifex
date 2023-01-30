@@ -6,50 +6,17 @@ Below we present which types you can use at this moment.
 You can also refer to [#42](https://github.com/membraneframework/unifex/issues/42) to see 
 state of work on remaining types.
 
-## NIF
-| type      | as function parameter | as return type  |
-| --------- | :-------------------: | :-------------: |
-| `atom`    | yes                   | yes             |
-| `bool`    | yes                   | yes             |
-| `unsigned`| yes                   | yes             |
-| `uint64`  | yes                   | yes             |
-| `int`     | yes                   | yes             |
-| `int64`   | yes                   | yes             |
-| `float`   | yes                   | yes             |
-| `list`    | yes                   | yes             |
-| `payload` | yes                   | yes             |
-| `pid`     | yes                   | yes             |
-| `string`  | yes                   | yes             |
-
-## CNode
-| type      | as function parameter | as return type  |
-| --------- | :-------------------: | :-------------: |
-| `atom`    | yes                   | yes             |
-| `bool`    | yes                   | yes             |
-| `unsigned`| yes                   | yes             |
-| `uint64`  | no                    | no              |
-| `int`     | yes                   | yes             |
-| `int64`   | no                    | no              |
-| `float`   | yes                   | yes             |
-| `list`    | yes                   | yes             |
-| `payload` | yes                   | yes             |
-| `pid`     | yes                   | yes             |
-| `string`  | yes                   | yes             |
-
-## Types mapping
-List of examples, how specific type in `*.spec.exs` will be translated onto native side
-
-Elixir type | Native type
---- | ---
-`atom` | `char *`
-`bool` | `int`
-`float` | `double`
-`int` | `int`
-`int64` | `int64_t`
-`payload` | `UnifexPayload`
-`pid` | `UnifexPid`
-`state` | `UnifexState *`
-`string` | `char *`
-`uint64` | `uint64_t`
-`unsigned` | `unsigned int`
-`[int]` | `int *`, `unsigned int`
+## Supported types
+| Elixir type | Native type                     | in NIF as a function parameter | in NIF as a return type | in CNode as a function parameter | in CNode as a return type  |
+| ---------   | :-----------------------------: | :-------------------------: | :------------------: | :---------------------------: | :---------------------: |
+| `atom`      | `char *`                        | ✅                          | ✅                    | ✅                            | ✅                      |
+| `bool`      | `int`                           | ✅                          | ✅                    | ✅                            | ✅                      |
+| `unsigned`  | `unsigned int`                  | ✅                          | ✅                    | ✅                            | ✅                      |
+| `uint64`    | `uint64_t`                      | ✅                          | ✅                    | ❌                            | ❌                      |
+| `int`       | `int`                           | ✅                          | ✅                    | ✅                            | ✅                      |
+| `int64`     | `int64_t`                       | ✅                          | ✅                    | ❌                            | ❌                      |
+| `float`     | `double`                        | ✅                          | ✅                    | ✅                            | ✅                      |
+| `payload`   | `UnifexPayload`                 | ✅                          | ✅                    | ✅                            | ✅                      |
+| `pid`       | `UnifexPid`                     | ✅                          | ✅                    | ✅                            | ✅                      |
+| `string`    | `char *`                        | ✅                          | ✅                    | ✅                            | ✅                      |
+| `[type]`    | `native_type *`, `unsigned int` | ✅                          | ✅                    | ✅                            | ✅                      |
