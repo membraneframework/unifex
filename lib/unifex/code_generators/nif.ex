@@ -128,7 +128,7 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_result_function({name, result}, ctx) do
     declaration = generate_result_function_declaration({name, result}, ctx)
     {result, _meta} = generate_serialization(result, ctx)
-
+    IO.inspect(result, label: "result")
     ~g"""
     #{declaration} {
       return #{result};
@@ -449,6 +449,9 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_serialization(specs, ctx) do
+
+    IO.inspect(specs, label: "specs")
+
     Utils.generate_serialization(specs, %{
       arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF, ctx) end,
       tuple_serializer: &generate_tuple_maker/1
