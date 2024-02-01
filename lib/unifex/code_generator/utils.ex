@@ -52,7 +52,7 @@ defmodule Unifex.CodeGenerator.Utils do
 
   def generate_serialization({:"::", _meta, [name = nil, {:label, _meta2, _args}]}, serializers)
       when is_atom(name) do
-        name = "nil"
+    name = "nil"
     {serializers.arg_serializer.(:atom, :"\"#{name}\""), label: name}
   end
 

@@ -128,7 +128,7 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_result_function({name, result}, ctx) do
     declaration = generate_result_function_declaration({name, result}, ctx)
     {result, _meta} = generate_serialization(result, ctx)
-    IO.inspect(result, label: "result")
+
     ~g"""
     #{declaration} {
       return #{result};
@@ -139,19 +139,23 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_result_function_declaration({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)
     args = meta |> Keyword.get_values(:arg)
-    labels = meta |> Keyword.get_values(:label) |> Enum.map(fn l ->
-      if l == nil do
-        "nil"
-      else
-        l
-      end
-    end)
+
+    labels =
+      meta
+      |> Keyword.get_values(:label)
+      |> Enum.map(fn label ->
+        if label == nil do
+          "nil"
+        else
+          label
+        end
+      end)
 
     args_declarations =
       [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
       |> Enum.join(", ")
 
-      ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+    ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
   defp generate_send_function(sends, ctx) do
@@ -449,9 +453,6 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_serialization(specs, ctx) do
-
-    IO.inspect(specs, label: "specs")
-
     Utils.generate_serialization(specs, %{
       arg_serializer: fn type, name -> BaseType.generate_arg_serialize(type, name, NIF, ctx) end,
       tuple_serializer: &generate_tuple_maker/1
