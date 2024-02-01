@@ -139,13 +139,19 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_result_function_declaration({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)
     args = meta |> Keyword.get_values(:arg)
-    labels = meta |> Keyword.get_values(:label)
+    labels = meta |> Keyword.get_values(:label) |> Enum.map(fn l ->
+      if l == nil do
+        "nil"
+      else
+        l
+      end
+    end)
 
     args_declarations =
       [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
       |> Enum.join(", ")
 
-    ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+      ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
   end
 
   defp generate_send_function(sends, ctx) do
