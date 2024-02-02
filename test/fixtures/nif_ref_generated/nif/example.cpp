@@ -34,6 +34,10 @@ UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
   });
 }
 
+UNIFEX_TERM test_nil_result_nil(UnifexEnv *env) {
+  return enif_make_atom(env, "nil");
+}
+
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
@@ -398,6 +402,20 @@ static ERL_NIF_TERM export_test_int(ErlNifEnv *env, int argc,
   result = test_int(unifex_env, in_int);
   goto exit_export_test_int;
 exit_export_test_int:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_nil(ErlNifEnv *env, int argc,
+                                    const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+
+  result = test_nil(unifex_env);
+  goto exit_export_test_nil;
+exit_export_test_nil:
 
   return result;
 }
@@ -947,6 +965,7 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_atom", 1, export_test_atom, 0},
     {"unifex_test_float", 1, export_test_float, 0},
     {"unifex_test_int", 1, export_test_int, 0},
+    {"unifex_test_nil", 0, export_test_nil, 0},
     {"unifex_test_string", 1, export_test_string, 0},
     {"unifex_test_list", 1, export_test_list, 0},
     {"unifex_test_list_of_strings", 1, export_test_list_of_strings, 0},

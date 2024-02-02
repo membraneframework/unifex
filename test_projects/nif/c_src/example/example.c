@@ -9,6 +9,10 @@ int handle_load(UnifexEnv *env, void **priv_data) {
   return 0;
 }
 
+UNIFEX_TERM test_nil(UnifexEnv* env) {
+  return test_nil_result_nil(env);
+}
+
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
   state->a = 42;

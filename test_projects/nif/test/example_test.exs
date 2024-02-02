@@ -8,6 +8,10 @@ defmodule ExampleTest do
     [state: state]
   end
 
+  test "nil" do
+    assert Example.test_nil() == nil
+  end
+
   test "atom" do
     assert {:ok, :unifex} = Example.test_atom(:unifex)
   end
