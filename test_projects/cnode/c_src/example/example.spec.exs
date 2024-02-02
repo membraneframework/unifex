@@ -8,6 +8,8 @@ state_type "MyState"
 
 spec init() :: {:ok :: label, state}
 
+spec test_nil() :: (nil :: label)
+
 spec test_atom(in_atom :: atom) :: {:ok :: label, out_atom :: atom}
 
 spec test_bool(in_bool :: bool) :: {:ok :: label, out_bool :: bool}

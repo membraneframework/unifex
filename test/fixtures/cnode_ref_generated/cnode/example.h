@@ -78,6 +78,7 @@ typedef struct nested_struct_t nested_struct;
 #endif
 
 UNIFEX_TERM init(UnifexEnv *env);
+UNIFEX_TERM test_nil(UnifexEnv *env);
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
 UNIFEX_TERM test_bool(UnifexEnv *env, int in_bool);
 UNIFEX_TERM test_float(UnifexEnv *env, double in_float);
@@ -99,6 +100,7 @@ UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
+UNIFEX_TERM test_nil_result_nil(UnifexEnv *env);
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
@@ -125,6 +127,7 @@ UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_nil_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_float_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);

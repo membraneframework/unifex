@@ -8,6 +8,10 @@ defmodule ExampleTest do
     [cnode: cnode]
   end
 
+  test "nil", context do
+    assert nil == Unifex.CNode.call(context[:cnode], :test_nil, [:unifex])
+  end
+
   test "atom", context do
     assert {:ok, :unifex} = Unifex.CNode.call(context[:cnode], :test_atom, [:unifex])
   end
