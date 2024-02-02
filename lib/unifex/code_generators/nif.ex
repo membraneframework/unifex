@@ -143,7 +143,7 @@ defmodule Unifex.CodeGenerators.NIF do
     labels =
       meta
       |> Keyword.get_values(:label)
-      |> Enum.map(&(if &1 == nil, do: "nil", else: &1))
+      |> Enum.map(&if &1 == nil, do: "nil", else: &1)
 
     args_declarations =
       [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]

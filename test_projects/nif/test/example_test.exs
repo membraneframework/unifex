@@ -9,7 +9,7 @@ defmodule ExampleTest do
   end
 
   test "nil" do
-    assert Example.test_nil() == nil
+    assert nil == Example.test_nil()
   end
 
   test "atom" do
