@@ -8,6 +8,10 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
+UNIFEX_TERM test_nil(UnifexEnv* env) {
+  return test_nil_result_nil(env);
+}
+
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
   return test_atom_result_ok(env, in_atom);
 }

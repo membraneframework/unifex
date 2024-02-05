@@ -52,7 +52,7 @@ defmodule Unifex.CodeGenerator do
     |> Enum.map(&interface_generator/1)
   end
 
-  @spec bundlex_interface(Bundlex.Native.interface_t()) :: Specs.interface_t()
+  @spec bundlex_interface(Bundlex.Project.native_interface()) :: Specs.interface_t()
   def bundlex_interface(:cnode), do: CNode
   def bundlex_interface(:nif), do: NIF
   def bundlex_interface(:port), do: Port

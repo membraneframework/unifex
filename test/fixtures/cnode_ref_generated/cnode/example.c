@@ -28,6 +28,15 @@ UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   return out_buff;
 }
 
+UNIFEX_TERM test_nil_result_nil(UnifexEnv *env) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_atom(out_buff, "nil");
+
+  return out_buff;
+}
+
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -350,6 +359,17 @@ UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   result = init(env);
   goto exit_init_caller;
 exit_init_caller:
+
+  return result;
+}
+
+UNIFEX_TERM test_nil_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+
+  result = test_nil(env);
+  goto exit_test_nil_caller;
+exit_test_nil_caller:
 
   return result;
 }
@@ -1277,6 +1297,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
                                         UnifexCNodeInBuff *in_buff) {
   if (strcmp(fun_name, "init") == 0) {
     return init_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_nil") == 0) {
+    return test_nil_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_atom") == 0) {
     return test_atom_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_bool") == 0) {

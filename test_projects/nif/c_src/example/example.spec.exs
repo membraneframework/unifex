@@ -21,6 +21,8 @@ spec test_float(in_float :: float) :: {:ok :: label, out_float :: float}
 
 spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
+spec test_nil() :: (nil :: label)
+
 @doc """
 test_string docs
 """
