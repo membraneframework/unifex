@@ -53,7 +53,7 @@ defmodule Unifex.CodeGenerator do
   end
 
   @doc false
-  @spec bundlex_interface(Bundlex.Native.interface_t()) :: Specs.interface_t()
+  @spec bundlex_interface(:cnode | :nif | :port) :: CNode | NIF | Port
   def bundlex_interface(:cnode), do: CNode
   def bundlex_interface(:nif), do: NIF
   def bundlex_interface(:port), do: Port
