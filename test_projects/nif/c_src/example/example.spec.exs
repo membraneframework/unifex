@@ -26,7 +26,6 @@ spec test_nil() :: (nil :: label)
 @doc """
 test_string docs
 """
-
 spec test_string(in_string :: string) :: {:ok :: label, out_string :: string}
 
 spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}
