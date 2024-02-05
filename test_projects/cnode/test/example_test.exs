@@ -9,7 +9,7 @@ defmodule ExampleTest do
   end
 
   test "nil", context do
-    assert nil == Unifex.CNode.call(context[:cnode], :test_nil, [:unifex])
+    assert nil == Unifex.CNode.call(context[:cnode], :test_nil, [])
   end
 
   test "atom", context do
