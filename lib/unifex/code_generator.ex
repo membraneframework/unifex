@@ -52,7 +52,6 @@ defmodule Unifex.CodeGenerator do
     |> Enum.map(&interface_generator/1)
   end
 
-  @doc false
   @spec bundlex_interface(:cnode | :nif | :port) :: CNode | NIF | Port
   def bundlex_interface(:cnode), do: CNode
   def bundlex_interface(:nif), do: NIF
