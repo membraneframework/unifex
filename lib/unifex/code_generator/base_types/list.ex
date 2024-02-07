@@ -34,8 +34,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
   def generate_destruction(name, ctx) do
     ~g"""
     if(#{name} != NULL) {
-      for(unsigned int i = 0; i < #{name}_length; i++) {
-        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)}
+      for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{name}_length; i_#{ctx.subtype}++) {
+        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)}
       }
       unifex_free(#{name});
     }
@@ -83,12 +83,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         }
 
         ERL_NIF_TERM list = #{arg};
-        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+        for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{len_var_name}; i_#{ctx.subtype}++) {
           ERL_NIF_TERM elem;
           enif_get_list_cell(env, list, &elem, &list);
-          #{native_type} #{elem_name} = #{var_name}[i];
+          #{native_type} #{elem_name} = #{var_name}[i_#{ctx.subtype}];
           #{BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)}
-          #{var_name}[i] = #{elem_name};
+          #{var_name}[i_#{ctx.subtype}] = #{elem_name};
         }
       }
       get_list_length_result;

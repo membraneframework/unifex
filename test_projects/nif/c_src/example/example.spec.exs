@@ -52,11 +52,18 @@ type simple_struct :: %SimpleStruct{
 }
 
 spec test_my_struct(in_struct :: my_struct) :: {:ok :: label, out_struct :: my_struct}
-
+ 
 type nested_struct :: %Nested.Struct{
   inner_struct: my_struct,
   id: int
 }
+
+type nested_struct_list :: %Nested.StructList{
+  inner_list: [my_struct],
+  id: int
+}
+
+spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}
 
 spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}
 

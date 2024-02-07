@@ -562,7 +562,7 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   goto exit_test_list_caller;
 exit_test_list_caller:
   if (in_list != NULL) {
-    for (unsigned int i = 0; i < in_list_length; i++) {
+    for (unsigned int i_int = 0; i_int < in_list_length; i_int++) {
     }
     unifex_free(in_list);
   }
@@ -639,8 +639,8 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
   goto exit_test_list_of_strings_caller;
 exit_test_list_of_strings_caller:
   if (in_strings != NULL) {
-    for (unsigned int i = 0; i < in_strings_length; i++) {
-      unifex_free(in_strings[i]);
+    for (unsigned int i_string = 0; i_string < in_strings_length; i_string++) {
+      unifex_free(in_strings[i_string]);
     }
     unifex_free(in_strings);
   }
@@ -713,7 +713,8 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
   goto exit_test_list_of_uints_caller;
 exit_test_list_of_uints_caller:
   if (in_uints != NULL) {
-    for (unsigned int i = 0; i < in_uints_length; i++) {
+    for (unsigned int i_unsigned = 0; i_unsigned < in_uints_length;
+         i_unsigned++) {
     }
     unifex_free(in_uints);
   }
@@ -795,7 +796,7 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
   goto exit_test_list_with_other_args_caller;
 exit_test_list_with_other_args_caller:
   if (in_list != NULL) {
-    for (unsigned int i = 0; i < in_list_length; i++) {
+    for (unsigned int i_int = 0; i_int < in_list_length; i_int++) {
     }
     unifex_free(in_list);
   }
@@ -995,7 +996,7 @@ UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   goto exit_test_my_struct_caller;
 exit_test_my_struct_caller:
   if (in_struct.data != NULL) {
-    for (unsigned int i = 0; i < in_struct.data_length; i++) {
+    for (unsigned int i_int = 0; i_int < in_struct.data_length; i_int++) {
     }
     unifex_free(in_struct.data);
   }
@@ -1221,7 +1222,8 @@ UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
   goto exit_test_nested_struct_caller;
 exit_test_nested_struct_caller:
   if (in_struct.inner_struct.data != NULL) {
-    for (unsigned int i = 0; i < in_struct.inner_struct.data_length; i++) {
+    for (unsigned int i_int = 0; i_int < in_struct.inner_struct.data_length;
+         i_int++) {
     }
     unifex_free(in_struct.inner_struct.data);
   }
