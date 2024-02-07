@@ -52,9 +52,9 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_list_length - 1; i >= 0; i--) {
-            list =
-                enif_make_list_cell(env, enif_make_int(env, out_list[i]), list);
+          for (int i_int = out_list_length - 1; i_int >= 0; i_int--) {
+            list = enif_make_list_cell(env, enif_make_int(env, out_list[i_int]),
+                                       list);
           }
           list;
         })
@@ -70,9 +70,10 @@ UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_strings_length - 1; i >= 0; i--) {
+          for (int i_string = out_strings_length - 1; i_string >= 0;
+               i_string--) {
             list = enif_make_list_cell(
-                env, unifex_string_to_term(env, out_strings[i]), list);
+                env, unifex_string_to_term(env, out_strings[i_string]), list);
           }
           list;
         })
@@ -127,9 +128,9 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
           keys[1] = enif_make_atom(env, "data");
           values[1] = ({
             ERL_NIF_TERM list = enif_make_list(env, 0);
-            for (int i = out_struct.data_length - 1; i >= 0; i--) {
+            for (int i_int = out_struct.data_length - 1; i_int >= 0; i_int--) {
               list = enif_make_list_cell(
-                  env, enif_make_int(env, out_struct.data[i]), list);
+                  env, enif_make_int(env, out_struct.data[i_int]), list);
             }
             list;
           });
@@ -169,10 +170,11 @@ UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
             keys[1] = enif_make_atom(env, "data");
             values[1] = ({
               ERL_NIF_TERM list = enif_make_list(env, 0);
-              for (int i = out_struct.inner_struct.data_length - 1; i >= 0;
-                   i--) {
+              for (int i_int = out_struct.inner_struct.data_length - 1;
+                   i_int >= 0; i_int--) {
                 list = enif_make_list_cell(
-                    env, enif_make_int(env, out_struct.inner_struct.data[i]),
+                    env,
+                    enif_make_int(env, out_struct.inner_struct.data[i_int]),
                     list);
               }
               list;
@@ -214,18 +216,20 @@ test_list_of_structs_result_ok(UnifexEnv *env,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_struct_list_length - 1; i >= 0; i--) {
+          for (int i_simple_struct = out_struct_list_length - 1;
+               i_simple_struct >= 0; i_simple_struct--) {
             list = enif_make_list_cell(
                 env, ({
                   ERL_NIF_TERM keys[3];
                   ERL_NIF_TERM values[3];
 
                   keys[0] = enif_make_atom(env, "id");
-                  values[0] = enif_make_int(env, out_struct_list[i].id);
+                  values[0] =
+                      enif_make_int(env, out_struct_list[i_simple_struct].id);
 
                   keys[1] = enif_make_atom(env, "name");
-                  values[1] =
-                      unifex_string_to_term(env, out_struct_list[i].name);
+                  values[1] = unifex_string_to_term(
+                      env, out_struct_list[i_simple_struct].name);
 
                   keys[2] = enif_make_atom(env, "__struct__");
                   values[2] = enif_make_atom(env, "Elixir.SimpleStruct");

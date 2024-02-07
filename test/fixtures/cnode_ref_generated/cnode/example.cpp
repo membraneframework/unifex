@@ -104,9 +104,9 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
   ei_x_encode_atom(out_buff, "ok");
   ({
     ei_x_encode_list_header(out_buff, out_list_length);
-    for (unsigned int i = 0; i < out_list_length; i++) {
+    for (unsigned int i_int = 0; i_int < out_list_length; i_int++) {
       ({
-        int tmp_int = out_list[i];
+        int tmp_int = out_list[i_int];
         ei_x_encode_longlong(out_buff, (long long)tmp_int);
       });
     }
@@ -125,8 +125,9 @@ UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
   ei_x_encode_atom(out_buff, "ok");
   ({
     ei_x_encode_list_header(out_buff, out_strings_length);
-    for (unsigned int i = 0; i < out_strings_length; i++) {
-      ei_x_encode_binary(out_buff, out_strings[i], strlen(out_strings[i]));
+    for (unsigned int i_string = 0; i_string < out_strings_length; i_string++) {
+      ei_x_encode_binary(out_buff, out_strings[i_string],
+                         strlen(out_strings[i_string]));
     }
     ei_x_encode_empty_list(out_buff);
   });
@@ -144,9 +145,10 @@ UNIFEX_TERM test_list_of_uints_result_ok(UnifexEnv *env,
   ei_x_encode_atom(out_buff, "ok");
   ({
     ei_x_encode_list_header(out_buff, out_uints_length);
-    for (unsigned int i = 0; i < out_uints_length; i++) {
+    for (unsigned int i_unsigned = 0; i_unsigned < out_uints_length;
+         i_unsigned++) {
       ({
-        unsigned int tmp_uint = out_uints[i];
+        unsigned int tmp_uint = out_uints[i_unsigned];
         ei_x_encode_ulonglong(out_buff, (unsigned long long)tmp_uint);
       });
     }
@@ -167,9 +169,9 @@ UNIFEX_TERM test_list_with_other_args_result_ok(UnifexEnv *env,
   ei_x_encode_atom(out_buff, "ok");
   ({
     ei_x_encode_list_header(out_buff, out_list_length);
-    for (unsigned int i = 0; i < out_list_length; i++) {
+    for (unsigned int i_int = 0; i_int < out_list_length; i_int++) {
       ({
-        int tmp_int = out_list[i];
+        int tmp_int = out_list[i_int];
         ei_x_encode_longlong(out_buff, (long long)tmp_int);
       });
     }
@@ -243,9 +245,9 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
     ei_x_encode_atom(out_buff, "data");
     ({
       ei_x_encode_list_header(out_buff, out_struct.data_length);
-      for (unsigned int i = 0; i < out_struct.data_length; i++) {
+      for (unsigned int i_int = 0; i_int < out_struct.data_length; i_int++) {
         ({
-          int tmp_int = out_struct.data[i];
+          int tmp_int = out_struct.data[i_int];
           ei_x_encode_longlong(out_buff, (long long)tmp_int);
         });
       }
@@ -286,9 +288,10 @@ UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
       ei_x_encode_atom(out_buff, "data");
       ({
         ei_x_encode_list_header(out_buff, out_struct.inner_struct.data_length);
-        for (unsigned int i = 0; i < out_struct.inner_struct.data_length; i++) {
+        for (unsigned int i_int = 0;
+             i_int < out_struct.inner_struct.data_length; i_int++) {
           ({
-            int tmp_int = out_struct.inner_struct.data[i];
+            int tmp_int = out_struct.inner_struct.data[i_int];
             ei_x_encode_longlong(out_buff, (long long)tmp_int);
           });
         }

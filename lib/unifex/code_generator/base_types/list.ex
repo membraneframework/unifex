@@ -52,10 +52,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ~g"""
       ({
         ERL_NIF_TERM list = enif_make_list(env, 0);
-        for(int i = #{name}_length-1; i >= 0; i--) {
+        for(int i_#{ctx.subtype} = #{name}_length-1; i_#{ctx.subtype} >= 0; i_#{ctx.subtype}--) {
           list = enif_make_list_cell(
             env,
-            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)},
+            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)},
             list
           );
         }
@@ -107,8 +107,8 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       ~g"""
       ({
         ei_x_encode_list_header(out_buff, #{name}_length);
-        for(unsigned int i = 0; i < #{name}_length; i++) {
-          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i]", ctx.generator, ctx)}
+        for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{name}_length; i_#{ctx.subtype}++) {
+          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)}
         }
         ei_x_encode_empty_list(out_buff);
       });
