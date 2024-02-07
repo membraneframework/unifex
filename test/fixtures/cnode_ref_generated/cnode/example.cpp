@@ -355,6 +355,72 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   return out_buff;
 }
 
+UNIFEX_TERM test_nested_struct_list_result_ok(UnifexEnv *env,
+                                              nested_struct_list out_struct) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    ei_x_encode_map_header(out_buff, 3);
+    ei_x_encode_atom(out_buff, "inner_list");
+    ({
+      ei_x_encode_list_header(out_buff, out_struct.inner_list_length);
+      for (unsigned int i_my_struct = 0;
+           i_my_struct < out_struct.inner_list_length; i_my_struct++) {
+        ({
+          ei_x_encode_map_header(out_buff, 4);
+          ei_x_encode_atom(out_buff, "id");
+          ({
+            int tmp_int = out_struct.inner_list[i_my_struct].id;
+            ei_x_encode_longlong(out_buff, (long long)tmp_int);
+          });
+          ;
+
+          ei_x_encode_atom(out_buff, "data");
+          ({
+            ei_x_encode_list_header(
+                out_buff, out_struct.inner_list[i_my_struct].data_length);
+            for (unsigned int i_int = 0;
+                 i_int < out_struct.inner_list[i_my_struct].data_length;
+                 i_int++) {
+              ({
+                int tmp_int = out_struct.inner_list[i_my_struct].data[i_int];
+                ei_x_encode_longlong(out_buff, (long long)tmp_int);
+              });
+            }
+            ei_x_encode_empty_list(out_buff);
+          });
+          ;
+
+          ei_x_encode_atom(out_buff, "name");
+          ei_x_encode_binary(out_buff, out_struct.inner_list[i_my_struct].name,
+                             strlen(out_struct.inner_list[i_my_struct].name));
+          ;
+
+          ei_x_encode_atom(out_buff, "__struct__");
+          ei_x_encode_atom(out_buff, "Elixir.My.Struct");
+        });
+      }
+      ei_x_encode_empty_list(out_buff);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "id");
+    ({
+      int tmp_int = out_struct.id;
+      ei_x_encode_longlong(out_buff, (long long)tmp_int);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "__struct__");
+    ei_x_encode_atom(out_buff, "Elixir.Nested.StructList");
+  });
+
+  return out_buff;
+}
+
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
   UNIFEX_MAYBE_UNUSED(in_buff);
   UNIFEX_TERM result;
@@ -1282,6 +1348,316 @@ exit_test_my_enum_caller:
   return result;
 }
 
+UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
+                                           UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+  nested_struct_list in_struct;
+  in_struct.inner_list = NULL;
+  if (({
+        int arity = 0;
+        int decode_map_header_result =
+            ei_decode_map_header(in_buff->buff, in_buff->index, &arity);
+        if (decode_map_header_result == 0) {
+          for (int i = 0; i < arity; ++i) {
+            char key[MAXATOMLEN + 1];
+            int decode_key_result =
+                ei_decode_atom(in_buff->buff, in_buff->index, key);
+            if (decode_key_result == 0) {
+              if (strcmp(key, "inner_list") == 0) {
+                if (({
+                      int type;
+                      int size;
+
+                      ei_get_type(in_buff->buff, in_buff->index, &type, &size);
+                      in_struct.inner_list_length = (unsigned int)size;
+
+                      int index = 0;
+                      UnifexCNodeInBuff unifex_buff;
+                      UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+                      if (type == ERL_STRING_EXT) {
+                        ei_x_buff buff = unifex_cnode_string_to_list(
+                            in_buff, in_struct.inner_list_length);
+                        unifex_buff.buff = buff.buff;
+                        unifex_buff.index = &index;
+                      } else {
+                        unifex_buff.buff = in_buff->buff;
+                        unifex_buff.index = in_buff->index;
+                      }
+                      int header_res = ei_decode_list_header(
+                          unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+                      in_struct.inner_list_length = (unsigned int)size;
+                      in_struct.inner_list = (my_struct *)malloc(
+                          sizeof(my_struct) * in_struct.inner_list_length);
+
+                      for (unsigned int i = 0; i < in_struct.inner_list_length;
+                           i++) {
+                        in_struct.inner_list[i].data = NULL;
+                        in_struct.inner_list[i].name = NULL;
+                      }
+
+                      for (unsigned int i = 0; i < in_struct.inner_list_length;
+                           i++) {
+                        if (({
+                              int arity = 0;
+                              int decode_map_header_result =
+                                  ei_decode_map_header(unifex_buff_ptr->buff,
+                                                       unifex_buff_ptr->index,
+                                                       &arity);
+                              if (decode_map_header_result == 0) {
+                                for (int i = 0; i < arity; ++i) {
+                                  char key[MAXATOMLEN + 1];
+                                  int decode_key_result = ei_decode_atom(
+                                      unifex_buff_ptr->buff,
+                                      unifex_buff_ptr->index, key);
+                                  if (decode_key_result == 0) {
+                                    if (strcmp(key, "id") == 0) {
+                                      if (({
+                                            long long tmp_longlong;
+                                            int result = ei_decode_longlong(
+                                                unifex_buff_ptr->buff,
+                                                unifex_buff_ptr->index,
+                                                &tmp_longlong);
+                                            in_struct.inner_list[i].id =
+                                                (int)tmp_longlong;
+                                            result;
+                                          })) {
+                                        result = unifex_raise(
+                                            env, "Unifex CNode: cannot parse "
+                                                 "argument 'in_struct' of type "
+                                                 "':nested_struct_list'");
+                                        goto exit_test_nested_struct_list_caller;
+                                      }
+
+                                    } else if (strcmp(key, "data") == 0) {
+                                      if (({
+                                            int type;
+                                            int size;
+
+                                            ei_get_type(unifex_buff_ptr->buff,
+                                                        unifex_buff_ptr->index,
+                                                        &type, &size);
+                                            in_struct.inner_list[i]
+                                                .data_length =
+                                                (unsigned int)size;
+
+                                            int index = 0;
+                                            UnifexCNodeInBuff unifex_buff;
+                                            UnifexCNodeInBuff *unifex_buff_ptr =
+                                                &unifex_buff;
+                                            if (type == ERL_STRING_EXT) {
+                                              ei_x_buff buff =
+                                                  unifex_cnode_string_to_list(
+                                                      unifex_buff_ptr,
+                                                      in_struct.inner_list[i]
+                                                          .data_length);
+                                              unifex_buff.buff = buff.buff;
+                                              unifex_buff.index = &index;
+                                            } else {
+                                              unifex_buff.buff =
+                                                  unifex_buff_ptr->buff;
+                                              unifex_buff.index =
+                                                  unifex_buff_ptr->index;
+                                            }
+                                            int header_res =
+                                                ei_decode_list_header(
+                                                    unifex_buff_ptr->buff,
+                                                    unifex_buff_ptr->index,
+                                                    &size);
+                                            in_struct.inner_list[i]
+                                                .data_length =
+                                                (unsigned int)size;
+                                            in_struct.inner_list[i].data =
+                                                (int *)malloc(
+                                                    sizeof(int) *
+                                                    in_struct.inner_list[i]
+                                                        .data_length);
+
+                                            for (unsigned int i = 0;
+                                                 i < in_struct.inner_list[i]
+                                                         .data_length;
+                                                 i++) {
+                                            }
+
+                                            for (unsigned int i = 0;
+                                                 i < in_struct.inner_list[i]
+                                                         .data_length;
+                                                 i++) {
+                                              if (({
+                                                    long long tmp_longlong;
+                                                    int result =
+                                                        ei_decode_longlong(
+                                                            unifex_buff_ptr
+                                                                ->buff,
+                                                            unifex_buff_ptr
+                                                                ->index,
+                                                            &tmp_longlong);
+                                                    in_struct.inner_list[i]
+                                                        .data[i] =
+                                                        (int)tmp_longlong;
+                                                    result;
+                                                  })) {
+                                                result = unifex_raise(
+                                                    env,
+                                                    "Unifex CNode: cannot "
+                                                    "parse argument "
+                                                    "'in_struct' of type "
+                                                    "':nested_struct_list'");
+                                                goto exit_test_nested_struct_list_caller;
+                                              }
+                                            }
+                                            if (in_struct.inner_list[i]
+                                                    .data_length) {
+                                              header_res =
+                                                  ei_decode_list_header(
+                                                      unifex_buff_ptr->buff,
+                                                      unifex_buff_ptr->index,
+                                                      &size);
+                                            }
+                                            header_res;
+                                          })) {
+                                        result = unifex_raise(
+                                            env, "Unifex CNode: cannot parse "
+                                                 "argument 'in_struct' of type "
+                                                 "':nested_struct_list'");
+                                        goto exit_test_nested_struct_list_caller;
+                                      }
+
+                                    } else if (strcmp(key, "name") == 0) {
+                                      if (({
+                                            int type;
+                                            int size;
+                                            long len;
+                                            ei_get_type(unifex_buff_ptr->buff,
+                                                        unifex_buff_ptr->index,
+                                                        &type, &size);
+                                            size = size + 1; // for NULL byte
+                                            in_struct.inner_list[i].name =
+                                                (char *)malloc(sizeof(char) *
+                                                               size);
+                                            memset(in_struct.inner_list[i].name,
+                                                   0, size);
+                                            ei_decode_binary(
+                                                unifex_buff_ptr->buff,
+                                                unifex_buff_ptr->index,
+                                                in_struct.inner_list[i].name,
+                                                &len);
+                                          })) {
+                                        result = unifex_raise(
+                                            env, "Unifex CNode: cannot parse "
+                                                 "argument 'in_struct' of type "
+                                                 "':nested_struct_list'");
+                                        goto exit_test_nested_struct_list_caller;
+                                      }
+
+                                    } else if (strcmp(key, "__struct__") == 0) {
+                                      char *elixir_module_name;
+                                      if (({
+                                            elixir_module_name =
+                                                (char *)unifex_alloc(
+                                                    MAXATOMLEN);
+                                            ei_decode_atom(
+                                                unifex_buff_ptr->buff,
+                                                unifex_buff_ptr->index,
+                                                elixir_module_name);
+                                          })) {
+                                        result = unifex_raise(
+                                            env, "Unifex CNode: cannot parse "
+                                                 "argument 'in_struct' of type "
+                                                 "':nested_struct_list'");
+                                        goto exit_test_nested_struct_list_caller;
+                                      }
+
+                                      if (elixir_module_name != NULL)
+                                        unifex_free(elixir_module_name);
+                                    }
+                                  }
+                                }
+                              }
+
+                              decode_map_header_result;
+                            })) {
+                          result = unifex_raise(
+                              env, "Unifex CNode: cannot parse argument "
+                                   "'in_struct' of type ':nested_struct_list'");
+                          goto exit_test_nested_struct_list_caller;
+                        }
+                      }
+                      if (in_struct.inner_list_length) {
+                        header_res = ei_decode_list_header(
+                            unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                            &size);
+                      }
+                      header_res;
+                    })) {
+                  result = unifex_raise(
+                      env, "Unifex CNode: cannot parse argument 'in_struct' of "
+                           "type ':nested_struct_list'");
+                  goto exit_test_nested_struct_list_caller;
+                }
+
+              } else if (strcmp(key, "id") == 0) {
+                if (({
+                      long long tmp_longlong;
+                      int result = ei_decode_longlong(
+                          in_buff->buff, in_buff->index, &tmp_longlong);
+                      in_struct.id = (int)tmp_longlong;
+                      result;
+                    })) {
+                  result = unifex_raise(
+                      env, "Unifex CNode: cannot parse argument 'in_struct' of "
+                           "type ':nested_struct_list'");
+                  goto exit_test_nested_struct_list_caller;
+                }
+
+              } else if (strcmp(key, "__struct__") == 0) {
+                char *elixir_module_name;
+                if (({
+                      elixir_module_name = (char *)unifex_alloc(MAXATOMLEN);
+                      ei_decode_atom(in_buff->buff, in_buff->index,
+                                     elixir_module_name);
+                    })) {
+                  result = unifex_raise(
+                      env, "Unifex CNode: cannot parse argument 'in_struct' of "
+                           "type ':nested_struct_list'");
+                  goto exit_test_nested_struct_list_caller;
+                }
+
+                if (elixir_module_name != NULL)
+                  unifex_free(elixir_module_name);
+              }
+            }
+          }
+        }
+
+        decode_map_header_result;
+      })) {
+    result = unifex_raise(env, "Unifex CNode: cannot parse argument "
+                               "'in_struct' of type ':nested_struct_list'");
+    goto exit_test_nested_struct_list_caller;
+  }
+
+  result = test_nested_struct_list(env, in_struct);
+  goto exit_test_nested_struct_list_caller;
+exit_test_nested_struct_list_caller:
+  if (in_struct.inner_list != NULL) {
+    for (unsigned int i_my_struct = 0;
+         i_my_struct < in_struct.inner_list_length; i_my_struct++) {
+      if (in_struct.inner_list[i_my_struct].data != NULL) {
+        for (unsigned int i_int = 0;
+             i_int < in_struct.inner_list[i_my_struct].data_length; i_int++) {
+        }
+        unifex_free(in_struct.inner_list[i_my_struct].data);
+      }
+
+      unifex_free(in_struct.inner_list[i_my_struct].name);
+    }
+    unifex_free(in_struct.inner_list);
+  }
+
+  return result;
+}
+
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   UNIFEX_UNUSED(flags);
   ei_x_buff *out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
@@ -1334,6 +1710,8 @@ UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
     return test_nested_struct_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_my_enum") == 0) {
     return test_my_enum_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_nested_struct_list") == 0) {
+    return test_nested_struct_list_caller(env, in_buff);
   } else {
     return unifex_cnode_undefined_function_error(env, fun_name);
   }
