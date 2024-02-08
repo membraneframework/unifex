@@ -215,6 +215,14 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   defp generate_caller_function({name, args}, ctx) do
+    # ctx = if Map.has_key?(ctx, :debug_counter) do
+    #   ctx
+    # else
+    #   Map.merge(ctx, %{debug_counter: 0})
+    # end
+
+    # Map.update!(ctx, :debug_counter, &(&1*2))
+    IO.inspect(ctx, label: "DEBUG COUNTER")
     declaration = generate_caller_function_declaration({name, args}, ctx)
     exit_label = "exit_#{name}_caller"
 

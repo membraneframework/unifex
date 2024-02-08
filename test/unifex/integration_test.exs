@@ -81,7 +81,6 @@ defmodule Unifex.IntegrationTest do
     #            File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
     #   true
     # end)
-    
   end
 
   defp generate_cpp_code(project) do

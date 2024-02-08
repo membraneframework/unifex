@@ -58,7 +58,7 @@ spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
 
 type nested_struct_list :: %Nested.StructList{
-  inner_list: my_struct,
+  inner_list: [my_struct],
   id: int
 }
 

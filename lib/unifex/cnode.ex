@@ -91,7 +91,7 @@ defmodule Unifex.CNode do
           response :: term
   def call(%__MODULE__{bundlex_cnode: cnode}, fun_name, args \\ [], timeout \\ 5000) do
     msg = [fun_name | args] |> List.to_tuple()
-    # IO.inspect(msg, label: "CNODE MSG")
+    IO.inspect(msg, label: "CNODE MSG")
     cnode
     |> Bundlex.CNode.call(msg, timeout)
     |> handle_response()
