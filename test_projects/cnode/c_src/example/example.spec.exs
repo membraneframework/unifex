@@ -8,7 +8,7 @@ state_type "MyState"
 
 spec init() :: {:ok :: label, state}
 
-spec test_nil() :: (nil :: label)
+spec test_nil() :: nil :: label
 
 spec test_atom(in_atom :: atom) :: {:ok :: label, out_atom :: atom}
 
@@ -26,8 +26,7 @@ spec test_list_of_strings(in_strings :: [string]) :: {:ok :: label, out_strings 
 
 spec test_list_of_uints(in_uints :: [unsigned]) :: {:ok :: label, out_uints :: [unsigned]}
 
-spec test_list_with_other_args(in_list :: [int], other_param :: atom) ::
-       {:ok :: label, out_list :: [int], other_param :: atom}
+spec test_list_with_other_args(in_list :: [int], other_param :: atom) :: {:ok :: label, out_list :: [int], other_param :: atom}
 
 spec test_payload(in_payload :: payload) :: {:ok :: label, out_payload :: payload}
 
@@ -52,14 +51,18 @@ type nested_struct :: %Nested.Struct{
 
 spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}
 
-type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
+type(my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five)
 
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
+# type nested_struct_inner :: %Nested.StructInner{
+#   name: string,
+#   id: int
+# }
 
-type nested_struct_list :: %Nested.StructList{
-  inner_list: [my_struct],
-  id: int
-}
+# type nested_struct_list :: %Nested.StructList{
+#   inner_list: [nested_struct_inner],
+#   id: int
+# }
 
-spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}
+# spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}
