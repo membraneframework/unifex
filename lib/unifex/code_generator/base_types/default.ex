@@ -35,6 +35,14 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
     end
 
     @impl true
+    def generate_arg_parse(argument, variable, %{type: :int64} = ctx) do
+      IO.inspect("ctx.type: #{ctx.type}, argument: #{argument}, variable: &#{variable}")
+      ~g<({
+        ErlNifSInt64 *pp = (ErlNifSInt64)pts;
+        enif_get_#{ctx.type}(env, #{argument}, pp);
+        })>
+    end
+
     def generate_arg_parse(argument, variable, ctx) do
       ~g<enif_get_#{ctx.type}(env, #{argument}, &#{variable})>
     end
