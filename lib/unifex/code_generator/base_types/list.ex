@@ -104,6 +104,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
+      # IO.inspect(name, label: "CNODE ctx")
       ~g"""
       ({
         ei_x_encode_list_header(out_buff, #{name}_length);
@@ -117,7 +118,10 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
-      elem_name = :"#{var_name}[i]"
+      # IO.inspect(Counter.value(), label: "value")
+      Counter.increment()
+
+      elem_name = :"#{var_name}[i_#{Counter.value()}]" # do tego i doklejac suffix z agenta
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
@@ -145,11 +149,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         #{len_var_name} = (unsigned int) size;
         #{var_name} = (#{native_type} *)malloc(sizeof(#{native_type}) * #{len_var_name});
 
-        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+        for(unsigned int i_#{Counter.value()} = 0; i_#{Counter.value()} < #{len_var_name}; i_#{Counter.value()}++) { // do tego i doklejac suffix z agenta
           #{BaseType.generate_initialization(subtype, elem_name, generator, ctx)}
         }
 
-        for(unsigned int i = 0; i < #{len_var_name}; i++) {
+        for(unsigned int i_#{Counter.value()} = 0; i_#{Counter.value()} < #{len_var_name}; i_#{Counter.value()}++) { // do tego i doklejac suffix z agenta
           #{BaseType.generate_arg_parse(subtype,
       elem_name,
       "unifex_buff_ptr",

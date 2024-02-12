@@ -55,14 +55,13 @@ type(my_enum :: :option_one | :option_two | :option_three | :option_four | :opti
 
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
-# type nested_struct_inner :: %Nested.StructInner{
-#   name: string,
-#   id: int
-# }
-
-# type nested_struct_list :: %Nested.StructList{
-#   inner_list: [nested_struct_inner],
-#   id: int
-# }
-
-# spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}
+type nested_struct_inner :: %Nested.StructInner{
+  name: string,
+  data: [int],
+  id: int
+}
+type nested_struct_list :: %Nested.StructList{
+  inner_list: [nested_struct_inner],
+  id: int
+}
+spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}

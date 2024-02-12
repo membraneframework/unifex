@@ -156,6 +156,11 @@ defmodule Unifex.CodeGenerator.BaseType do
           map
         ) :: CodeGenerator.code_t()
   def generate_arg_parse(type, name, argument, postproc_fun \\ & &1, code_generator, ctx) do
+    IO.inspect(name, label: "name")
+
+    # if name == :"in_struct.inner_list[i].data[i]" do
+    #   IO.inspect(name, label: "name")
+    # end
     call(
       type,
       :generate_arg_parse,
@@ -163,7 +168,8 @@ defmodule Unifex.CodeGenerator.BaseType do
       code_generator,
       Map.put(ctx, :postproc_fun, postproc_fun)
     )
-    |> postproc_fun.()
+    |> postproc_fun.() 
+    # |> IO.inspect(label: "post")
   end
 
   @spec generate_arg_name(t, name :: atom, CodeGenerator.t(), map) :: [CodeGenerator.code_t()]
@@ -216,6 +222,7 @@ defmodule Unifex.CodeGenerator.BaseType do
       args ++ [Map.merge(ctx, %{generator: code_generator, type: full_type, subtype: subtype})]
 
     [gen_aware_module, module, default_gen_aware_module]
+    # |> IO.inspect()
     |> Enum.find(
       BaseTypes.Default,
       &(Code.ensure_loaded?(&1) and function_exported?(&1, callback, length(args)))
