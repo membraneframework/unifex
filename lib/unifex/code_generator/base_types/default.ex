@@ -38,8 +38,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
     def generate_arg_parse(argument, variable, %{type: :int64} = ctx) do
       IO.inspect("ctx.type: #{ctx.type}, argument: #{argument}, variable: &#{variable}")
       ~g<({
-        ErlNifSInt64 *pp = (ErlNifSInt64)pts;
-        enif_get_#{ctx.type}(env, #{argument}, pp);
+        // ErlNifSInt64 *pp = (ErlNifSInt64)&pts;
+        // int64_t elo = 0;
+        printf("%d #{argument}: ", #{argument});
+        // argv[1] 'ERL_NIF_TERM' (aka 'unsigned long')
+        enif_get_#{ctx.type}(env, (int64_t)#{argument}, &pts);
         })>
     end
 
