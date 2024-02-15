@@ -203,8 +203,6 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.with_index()
       |> Enum.map_join("\n", fn {{name, type}, i} ->
         postproc_fun = fn arg_getter ->
-          # IO.inspect("name: #{name}, type: #{type}")
-          # IO.inspect("name: #{name}, type: #{type}, arg_getter: #{arg_getter}")
           ~g"""
           if(!#{arg_getter}) {
             #{result_var} = unifex_raise_args_error(env, "#{name}", "#{inspect(type)}");
