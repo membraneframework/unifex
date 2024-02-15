@@ -19,7 +19,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
   def generate_initialization(_name, _ctx) do
     ""
   end
- 
+
   @impl true
   def generate_destruction(_name, _ctx) do
     ""
