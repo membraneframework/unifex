@@ -19,7 +19,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
   def generate_initialization(_name, _ctx) do
     ""
   end
-
+ 
   @impl true
   def generate_destruction(_name, _ctx) do
     ""
@@ -36,13 +36,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.Default do
 
     @impl true
     def generate_arg_parse(argument, variable, %{type: :int64} = ctx) do
-      IO.inspect("ctx.type: #{ctx.type}, argument: #{argument}, variable: &#{variable}")
       ~g<({
-        // ErlNifSInt64 *pp = (ErlNifSInt64)&pts;
-        // int64_t elo = 0;
-        printf("%d #{argument}: ", #{argument});
-        // argv[1] 'ERL_NIF_TERM' (aka 'unsigned long')
-        enif_get_#{ctx.type}(env, (int64_t)#{argument}, &pts);
+        ErlNifSInt64 temp = 0;
+        int success = enif_get_#{ctx.type}(env, #{argument}, &temp);
+        #{variable} = (int64_t)temp;
+        success;
         })>
     end
 
