@@ -93,22 +93,22 @@ defmodule Unifex.Specs do
       |> Enum.flat_map(fn {dirty_func, type} ->
         cond do
           is_atom(dirty_func) ->
-            matched_func = List.keyfind(functions_arity, dirty_func, 0)
-            if matched_func == nil do
+            matched_func_arity = List.keyfind(functions_arity, dirty_func, 0)
+            if matched_func_arity == nil do
               Logger.warning(
                 "Function #{dirty_func} marked as dirty that does not correspond to any function defined in spec (#{specs_file})."
               )
               []
             else
-              [{matched_func, type}]
+              {name, arity} = matched_func_arity
+              [{name, type}]
             end
           is_tuple(dirty_func) ->
             [{dirty_func, type}]
         end
       end)
-      |> IO.inspect(label: "dirty_functions list after")
       |> Map.new()
-
+      |> IO.inspect(label: "dirty_functions list after")
     %__MODULE__{
       name: name,
       module: Keyword.get(config, :module),
