@@ -70,16 +70,35 @@ defmodule Unifex.Specs do
     {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env(specs_file))
     config = binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
 
-    {functions_args, functions_results} =
+    {functions_args_arity, functions_results} =
       config
       |> Keyword.get_values(:function)
-      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
+      |> Enum.map(fn {name, args, results} ->
+        {{{name, args}, {name, Enum.count(args)}}, {name, results}}
+      end)
       |> Enum.unzip()
+
+    {functions_args, functions_arity} = Enum.unzip(functions_args_arity)
 
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
     functions_docs = parse_docs(config, specs_file)
+
+    dirty_functions =
+      config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new()
+
+    dirty_functions
+    |> Map.keys()
+    |> Enum.each(fn dirty_function ->
+      if not Enum.member?(functions_arity, dirty_function) do
+        {name, arity} = dirty_function
+
+        Logger.warning(
+          "Function #{name} with arity #{arity} marked as dirty that does not correspond to any function defined in spec."
+        )
+      end
+    end)
 
     %__MODULE__{
       name: name,
@@ -88,8 +107,7 @@ defmodule Unifex.Specs do
       functions_results: functions_results,
       functions_docs: functions_docs,
       sends: Keyword.get_values(config, :sends),
-      dirty_functions:
-        config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
+      dirty_functions: dirty_functions,
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface),
       state_type: Keyword.get(config, :state_type, nil),
