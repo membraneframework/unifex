@@ -95,7 +95,7 @@ defmodule Unifex.Specs do
         {name, arity} = dirty_function
 
         Logger.warning(
-          "Function #{name} with arity #{arity} marked as dirty that does not correspond to any function defined in spec."
+          "Function #{name} with arity #{arity} marked as dirty that does not correspond to any function defined in spec (#{specs_file})."
         )
       end
     end)
