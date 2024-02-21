@@ -79,26 +79,35 @@ defmodule Unifex.Specs do
       |> Enum.unzip()
 
     {functions_args, functions_arity} = Enum.unzip(functions_args_arity)
-
+      IO.inspect(functions_arity, label: "functions_arity")
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
     functions_docs = parse_docs(config, specs_file)
 
     dirty_functions =
-      config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new()
-
-    dirty_functions
-    |> Map.keys()
-    |> Enum.each(fn dirty_function ->
-      if not Enum.member?(functions_arity, dirty_function) do
-        {name, arity} = dirty_function
-
-        Logger.warning(
-          "Function #{name} with arity #{arity} marked as dirty that does not correspond to any function defined in spec (#{specs_file})."
-        )
-      end
-    end)
+      config
+      |> Keyword.get_values(:dirty_functions)
+      |> List.flatten()
+      |> IO.inspect(label: "dirty_functions list before")
+      |> Enum.flat_map(fn {dirty_func, type} ->
+        cond do
+          is_atom(dirty_func) ->
+            matched_func = List.keyfind(functions_arity, dirty_func, 0)
+            if matched_func == nil do
+              Logger.warning(
+                "Function #{dirty_func} marked as dirty that does not correspond to any function defined in spec (#{specs_file})."
+              )
+              []
+            else
+              [{matched_func, type}]
+            end
+          is_tuple(dirty_func) ->
+            [{dirty_func, type}]
+        end
+      end)
+      |> IO.inspect(label: "dirty_functions list after")
+      |> Map.new()
 
     %__MODULE__{
       name: name,
