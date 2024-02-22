@@ -18,7 +18,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int64 do
     use Unifex.CodeGenerator.BaseType
 
     @impl true
-    def generate_arg_parse(argument, variable, ctx) do
+    def generate_arg_parse(argument, variable, _ctx) do
       ~g<({
         ErlNifSInt64 temp = 0;
         int success = enif_get_int64(env, #{argument}, &temp);
