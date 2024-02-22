@@ -79,7 +79,7 @@ defmodule Unifex.Specs do
       |> Enum.unzip()
 
     {functions_args, functions_arity} = Enum.unzip(functions_args_arity)
-      IO.inspect(functions_arity, label: "functions_arity")
+
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
 
@@ -89,37 +89,30 @@ defmodule Unifex.Specs do
       config
       |> Keyword.get_values(:dirty_functions)
       |> List.flatten()
-      |> IO.inspect(label: "dirty_functions list before")
       |> Enum.map(fn {dirty_func, type} ->
-        cond do
-          is_tuple(dirty_func) ->
-            {dirty_name, _dirty_arity} = dirty_func
-            matched_func = List.keyfind(functions_arity, dirty_name, 0)
-            if matched_func == dirty_func do
-              {dirty_func, type}
-            else
-              Logger.warning(
-                "Function #{dirty_name} marked as dirty does not correspond to any function defined in spec (#{specs_file})."
-              )
-              nil
-            end
-          is_atom(dirty_func) ->
-            matched_func = List.keyfind(functions_arity, dirty_func, 0)
-            if matched_func == nil do
-              Logger.warning(
-                "Function #{dirty_func} marked as dirty does not correspond to any function defined in spec (#{specs_file})."
-              )
-              nil
-            else
-              {name, arity} = matched_func
-              {{name, arity}, type}
-            end
-          true -> nil
+        {dirty_name, dirty_arity} =
+          cond do
+            is_tuple(dirty_func) ->
+              dirty_func
+
+            is_atom(dirty_func) ->
+              {dirty_func, nil}
+          end
+
+        {matched_name, matched_arity} = List.keyfind(functions_arity, dirty_name, 0, {nil, nil})
+
+        if matched_name == dirty_name and (matched_arity == dirty_arity or dirty_arity == nil) do
+          {{dirty_name, matched_arity}, type}
+        else
+          Logger.warning(
+            "Function #{dirty_name} marked as dirty does not match any function defined in spec (#{specs_file})."
+          )
+
+          nil
         end
       end)
       |> Enum.reject(fn el -> el == nil end)
       |> Map.new()
-      |> IO.inspect(label: "dirty_functions map")
 
     %__MODULE__{
       name: name,
