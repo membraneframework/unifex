@@ -104,7 +104,8 @@ defmodule Unifex.Specs do
               [{name, type}]
             end
           is_tuple(dirty_func) ->
-            [{dirty_func, type}]
+            {name, arity} = dirty_func
+            [{name, type}]
         end
       end)
       |> Map.new()
