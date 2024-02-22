@@ -70,15 +70,11 @@ defmodule Unifex.Specs do
     {_res, binds} = Code.eval_string(specs_code, [{:unifex_config__, []}], make_env(specs_file))
     config = binds |> Keyword.fetch!(:unifex_config__) |> Enum.reverse()
 
-    {functions_args_arity, functions_results} =
+    {functions_args, functions_results} =
       config
       |> Keyword.get_values(:function)
-      |> Enum.map(fn {name, args, results} ->
-        {{{name, args}, {name, Enum.count(args)}}, {name, results}}
-      end)
+      |> Enum.map(fn {name, args, results} -> {{name, args}, {name, results}} end)
       |> Enum.unzip()
-
-    {functions_args, functions_arity} = Enum.unzip(functions_args_arity)
 
     functions_results =
       Enum.flat_map(functions_results, fn {name, results} -> Enum.map(results, &{name, &1}) end)
@@ -90,19 +86,16 @@ defmodule Unifex.Specs do
       |> Keyword.get_values(:dirty_functions)
       |> List.flatten()
       |> Enum.flat_map(fn {dirty_func, type} ->
-        {dirty_name, dirty_arity} =
-          cond do
-            is_tuple(dirty_func) ->
-              dirty_func
-
-            is_atom(dirty_func) ->
-              {dirty_func, nil}
+        dirty_name =
+          case dirty_func do
+            {name, _arity} -> name
+            name -> name
           end
 
-        {matched_name, matched_arity} = List.keyfind(functions_arity, dirty_name, 0, {nil, nil})
+        {matched_name, matched_args} = List.keyfind(functions_args, dirty_name, 0, {nil, nil})
 
-        if matched_name == dirty_name and (matched_arity == dirty_arity or dirty_arity == nil) do
-          [{{dirty_name, matched_arity}, type}]
+        if matched_name != nil and matched_args != nil and dirty_func in [matched_name, {matched_name, length(matched_args)}] do
+          [{{dirty_name, length(matched_args)}, type}]
         else
           Logger.warning(
             "Function #{dirty_name} marked as dirty does not match any function defined in spec (#{specs_file})."
