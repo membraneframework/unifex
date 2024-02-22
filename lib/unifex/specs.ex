@@ -92,10 +92,9 @@ defmodule Unifex.Specs do
             name -> name
           end
 
-        {matched_name, matched_args} = List.keyfind(functions_args, dirty_name, 0, {nil, nil})
+        {matched_name, matched_args} = List.keyfind(functions_args, dirty_name, 0, {nil, []})
 
-        if matched_name != nil and matched_args != nil and
-             dirty_func in [matched_name, {matched_name, length(matched_args)}] do
+        if dirty_func in [matched_name, {matched_name, length(matched_args)}] do
           [{{dirty_name, length(matched_args)}, type}]
         else
           Logger.warning(
