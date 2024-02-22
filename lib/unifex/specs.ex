@@ -89,7 +89,7 @@ defmodule Unifex.Specs do
       config
       |> Keyword.get_values(:dirty_functions)
       |> List.flatten()
-      |> Enum.map(fn {dirty_func, type} ->
+      |> Enum.flat_map(fn {dirty_func, type} ->
         {dirty_name, dirty_arity} =
           cond do
             is_tuple(dirty_func) ->
@@ -102,16 +102,15 @@ defmodule Unifex.Specs do
         {matched_name, matched_arity} = List.keyfind(functions_arity, dirty_name, 0, {nil, nil})
 
         if matched_name == dirty_name and (matched_arity == dirty_arity or dirty_arity == nil) do
-          {{dirty_name, matched_arity}, type}
+          [{{dirty_name, matched_arity}, type}]
         else
           Logger.warning(
             "Function #{dirty_name} marked as dirty does not match any function defined in spec (#{specs_file})."
           )
 
-          nil
+          []
         end
       end)
-      |> Enum.reject(fn el -> el == nil end)
       |> Map.new()
 
     %__MODULE__{
