@@ -90,26 +90,37 @@ defmodule Unifex.Specs do
       |> Keyword.get_values(:dirty_functions)
       |> List.flatten()
       |> IO.inspect(label: "dirty_functions list before")
-      |> Enum.flat_map(fn {dirty_func, type} ->
+      |> Enum.map(fn {dirty_func, type} ->
         cond do
-          is_atom(dirty_func) ->
-            matched_func_arity = List.keyfind(functions_arity, dirty_func, 0)
-            if matched_func_arity == nil do
-              Logger.warning(
-                "Function #{dirty_func} marked as dirty that does not correspond to any function defined in spec (#{specs_file})."
-              )
-              []
-            else
-              {name, arity} = matched_func_arity
-              [{name, type}]
-            end
           is_tuple(dirty_func) ->
-            {name, arity} = dirty_func
-            [{name, type}]
+            {dirty_name, _dirty_arity} = dirty_func
+            matched_func = List.keyfind(functions_arity, dirty_name, 0)
+            if matched_func == dirty_func do
+              {dirty_func, type}
+            else
+              Logger.warning(
+                "Function #{dirty_name} marked as dirty does not correspond to any function defined in spec (#{specs_file})."
+              )
+              nil
+            end
+          is_atom(dirty_func) ->
+            matched_func = List.keyfind(functions_arity, dirty_func, 0)
+            if matched_func == nil do
+              Logger.warning(
+                "Function #{dirty_func} marked as dirty does not correspond to any function defined in spec (#{specs_file})."
+              )
+              nil
+            else
+              {name, arity} = matched_func
+              {{name, arity}, type}
+            end
+          true -> nil
         end
       end)
+      |> Enum.reject(fn el -> el == nil end)
       |> Map.new()
-      |> IO.inspect(label: "dirty_functions list after")
+      |> IO.inspect(label: "dirty_functions map")
+
     %__MODULE__{
       name: name,
       module: Keyword.get(config, :module),
