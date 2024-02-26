@@ -81,6 +81,31 @@ defmodule Unifex.Specs do
 
     functions_docs = parse_docs(config, specs_file)
 
+    dirty_functions =
+      config
+      |> Keyword.get_values(:dirty_functions)
+      |> List.flatten()
+      |> Enum.flat_map(fn {dirty_func, type} ->
+        dirty_name =
+          case dirty_func do
+            {name, _arity} -> name
+            name -> name
+          end
+
+        {matched_name, matched_args} = List.keyfind(functions_args, dirty_name, 0, {nil, []})
+
+        if dirty_func in [matched_name, {matched_name, length(matched_args)}] do
+          [{{dirty_name, length(matched_args)}, type}]
+        else
+          Logger.warning(
+            "Function #{dirty_name} marked as dirty does not match any function defined in spec (#{specs_file})."
+          )
+
+          []
+        end
+      end)
+      |> Map.new()
+
     %__MODULE__{
       name: name,
       module: Keyword.get(config, :module),
@@ -88,8 +113,7 @@ defmodule Unifex.Specs do
       functions_results: functions_results,
       functions_docs: functions_docs,
       sends: Keyword.get_values(config, :sends),
-      dirty_functions:
-        config |> Keyword.get_values(:dirty_functions) |> List.flatten() |> Map.new(),
+      dirty_functions: dirty_functions,
       callbacks: config |> Keyword.get_values(:callback) |> Map.new(),
       interface: Keyword.get(config, :interface),
       state_type: Keyword.get(config, :state_type, nil),
