@@ -100,6 +100,13 @@ defmodule Unifex.CodeGenerator.Utils do
     generate_serialization({:"::", [], [name_var, name_var]}, serializers)
   end
 
+  def generate_serialization_bugged(
+        {:"::", _meta, [name = nil, {:label, _meta2, _args}]},
+        serializers
+      ) do
+    {serializers.arg_serializer.(:atom, :"\"#{name}\""), label: name}
+  end
+
   @spec generate_functions(
           config :: Enumerable.t(),
           generator :: (term, map -> CodeGenerator.code_t()),

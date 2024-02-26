@@ -125,15 +125,48 @@ defmodule Unifex.CodeGenerators.NIF do
     end)
   end
 
+  # def generate_serialization(true = _bugged, {:"::", _meta, [_name = nil, {:label, _meta2, _args}]}, serializers) do
+  # {serializers.arg_serializer.(:atom, :""), label: ""}
+  # end
   defp generate_result_function({name, result}, ctx) do
-    declaration = generate_result_function_declaration({name, result}, ctx)
-    {result, _meta} = generate_serialization(result, ctx)
+    {_x, _y, tab} = result
+    res = Enum.at(tab, 0, "x")
 
-    ~g"""
-    #{declaration} {
-      return #{result};
-    }
-    """
+    if is_nil(res) do
+      declaration_correct = generate_result_function_declaration({name, result}, ctx)
+      {result_correct, _meta} = generate_serialization(result, ctx)
+      declaration_bugged = generate_result_function_declaration_bugged({name, result}, ctx)
+
+      {result_bugged, _meta} =
+        Utils.generate_serialization_bugged(
+          result,
+          %{
+            arg_serializer: fn type, name ->
+              BaseType.generate_arg_serialize(type, name, NIF, ctx)
+            end,
+            tuple_serializer: &generate_tuple_maker/1
+          }
+        )
+
+      ~g"""
+      #{declaration_bugged} {
+        return #{result_bugged};
+      }
+
+      #{declaration_correct} {
+        return #{result_correct};
+      }
+      """
+    else
+      declaration = generate_result_function_declaration({name, result}, ctx)
+      {result, _meta} = generate_serialization(result, ctx)
+
+      ~g"""
+      #{declaration} {
+        return #{result};
+      }
+      """
+    end
   end
 
   defp generate_result_function_declaration({name, result}, ctx) do
@@ -150,6 +183,17 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
+  end
+
+  defp generate_result_function_declaration_bugged({name, result}, ctx) do
+    {_result, meta} = generate_serialization(result, ctx)
+    args = meta |> Keyword.get_values(:arg)
+
+    args_declarations =
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+      |> Enum.join(", ")
+
+    ~g<UNIFEX_TERM #{[name, :result | [""]] |> Enum.join("_")}(#{args_declarations})>
   end
 
   defp generate_send_function(sends, ctx) do
