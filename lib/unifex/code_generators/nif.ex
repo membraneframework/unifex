@@ -71,9 +71,7 @@ defmodule Unifex.CodeGenerators.NIF do
      * They are automatically generated and don't need to be implemented.
      */
 
-    #{Utils.generate_functions_declarations(specs.functions_results,
-    &generate_result_function_declaration/2,
-    ctx)}
+    #{generate_functions_declarations_bugged(specs.functions_results, ctx)}
 
     /*
      * Functions that send the defined messages from Nif.
@@ -88,6 +86,39 @@ defmodule Unifex.CodeGenerators.NIF do
     }
     #endif
     """
+  end
+
+  defp generate_functions_declarations_bugged(config, ctx) do
+    do_generate(config, &generate_result_function_declaration_bugged_header/2, &(&1 <> ";"), ctx)
+  end
+  defp do_generate(config, generator, mapper, ctx) do
+
+    config
+    |> Enum.map(fn c -> generator.(c, ctx) end)
+    |> List.flatten()
+    |> Enum.filter(&(&1 != ""))
+    |> IO.inspect(label: "generated_filtered")
+    |> Enum.map_join("\n", mapper)
+  end
+  defp generate_result_function_declaration_bugged_header({name, result}, ctx) do
+    {_result, meta} = generate_serialization(result, ctx)
+    args = meta |> Keyword.get_values(:arg)
+
+    args_declarations =
+      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+      |> Enum.join(", ")
+
+    labels =
+      meta
+      |> Keyword.get_values(:label)
+    if Enum.member?(labels, "nil") do
+      [
+        ~g<UNIFEX_TERM #{[name, :result | ["nil"]] |> Enum.join("_")}(#{args_declarations})>,
+        ~g<UNIFEX_TERM #{[name, :result | [""]] |> Enum.join("_")}(#{args_declarations})>
+      ]
+    else
+      [~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>]
+    end
   end
 
   @impl CodeGenerator
@@ -125,9 +156,6 @@ defmodule Unifex.CodeGenerators.NIF do
     end)
   end
 
-  # def generate_serialization(true = _bugged, {:"::", _meta, [_name = nil, {:label, _meta2, _args}]}, serializers) do
-  # {serializers.arg_serializer.(:atom, :""), label: ""}
-  # end
   defp generate_result_function({name, result}, ctx) do
     {_x, _y, tab} = result
     res = Enum.at(tab, 0, "x")
@@ -168,6 +196,8 @@ defmodule Unifex.CodeGenerators.NIF do
       """
     end
   end
+
+
 
   defp generate_result_function_declaration({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)
