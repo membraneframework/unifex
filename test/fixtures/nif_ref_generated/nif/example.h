@@ -149,6 +149,7 @@ UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
 UNIFEX_TERM test_nil_result_nil(UnifexEnv *env);
+UNIFEX_TERM test_nil_result_(UnifexEnv *env);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);

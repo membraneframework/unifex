@@ -91,15 +91,15 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_functions_declarations_bugged(config, ctx) do
     do_generate(config, &generate_result_function_declaration_bugged_header/2, &(&1 <> ";"), ctx)
   end
-  defp do_generate(config, generator, mapper, ctx) do
 
+  defp do_generate(config, generator, mapper, ctx) do
     config
     |> Enum.map(fn c -> generator.(c, ctx) end)
     |> List.flatten()
     |> Enum.filter(&(&1 != ""))
-    |> IO.inspect(label: "generated_filtered")
     |> Enum.map_join("\n", mapper)
   end
+
   defp generate_result_function_declaration_bugged_header({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)
     args = meta |> Keyword.get_values(:arg)
@@ -111,6 +111,7 @@ defmodule Unifex.CodeGenerators.NIF do
     labels =
       meta
       |> Keyword.get_values(:label)
+
     if Enum.member?(labels, "nil") do
       [
         ~g<UNIFEX_TERM #{[name, :result | ["nil"]] |> Enum.join("_")}(#{args_declarations})>,
@@ -156,9 +157,8 @@ defmodule Unifex.CodeGenerators.NIF do
     end)
   end
 
-  defp generate_result_function({name, result}, ctx) do
-    {_x, _y, tab} = result
-    res = Enum.at(tab, 0, "x")
+  defp generate_result_function({name, {_x, _y, tab} = result}, ctx) do
+    res = Enum.at(tab, 0, "")
 
     if is_nil(res) do
       declaration_correct = generate_result_function_declaration({name, result}, ctx)
@@ -197,7 +197,16 @@ defmodule Unifex.CodeGenerators.NIF do
     end
   end
 
+  defp generate_result_function({name, result}, ctx) do
+    declaration = generate_result_function_declaration({name, result}, ctx)
+    {result, _meta} = generate_serialization(result, ctx)
 
+    ~g"""
+    #{declaration} {
+      return #{result};
+    }
+    """
+  end
 
   defp generate_result_function_declaration({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)

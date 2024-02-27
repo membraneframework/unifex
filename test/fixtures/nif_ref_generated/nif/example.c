@@ -34,6 +34,8 @@ UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
   });
 }
 
+UNIFEX_TERM test_nil_result_(UnifexEnv *env) { return enif_make_atom(env, ""); }
+
 UNIFEX_TERM test_nil_result_nil(UnifexEnv *env) {
   return enif_make_atom(env, "nil");
 }

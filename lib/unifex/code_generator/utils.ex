@@ -100,6 +100,15 @@ defmodule Unifex.CodeGenerator.Utils do
     generate_serialization({:"::", [], [name_var, name_var]}, serializers)
   end
 
+  @spec generate_serialization_bugged(
+          ast :: Macro.t(),
+          serializers :: %{
+            arg_serializer: (type :: BaseType.t(), name :: atom -> output),
+            tuple_serializer: ([output] -> output)
+          }
+        ) ::
+          {output, [{:label, atom} | {:arg, {name :: atom, type :: BaseType.t()}}]}
+        when output: term
   def generate_serialization_bugged(
         {:"::", _meta, [name = nil, {:label, _meta2, _args}]},
         serializers
