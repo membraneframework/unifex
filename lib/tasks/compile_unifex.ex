@@ -13,18 +13,18 @@ defmodule Mix.Tasks.Compile.Unifex do
   def run(_args) do
     Counter.start_link(0);
 
-    # {:ok, _apps} = Application.ensure_all_started(:unifex)
-    # Helper.get_source_dir()
-    # |> InterfaceIO.get_interfaces_specs!()
-    # |> Enum.each(fn {name, dir, specs_file} ->
-    #   codes = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
-    #   Enum.each(codes, &InterfaceIO.store_interface!(name, dir, &1))
-    #   generators = Enum.map(codes, fn {_header, _source, generator} -> generator end)
-    #   tie_header = Unifex.CodeGenerator.TieHeader.generate_header(name, generators)
-    #   InterfaceIO.store_tie_header!(name, dir, tie_header)
-    #   InterfaceIO.store_gitignore!(dir)
-    # end)
+    {:ok, _apps} = Application.ensure_all_started(:unifex)
+    Helper.get_source_dir()
+    |> InterfaceIO.get_interfaces_specs!()
+    |> Enum.each(fn {name, dir, specs_file} ->
+      codes = specs_file |> Specs.parse(name) |> CodeGenerator.generate_code()
+      Enum.each(codes, &InterfaceIO.store_interface!(name, dir, &1))
+      generators = Enum.map(codes, fn {_header, _source, generator} -> generator end)
+      tie_header = Unifex.CodeGenerator.TieHeader.generate_header(name, generators)
+      InterfaceIO.store_tie_header!(name, dir, tie_header)
+      InterfaceIO.store_gitignore!(dir)
+    end)
 
-    :ok
+    # :ok
   end
 end

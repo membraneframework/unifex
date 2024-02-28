@@ -356,8 +356,72 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
 }
 
 UNIFEX_TERM test_nested_struct_list_result_ok(UnifexEnv *env,
-                                              nested_struct_list in_struct) {
-  UNIFEX_TERM out_buff;
+                                              nested_struct_list out_struct) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    ei_x_encode_map_header(out_buff, 3);
+    ei_x_encode_atom(out_buff, "inner_list");
+    ({
+      ei_x_encode_list_header(out_buff, out_struct.inner_list_length);
+      for (unsigned int i_nested_struct_inner = 0;
+           i_nested_struct_inner < out_struct.inner_list_length;
+           i_nested_struct_inner++) {
+        ({
+          ei_x_encode_map_header(out_buff, 4);
+          ei_x_encode_atom(out_buff, "name");
+          ei_x_encode_binary(
+              out_buff, out_struct.inner_list[i_nested_struct_inner].name,
+              strlen(out_struct.inner_list[i_nested_struct_inner].name));
+          ;
+
+          ei_x_encode_atom(out_buff, "data");
+          ({
+            ei_x_encode_list_header(
+                out_buff,
+                out_struct.inner_list[i_nested_struct_inner].data_length);
+            for (unsigned int i_int = 0;
+                 i_int <
+                 out_struct.inner_list[i_nested_struct_inner].data_length;
+                 i_int++) {
+              ({
+                int tmp_int =
+                    out_struct.inner_list[i_nested_struct_inner].data[i_int];
+                ei_x_encode_longlong(out_buff, (long long)tmp_int);
+              });
+            }
+            ei_x_encode_empty_list(out_buff);
+          });
+          ;
+
+          ei_x_encode_atom(out_buff, "id");
+          ({
+            int tmp_int = out_struct.inner_list[i_nested_struct_inner].id;
+            ei_x_encode_longlong(out_buff, (long long)tmp_int);
+          });
+          ;
+
+          ei_x_encode_atom(out_buff, "__struct__");
+          ei_x_encode_atom(out_buff, "Elixir.Nested.StructInner");
+        });
+      }
+      ei_x_encode_empty_list(out_buff);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "id");
+    ({
+      int tmp_int = out_struct.id;
+      ei_x_encode_longlong(out_buff, (long long)tmp_int);
+    });
+    ;
+
+    ei_x_encode_atom(out_buff, "__struct__");
+    ei_x_encode_atom(out_buff, "Elixir.Nested.StructList");
+  });
 
   return out_buff;
 }
@@ -522,32 +586,30 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
         in_list_length = (unsigned int)size;
 
         int index = 0;
-        UnifexCNodeInBuff unifex_buff;
-        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+        UnifexCNodeInBuff unifex_buff_1;
+        UnifexCNodeInBuff *unifex_buff_ptr_1 = &unifex_buff_1;
         if (type == ERL_STRING_EXT) {
           ei_x_buff buff = unifex_cnode_string_to_list(in_buff, in_list_length);
-          unifex_buff.buff = buff.buff;
-          unifex_buff.index = &index;
+          unifex_buff_1.buff = buff.buff;
+          unifex_buff_1.index = &index;
         } else {
-          unifex_buff.buff = in_buff->buff;
-          unifex_buff.index = in_buff->index;
+          unifex_buff_1.buff = in_buff->buff;
+          unifex_buff_1.index = in_buff->index;
         }
-        int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                               unifex_buff_ptr->index, &size);
+        int header_res = ei_decode_list_header(unifex_buff_ptr_1->buff,
+                                               unifex_buff_ptr_1->index, &size);
         in_list_length = (unsigned int)size;
         in_list = (int *)malloc(sizeof(int) * in_list_length);
 
-        for (unsigned int i_1 = 0; i_1 < in_list_length;
-             i_1++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_1 = 0; i_1 < in_list_length; i_1++) {
         }
 
-        for (unsigned int i_1 = 0; i_1 < in_list_length;
-             i_1++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_1 = 0; i_1 < in_list_length; i_1++) {
           if (({
                 long long tmp_longlong;
                 int result =
-                    ei_decode_longlong(unifex_buff_ptr->buff,
-                                       unifex_buff_ptr->index, &tmp_longlong);
+                    ei_decode_longlong(unifex_buff_ptr_1->buff,
+                                       unifex_buff_ptr_1->index, &tmp_longlong);
                 in_list[i_1] = (int)tmp_longlong;
                 result;
               })) {
@@ -557,8 +619,8 @@ UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
           }
         }
         if (in_list_length) {
-          header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                             unifex_buff_ptr->index, &size);
+          header_res = ei_decode_list_header(unifex_buff_ptr_1->buff,
+                                             unifex_buff_ptr_1->index, &size);
         }
         header_res;
       })) {
@@ -594,40 +656,39 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
         in_strings_length = (unsigned int)size;
 
         int index = 0;
-        UnifexCNodeInBuff unifex_buff;
-        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+        UnifexCNodeInBuff unifex_buff_2;
+        UnifexCNodeInBuff *unifex_buff_ptr_2 = &unifex_buff_2;
         if (type == ERL_STRING_EXT) {
           ei_x_buff buff =
               unifex_cnode_string_to_list(in_buff, in_strings_length);
-          unifex_buff.buff = buff.buff;
-          unifex_buff.index = &index;
+          unifex_buff_2.buff = buff.buff;
+          unifex_buff_2.index = &index;
         } else {
-          unifex_buff.buff = in_buff->buff;
-          unifex_buff.index = in_buff->index;
+          unifex_buff_2.buff = in_buff->buff;
+          unifex_buff_2.index = in_buff->index;
         }
-        int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                               unifex_buff_ptr->index, &size);
+        int header_res = ei_decode_list_header(unifex_buff_ptr_2->buff,
+                                               unifex_buff_ptr_2->index, &size);
         in_strings_length = (unsigned int)size;
         in_strings = (char **)malloc(sizeof(char *) * in_strings_length);
 
-        for (unsigned int i_2 = 0; i_2 < in_strings_length;
-             i_2++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_2 = 0; i_2 < in_strings_length; i_2++) {
           in_strings[i_2] = NULL;
         }
 
-        for (unsigned int i_2 = 0; i_2 < in_strings_length;
-             i_2++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_2 = 0; i_2 < in_strings_length; i_2++) {
           if (({
                 int type;
                 int size;
                 long len;
-                ei_get_type(unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                ei_get_type(unifex_buff_ptr_2->buff, unifex_buff_ptr_2->index,
                             &type, &size);
                 size = size + 1; // for NULL byte
                 in_strings[i_2] = (char *)malloc(sizeof(char) * size);
                 memset(in_strings[i_2], 0, size);
-                ei_decode_binary(unifex_buff_ptr->buff, unifex_buff_ptr->index,
-                                 in_strings[i_2], &len);
+                ei_decode_binary(unifex_buff_ptr_2->buff,
+                                 unifex_buff_ptr_2->index, in_strings[i_2],
+                                 &len);
               })) {
             result =
                 unifex_raise(env, "Unifex CNode: cannot parse argument "
@@ -636,8 +697,8 @@ UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,
           }
         }
         if (in_strings_length) {
-          header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                             unifex_buff_ptr->index, &size);
+          header_res = ei_decode_list_header(unifex_buff_ptr_2->buff,
+                                             unifex_buff_ptr_2->index, &size);
         }
         header_res;
       })) {
@@ -674,34 +735,32 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
         in_uints_length = (unsigned int)size;
 
         int index = 0;
-        UnifexCNodeInBuff unifex_buff;
-        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+        UnifexCNodeInBuff unifex_buff_3;
+        UnifexCNodeInBuff *unifex_buff_ptr_3 = &unifex_buff_3;
         if (type == ERL_STRING_EXT) {
           ei_x_buff buff =
               unifex_cnode_string_to_list(in_buff, in_uints_length);
-          unifex_buff.buff = buff.buff;
-          unifex_buff.index = &index;
+          unifex_buff_3.buff = buff.buff;
+          unifex_buff_3.index = &index;
         } else {
-          unifex_buff.buff = in_buff->buff;
-          unifex_buff.index = in_buff->index;
+          unifex_buff_3.buff = in_buff->buff;
+          unifex_buff_3.index = in_buff->index;
         }
-        int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                               unifex_buff_ptr->index, &size);
+        int header_res = ei_decode_list_header(unifex_buff_ptr_3->buff,
+                                               unifex_buff_ptr_3->index, &size);
         in_uints_length = (unsigned int)size;
         in_uints =
             (unsigned int *)malloc(sizeof(unsigned int) * in_uints_length);
 
-        for (unsigned int i_3 = 0; i_3 < in_uints_length;
-             i_3++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_3 = 0; i_3 < in_uints_length; i_3++) {
         }
 
-        for (unsigned int i_3 = 0; i_3 < in_uints_length;
-             i_3++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_3 = 0; i_3 < in_uints_length; i_3++) {
           if (({
                 unsigned long long tmp_ulonglong;
-                int result =
-                    ei_decode_ulonglong(unifex_buff_ptr->buff,
-                                        unifex_buff_ptr->index, &tmp_ulonglong);
+                int result = ei_decode_ulonglong(unifex_buff_ptr_3->buff,
+                                                 unifex_buff_ptr_3->index,
+                                                 &tmp_ulonglong);
                 in_uints[i_3] = (unsigned int)tmp_ulonglong;
                 result;
               })) {
@@ -712,8 +771,8 @@ UNIFEX_TERM test_list_of_uints_caller(UnifexEnv *env,
           }
         }
         if (in_uints_length) {
-          header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                             unifex_buff_ptr->index, &size);
+          header_res = ei_decode_list_header(unifex_buff_ptr_3->buff,
+                                             unifex_buff_ptr_3->index, &size);
         }
         header_res;
       })) {
@@ -752,32 +811,30 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
         in_list_length = (unsigned int)size;
 
         int index = 0;
-        UnifexCNodeInBuff unifex_buff;
-        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+        UnifexCNodeInBuff unifex_buff_4;
+        UnifexCNodeInBuff *unifex_buff_ptr_4 = &unifex_buff_4;
         if (type == ERL_STRING_EXT) {
           ei_x_buff buff = unifex_cnode_string_to_list(in_buff, in_list_length);
-          unifex_buff.buff = buff.buff;
-          unifex_buff.index = &index;
+          unifex_buff_4.buff = buff.buff;
+          unifex_buff_4.index = &index;
         } else {
-          unifex_buff.buff = in_buff->buff;
-          unifex_buff.index = in_buff->index;
+          unifex_buff_4.buff = in_buff->buff;
+          unifex_buff_4.index = in_buff->index;
         }
-        int header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                               unifex_buff_ptr->index, &size);
+        int header_res = ei_decode_list_header(unifex_buff_ptr_4->buff,
+                                               unifex_buff_ptr_4->index, &size);
         in_list_length = (unsigned int)size;
         in_list = (int *)malloc(sizeof(int) * in_list_length);
 
-        for (unsigned int i_4 = 0; i_4 < in_list_length;
-             i_4++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_4 = 0; i_4 < in_list_length; i_4++) {
         }
 
-        for (unsigned int i_4 = 0; i_4 < in_list_length;
-             i_4++) { // do tego i doklejac suffix z agenta
+        for (unsigned int i_4 = 0; i_4 < in_list_length; i_4++) {
           if (({
                 long long tmp_longlong;
                 int result =
-                    ei_decode_longlong(unifex_buff_ptr->buff,
-                                       unifex_buff_ptr->index, &tmp_longlong);
+                    ei_decode_longlong(unifex_buff_ptr_4->buff,
+                                       unifex_buff_ptr_4->index, &tmp_longlong);
                 in_list[i_4] = (int)tmp_longlong;
                 result;
               })) {
@@ -787,8 +844,8 @@ UNIFEX_TERM test_list_with_other_args_caller(UnifexEnv *env,
           }
         }
         if (in_list_length) {
-          header_res = ei_decode_list_header(unifex_buff_ptr->buff,
-                                             unifex_buff_ptr->index, &size);
+          header_res = ei_decode_list_header(unifex_buff_ptr_4->buff,
+                                             unifex_buff_ptr_4->index, &size);
         }
         header_res;
       })) {
@@ -913,34 +970,35 @@ UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
                       in_struct.data_length = (unsigned int)size;
 
                       int index = 0;
-                      UnifexCNodeInBuff unifex_buff;
-                      UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+                      UnifexCNodeInBuff unifex_buff_5;
+                      UnifexCNodeInBuff *unifex_buff_ptr_5 = &unifex_buff_5;
                       if (type == ERL_STRING_EXT) {
                         ei_x_buff buff = unifex_cnode_string_to_list(
                             in_buff, in_struct.data_length);
-                        unifex_buff.buff = buff.buff;
-                        unifex_buff.index = &index;
+                        unifex_buff_5.buff = buff.buff;
+                        unifex_buff_5.index = &index;
                       } else {
-                        unifex_buff.buff = in_buff->buff;
-                        unifex_buff.index = in_buff->index;
+                        unifex_buff_5.buff = in_buff->buff;
+                        unifex_buff_5.index = in_buff->index;
                       }
                       int header_res = ei_decode_list_header(
-                          unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+                          unifex_buff_ptr_5->buff, unifex_buff_ptr_5->index,
+                          &size);
                       in_struct.data_length = (unsigned int)size;
                       in_struct.data =
                           (int *)malloc(sizeof(int) * in_struct.data_length);
 
                       for (unsigned int i_5 = 0; i_5 < in_struct.data_length;
-                           i_5++) { // do tego i doklejac suffix z agenta
+                           i_5++) {
                       }
 
                       for (unsigned int i_5 = 0; i_5 < in_struct.data_length;
-                           i_5++) { // do tego i doklejac suffix z agenta
+                           i_5++) {
                         if (({
                               long long tmp_longlong;
                               int result = ei_decode_longlong(
-                                  unifex_buff_ptr->buff, unifex_buff_ptr->index,
-                                  &tmp_longlong);
+                                  unifex_buff_ptr_5->buff,
+                                  unifex_buff_ptr_5->index, &tmp_longlong);
                               in_struct.data[i_5] = (int)tmp_longlong;
                               result;
                             })) {
@@ -952,7 +1010,7 @@ UNIFEX_TERM test_my_struct_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
                       }
                       if (in_struct.data_length) {
                         header_res = ei_decode_list_header(
-                            unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                            unifex_buff_ptr_5->buff, unifex_buff_ptr_5->index,
                             &size);
                       }
                       header_res;
@@ -1078,23 +1136,23 @@ UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
                                         (unsigned int)size;
 
                                     int index = 0;
-                                    UnifexCNodeInBuff unifex_buff;
-                                    UnifexCNodeInBuff *unifex_buff_ptr =
-                                        &unifex_buff;
+                                    UnifexCNodeInBuff unifex_buff_6;
+                                    UnifexCNodeInBuff *unifex_buff_ptr_6 =
+                                        &unifex_buff_6;
                                     if (type == ERL_STRING_EXT) {
                                       ei_x_buff buff =
                                           unifex_cnode_string_to_list(
                                               in_buff, in_struct.inner_struct
                                                            .data_length);
-                                      unifex_buff.buff = buff.buff;
-                                      unifex_buff.index = &index;
+                                      unifex_buff_6.buff = buff.buff;
+                                      unifex_buff_6.index = &index;
                                     } else {
-                                      unifex_buff.buff = in_buff->buff;
-                                      unifex_buff.index = in_buff->index;
+                                      unifex_buff_6.buff = in_buff->buff;
+                                      unifex_buff_6.index = in_buff->index;
                                     }
                                     int header_res = ei_decode_list_header(
-                                        unifex_buff_ptr->buff,
-                                        unifex_buff_ptr->index, &size);
+                                        unifex_buff_ptr_6->buff,
+                                        unifex_buff_ptr_6->index, &size);
                                     in_struct.inner_struct.data_length =
                                         (unsigned int)size;
                                     in_struct.inner_struct.data = (int *)malloc(
@@ -1104,20 +1162,18 @@ UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
                                     for (unsigned int i_6 = 0;
                                          i_6 <
                                          in_struct.inner_struct.data_length;
-                                         i_6++) { // do tego i doklejac suffix z
-                                                  // agenta
+                                         i_6++) {
                                     }
 
                                     for (unsigned int i_6 = 0;
                                          i_6 <
                                          in_struct.inner_struct.data_length;
-                                         i_6++) { // do tego i doklejac suffix z
-                                                  // agenta
+                                         i_6++) {
                                       if (({
                                             long long tmp_longlong;
                                             int result = ei_decode_longlong(
-                                                unifex_buff_ptr->buff,
-                                                unifex_buff_ptr->index,
+                                                unifex_buff_ptr_6->buff,
+                                                unifex_buff_ptr_6->index,
                                                 &tmp_longlong);
                                             in_struct.inner_struct.data[i_6] =
                                                 (int)tmp_longlong;
@@ -1132,8 +1188,8 @@ UNIFEX_TERM test_nested_struct_caller(UnifexEnv *env,
                                     }
                                     if (in_struct.inner_struct.data_length) {
                                       header_res = ei_decode_list_header(
-                                          unifex_buff_ptr->buff,
-                                          unifex_buff_ptr->index, &size);
+                                          unifex_buff_ptr_6->buff,
+                                          unifex_buff_ptr_6->index, &size);
                                     }
                                     header_res;
                                   })) {
@@ -1328,55 +1384,55 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                       in_struct.inner_list_length = (unsigned int)size;
 
                       int index = 0;
-                      UnifexCNodeInBuff unifex_buff;
-                      UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+                      UnifexCNodeInBuff unifex_buff_7;
+                      UnifexCNodeInBuff *unifex_buff_ptr_7 = &unifex_buff_7;
                       if (type == ERL_STRING_EXT) {
                         ei_x_buff buff = unifex_cnode_string_to_list(
                             in_buff, in_struct.inner_list_length);
-                        unifex_buff.buff = buff.buff;
-                        unifex_buff.index = &index;
+                        unifex_buff_7.buff = buff.buff;
+                        unifex_buff_7.index = &index;
                       } else {
-                        unifex_buff.buff = in_buff->buff;
-                        unifex_buff.index = in_buff->index;
+                        unifex_buff_7.buff = in_buff->buff;
+                        unifex_buff_7.index = in_buff->index;
                       }
                       int header_res = ei_decode_list_header(
-                          unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+                          unifex_buff_ptr_7->buff, unifex_buff_ptr_7->index,
+                          &size);
                       in_struct.inner_list_length = (unsigned int)size;
                       in_struct.inner_list = (nested_struct_inner *)malloc(
                           sizeof(nested_struct_inner) *
                           in_struct.inner_list_length);
 
                       for (unsigned int i_7 = 0;
-                           i_7 < in_struct.inner_list_length;
-                           i_7++) { // do tego i doklejac suffix z agenta
+                           i_7 < in_struct.inner_list_length; i_7++) {
                         in_struct.inner_list[i_7].name = NULL;
                         in_struct.inner_list[i_7].data = NULL;
                       }
 
                       for (unsigned int i_7 = 0;
-                           i_7 < in_struct.inner_list_length;
-                           i_7++) { // do tego i doklejac suffix z agenta
+                           i_7 < in_struct.inner_list_length; i_7++) {
                         if (({
                               int arity = 0;
                               int decode_map_header_result =
-                                  ei_decode_map_header(unifex_buff_ptr->buff,
-                                                       unifex_buff_ptr->index,
+                                  ei_decode_map_header(unifex_buff_ptr_7->buff,
+                                                       unifex_buff_ptr_7->index,
                                                        &arity);
                               if (decode_map_header_result == 0) {
                                 for (int i = 0; i < arity; ++i) {
                                   char key[MAXATOMLEN + 1];
                                   int decode_key_result = ei_decode_atom(
-                                      unifex_buff_ptr->buff,
-                                      unifex_buff_ptr->index, key);
+                                      unifex_buff_ptr_7->buff,
+                                      unifex_buff_ptr_7->index, key);
                                   if (decode_key_result == 0) {
                                     if (strcmp(key, "name") == 0) {
                                       if (({
                                             int type;
                                             int size;
                                             long len;
-                                            ei_get_type(unifex_buff_ptr->buff,
-                                                        unifex_buff_ptr->index,
-                                                        &type, &size);
+                                            ei_get_type(
+                                                unifex_buff_ptr_7->buff,
+                                                unifex_buff_ptr_7->index, &type,
+                                                &size);
                                             size = size + 1; // for NULL byte
                                             in_struct.inner_list[i_7].name =
                                                 (char *)malloc(sizeof(char) *
@@ -1385,8 +1441,8 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                                 in_struct.inner_list[i_7].name,
                                                 0, size);
                                             ei_decode_binary(
-                                                unifex_buff_ptr->buff,
-                                                unifex_buff_ptr->index,
+                                                unifex_buff_ptr_7->buff,
+                                                unifex_buff_ptr_7->index,
                                                 in_struct.inner_list[i_7].name,
                                                 &len);
                                           })) {
@@ -1402,35 +1458,37 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                             int type;
                                             int size;
 
-                                            ei_get_type(unifex_buff_ptr->buff,
-                                                        unifex_buff_ptr->index,
-                                                        &type, &size);
+                                            ei_get_type(
+                                                unifex_buff_ptr_7->buff,
+                                                unifex_buff_ptr_7->index, &type,
+                                                &size);
                                             in_struct.inner_list[i_7]
                                                 .data_length =
                                                 (unsigned int)size;
 
                                             int index = 0;
-                                            UnifexCNodeInBuff unifex_buff;
-                                            UnifexCNodeInBuff *unifex_buff_ptr =
-                                                &unifex_buff;
+                                            UnifexCNodeInBuff unifex_buff_8;
+                                            UnifexCNodeInBuff
+                                                *unifex_buff_ptr_8 =
+                                                    &unifex_buff_8;
                                             if (type == ERL_STRING_EXT) {
                                               ei_x_buff buff =
                                                   unifex_cnode_string_to_list(
-                                                      unifex_buff_ptr,
+                                                      unifex_buff_ptr_7,
                                                       in_struct.inner_list[i_7]
                                                           .data_length);
-                                              unifex_buff.buff = buff.buff;
-                                              unifex_buff.index = &index;
+                                              unifex_buff_8.buff = buff.buff;
+                                              unifex_buff_8.index = &index;
                                             } else {
-                                              unifex_buff.buff =
-                                                  unifex_buff_ptr->buff;
-                                              unifex_buff.index =
-                                                  unifex_buff_ptr->index;
+                                              unifex_buff_8.buff =
+                                                  unifex_buff_ptr_7->buff;
+                                              unifex_buff_8.index =
+                                                  unifex_buff_ptr_7->index;
                                             }
                                             int header_res =
                                                 ei_decode_list_header(
-                                                    unifex_buff_ptr->buff,
-                                                    unifex_buff_ptr->index,
+                                                    unifex_buff_ptr_8->buff,
+                                                    unifex_buff_ptr_8->index,
                                                     &size);
                                             in_struct.inner_list[i_7]
                                                 .data_length =
@@ -1444,22 +1502,20 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                             for (unsigned int i_8 = 0;
                                                  i_8 < in_struct.inner_list[i_7]
                                                            .data_length;
-                                                 i_8++) { // do tego i doklejac
-                                                          // suffix z agenta
+                                                 i_8++) {
                                             }
 
                                             for (unsigned int i_8 = 0;
                                                  i_8 < in_struct.inner_list[i_7]
                                                            .data_length;
-                                                 i_8++) { // do tego i doklejac
-                                                          // suffix z agenta
+                                                 i_8++) {
                                               if (({
                                                     long long tmp_longlong;
                                                     int result =
                                                         ei_decode_longlong(
-                                                            unifex_buff_ptr
+                                                            unifex_buff_ptr_8
                                                                 ->buff,
-                                                            unifex_buff_ptr
+                                                            unifex_buff_ptr_8
                                                                 ->index,
                                                             &tmp_longlong);
                                                     in_struct.inner_list[i_7]
@@ -1480,8 +1536,8 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                                     .data_length) {
                                               header_res =
                                                   ei_decode_list_header(
-                                                      unifex_buff_ptr->buff,
-                                                      unifex_buff_ptr->index,
+                                                      unifex_buff_ptr_8->buff,
+                                                      unifex_buff_ptr_8->index,
                                                       &size);
                                             }
                                             header_res;
@@ -1497,8 +1553,8 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                       if (({
                                             long long tmp_longlong;
                                             int result = ei_decode_longlong(
-                                                unifex_buff_ptr->buff,
-                                                unifex_buff_ptr->index,
+                                                unifex_buff_ptr_7->buff,
+                                                unifex_buff_ptr_7->index,
                                                 &tmp_longlong);
                                             in_struct.inner_list[i_7].id =
                                                 (int)tmp_longlong;
@@ -1518,8 +1574,8 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                                                 (char *)unifex_alloc(
                                                     MAXATOMLEN);
                                             ei_decode_atom(
-                                                unifex_buff_ptr->buff,
-                                                unifex_buff_ptr->index,
+                                                unifex_buff_ptr_7->buff,
+                                                unifex_buff_ptr_7->index,
                                                 elixir_module_name);
                                           })) {
                                         result = unifex_raise(
@@ -1546,7 +1602,7 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
                       }
                       if (in_struct.inner_list_length) {
                         header_res = ei_decode_list_header(
-                            unifex_buff_ptr->buff, unifex_buff_ptr->index,
+                            unifex_buff_ptr_7->buff, unifex_buff_ptr_7->index,
                             &size);
                       }
                       header_res;
@@ -1598,97 +1654,7 @@ UNIFEX_TERM test_nested_struct_list_caller(UnifexEnv *env,
     goto exit_test_nested_struct_list_caller;
   }
 
-  // result = test_nested_struct_list(env, in_struct);
-
-                  //   result = unifex_raise(env, "dupa");
-                  // goto exit_test_nested_struct_list_caller;
-
-                                  result = unifex_raise(env, "dupa");
-                  goto exit_test_nested_struct_list_caller;
-
-
-  result = (ei_x_buff *)malloc(sizeof(ei_x_buff));
-  unifex_cnode_prepare_ei_x_buff(env, result, "result");
-
-  ei_x_encode_tuple_header(result, 2);
-  ei_x_encode_atom(result, "ok");
-  ({
-
-
-
-    ei_x_encode_map_header(result, 3);
-    ei_x_encode_atom(result, "inner_list");
-    ({
-      ei_x_encode_list_header(result, in_struct.inner_list_length);
-      for (unsigned int i_nested_struct_inner = 0;
-           i_nested_struct_inner < in_struct.inner_list_length;
-           i_nested_struct_inner++) {
-        ({
-          ei_x_encode_map_header(result, 4);
-          ei_x_encode_atom(result, "name");
-          ei_x_encode_binary(
-              result, in_struct.inner_list[i_nested_struct_inner].name,
-              strlen(in_struct.inner_list[i_nested_struct_inner].name));
-          ;
-          ei_x_encode_atom(result, "data");
-          ({
-            ei_x_encode_list_header(
-                result,
-                in_struct.inner_list[i_nested_struct_inner].data_length);
-            for (unsigned int i_int = 0;
-                 i_int <
-                 in_struct.inner_list[i_nested_struct_inner].data_length;
-                 i_int++) {
-              ({
-                int tmp_int =
-                    in_struct.inner_list[i_nested_struct_inner].data[i_int];
-                ei_x_encode_longlong(result, (long long)tmp_int);
-              });
-            }
-            ei_x_encode_empty_list(result);
-          });
-          ;
-
-          ei_x_encode_atom(result, "id");
-          ({
-            int tmp_int = in_struct.inner_list[i_nested_struct_inner].id;
-            ei_x_encode_longlong(result, (long long)tmp_int);
-          });
-          ;
-
-          ei_x_encode_atom(result, "__struct__");
-          ei_x_encode_atom(result, "Elixir.Nested.StructInner");
-        });
-      }
-      ei_x_encode_empty_list(result);
-    });
-    ;
-
-    ei_x_encode_atom(result, "id");
-    ({
-      int tmp_int = in_struct.id;
-      ei_x_encode_longlong(result, (long long)tmp_int);
-    });
-    ;
-
-    ei_x_encode_atom(result, "__struct__");
-    ei_x_encode_atom(result, "Elixir.Nested.StructList");
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  result = test_nested_struct_list(env, in_struct);
   goto exit_test_nested_struct_list_caller;
 exit_test_nested_struct_list_caller:
   if (in_struct.inner_list != NULL) {

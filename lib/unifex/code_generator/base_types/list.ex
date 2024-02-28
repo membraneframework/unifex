@@ -104,7 +104,6 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
-      # IO.inspect(name, label: "CNODE ctx")
       ~g"""
       ({
         ei_x_encode_list_header(out_buff, #{name}_length);
@@ -118,14 +117,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
-      # IO.inspect(Counter.value(), label: "value")
-      Counter.increment()
+      counter_value = Counter.get_value()
 
-      elem_name = :"#{var_name}[i_#{Counter.value()}]" # do tego i doklejac suffix z agenta
+      elem_name = :"#{var_name}[i_#{counter_value}]"
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
-
       ~g"""
       ({
         int type;
@@ -135,34 +132,34 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         #{len_var_name} = (unsigned int) size;
 
         int index = 0;
-        UnifexCNodeInBuff unifex_buff;
-        UnifexCNodeInBuff *unifex_buff_ptr = &unifex_buff;
+        UnifexCNodeInBuff unifex_buff_#{counter_value};
+        UnifexCNodeInBuff *unifex_buff_ptr_#{counter_value} = &unifex_buff_#{counter_value};
         if(type == ERL_STRING_EXT) {
           ei_x_buff buff = unifex_cnode_string_to_list(#{arg}, #{len_var_name});
-          unifex_buff.buff = buff.buff;
-          unifex_buff.index = &index;
+          unifex_buff_#{counter_value}.buff = buff.buff;
+          unifex_buff_#{counter_value}.index = &index;
         } else {
-          unifex_buff.buff = #{arg}->buff;
-          unifex_buff.index = #{arg}->index;
+          unifex_buff_#{counter_value}.buff = #{arg}->buff;
+          unifex_buff_#{counter_value}.index = #{arg}->index;
         }
-        int header_res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+        int header_res = ei_decode_list_header(unifex_buff_ptr_#{counter_value}->buff, unifex_buff_ptr_#{counter_value}->index, &size);
         #{len_var_name} = (unsigned int) size;
         #{var_name} = (#{native_type} *)malloc(sizeof(#{native_type}) * #{len_var_name});
 
-        for(unsigned int i_#{Counter.value()} = 0; i_#{Counter.value()} < #{len_var_name}; i_#{Counter.value()}++) { // do tego i doklejac suffix z agenta
+        for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{len_var_name}; i_#{counter_value}++) {
           #{BaseType.generate_initialization(subtype, elem_name, generator, ctx)}
         }
 
-        for(unsigned int i_#{Counter.value()} = 0; i_#{Counter.value()} < #{len_var_name}; i_#{Counter.value()}++) { // do tego i doklejac suffix z agenta
+        for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{len_var_name}; i_#{counter_value}++) {
           #{BaseType.generate_arg_parse(subtype,
-      elem_name,
-      "unifex_buff_ptr",
-      postproc_fun,
-      generator,
-      ctx)}
+          elem_name,
+          "unifex_buff_ptr_#{counter_value}",
+          postproc_fun,
+          generator,
+          ctx)}
         }
         if(#{len_var_name}) {
-          header_res = ei_decode_list_header(unifex_buff_ptr->buff, unifex_buff_ptr->index, &size);
+          header_res = ei_decode_list_header(unifex_buff_ptr_#{counter_value}->buff, unifex_buff_ptr_#{counter_value}->index, &size);
         }
         header_res;
       })

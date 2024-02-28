@@ -154,7 +154,7 @@ defmodule ExampleTest do
 
   test "nested struct list", context do
     cnode = context[:cnode]
-    inner = %Nested.StructInner{id: 1444, name: "Jan Kowlaski", data: [1000,2000]} # if values in data:[] > 255 -> cnode timeout, else raise 
+    inner = %Nested.StructInner{id: 1444, name: "Jan Kowlaski", data: [1000,2000]} # if values in data:[] > 255 -> cnode timeout, else raise
     nested_struct_list = %Nested.StructList{id: 1223, inner_list: [inner]}
     assert {:ok, ^nested_struct_list} = Unifex.CNode.call(cnode, :test_nested_struct_list, [nested_struct_list])
   end
