@@ -58,6 +58,6 @@ type nested_struct_list :: %Nested.StructList{
 
 spec test_nested_struct_list(in_struct :: nested_struct_list) :: {:ok :: label, out_struct :: nested_struct_list}
 
-type(my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five)
+type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
 
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}

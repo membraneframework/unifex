@@ -75,8 +75,6 @@ defmodule Unifex.IntegrationTest do
     |> Enum.each(fn ref ->
       assert File.read!("test_projects/#{project}/c_src/example/_generated/#{interface}/#{ref}") ==
                File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
-
-      true
     end)
   end
 

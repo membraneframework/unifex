@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Compile.Unifex do
 
   @impl Mix.Task
   def run(_args) do
-    Counter.start_link(0)
+    Counter.start_link()
 
     {:ok, _apps} = Application.ensure_all_started(:unifex)
 

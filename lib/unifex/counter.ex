@@ -2,15 +2,14 @@ defmodule Counter do
   @moduledoc false
   use Agent
 
-  @spec start_link(integer()) ::
+  @spec start_link() ::
           {:error, {:already_started, pid()}} | {:error, String.t()} | {:ok, pid()}
-  def start_link(initial_value) do
-    Agent.start_link(fn -> initial_value end, name: __MODULE__)
+  def start_link() do
+    Agent.start_link(fn -> 0 end, name: __MODULE__)
   end
 
-  @spec get_value() :: integer()
-  def get_value do
-    Agent.update(__MODULE__, &(&1 + 1))
-    Agent.get(__MODULE__, & &1)
+  @spec get_and_increment() :: integer()
+  def get_and_increment do
+    Agent.get_and_update(__MODULE__, fn state -> {state, state + 1} end)
   end
 end

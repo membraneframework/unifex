@@ -32,7 +32,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
   @impl true
   def generate_destruction(name, ctx) do
-    counter_value = Counter.get_value()
+    counter_value = Counter.get_and_increment()
 
     ~g"""
     if(#{name} != NULL) {
@@ -51,7 +51,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
-      counter_value = Counter.get_value()
+      counter_value = Counter.get_and_increment()
 
       ~g"""
       ({
@@ -70,7 +70,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
-      counter_value = Counter.get_value()
+      counter_value = Counter.get_and_increment()
       elem_name = :"#{Unifex.CodeGenerator.Utils.sanitize_var_name("#{var_name}")}_i"
 
       len_var_name = "#{var_name}_length"
@@ -109,7 +109,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
-      counter_value = Counter.get_value()
+      counter_value = Counter.get_and_increment()
 
       ~g"""
       ({
@@ -124,7 +124,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
-      counter_value = Counter.get_value()
+      counter_value = Counter.get_and_increment()
 
       elem_name = :"#{var_name}[i_#{counter_value}]"
       len_var_name = "#{var_name}_length"
