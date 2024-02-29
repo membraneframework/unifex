@@ -32,10 +32,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
   @impl true
   def generate_destruction(name, ctx) do
+    counter_value = Counter.get_value()
+
     ~g"""
     if(#{name} != NULL) {
-      for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{name}_length; i_#{ctx.subtype}++) {
-        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)}
+      for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{name}_length; i_#{counter_value}++) {
+        #{BaseType.generate_destruction(ctx.subtype, :"#{name}[i_#{counter_value}]", ctx.generator, ctx)}
       }
       unifex_free(#{name});
     }
@@ -49,13 +51,15 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
+      counter_value = Counter.get_value()
+
       ~g"""
       ({
         ERL_NIF_TERM list = enif_make_list(env, 0);
-        for(int i_#{ctx.subtype} = #{name}_length-1; i_#{ctx.subtype} >= 0; i_#{ctx.subtype}--) {
+        for(int i_#{counter_value} = #{name}_length-1; i_#{counter_value} >= 0; i_#{counter_value}--) {
           list = enif_make_list_cell(
             env,
-            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)},
+            #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{counter_value}]", ctx.generator, ctx)},
             list
           );
         }
@@ -66,6 +70,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_parse(arg, var_name, ctx) do
+      counter_value = Counter.get_value()
       elem_name = :"#{Unifex.CodeGenerator.Utils.sanitize_var_name("#{var_name}")}_i"
 
       len_var_name = "#{var_name}_length"
@@ -83,12 +88,12 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
         }
 
         ERL_NIF_TERM list = #{arg};
-        for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{len_var_name}; i_#{ctx.subtype}++) {
+        for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{len_var_name}; i_#{counter_value}++) {
           ERL_NIF_TERM elem;
           enif_get_list_cell(env, list, &elem, &list);
-          #{native_type} #{elem_name} = #{var_name}[i_#{ctx.subtype}];
+          #{native_type} #{elem_name} = #{var_name}[i_#{counter_value}];
           #{BaseType.generate_arg_parse(subtype, elem_name, ~g<elem>, postproc_fun, generator, ctx)}
-          #{var_name}[i_#{ctx.subtype}] = #{elem_name};
+          #{var_name}[i_#{counter_value}] = #{elem_name};
         }
       }
       get_list_length_result;
@@ -104,11 +109,13 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
     @impl true
     def generate_arg_serialize(name, ctx) do
+      counter_value = Counter.get_value()
+
       ~g"""
       ({
         ei_x_encode_list_header(out_buff, #{name}_length);
-        for(unsigned int i_#{ctx.subtype} = 0; i_#{ctx.subtype} < #{name}_length; i_#{ctx.subtype}++) {
-          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{ctx.subtype}]", ctx.generator, ctx)}
+        for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{name}_length; i_#{counter_value}++) {
+          #{BaseType.generate_arg_serialize(ctx.subtype, :"#{name}[i_#{counter_value}]", ctx.generator, ctx)}
         }
         ei_x_encode_empty_list(out_buff);
       });
@@ -123,6 +130,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
       len_var_name = "#{var_name}_length"
       native_type = BaseType.generate_native_type(ctx.subtype, ctx.generator, ctx)
       %{subtype: subtype, postproc_fun: postproc_fun, generator: generator} = ctx
+
       ~g"""
       ({
         int type;
@@ -152,11 +160,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.List do
 
         for(unsigned int i_#{counter_value} = 0; i_#{counter_value} < #{len_var_name}; i_#{counter_value}++) {
           #{BaseType.generate_arg_parse(subtype,
-          elem_name,
-          "unifex_buff_ptr_#{counter_value}",
-          postproc_fun,
-          generator,
-          ctx)}
+      elem_name,
+      "unifex_buff_ptr_#{counter_value}",
+      postproc_fun,
+      generator,
+      ctx)}
         }
         if(#{len_var_name}) {
           header_res = ei_decode_list_header(unifex_buff_ptr_#{counter_value}->buff, unifex_buff_ptr_#{counter_value}->index, &size);

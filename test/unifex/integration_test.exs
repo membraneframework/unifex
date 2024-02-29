@@ -1,29 +1,29 @@
 defmodule Unifex.IntegrationTest do
   use ExUnit.Case, async: true
 
-  # test "NIF test project" do
-  #   test_project("nif", :nif)
-  # end
+  test "NIF test project" do
+    test_project("nif", :nif)
+  end
 
   test "CNode test project" do
     test_project("cnode", :cnode)
   end
 
-  # test "unified (NIF) test project" do
-  #   test_project("unified", :nif)
-  # end
+  test "unified (NIF) test project" do
+    test_project("unified", :nif)
+  end
 
-  # test "unified (CNode) test project" do
-  #   test_project("unified", :cnode)
-  # end
+  test "unified (CNode) test project" do
+    test_project("unified", :cnode)
+  end
 
-  # test "bundlex.exs specified interface (NIF) test project" do
-  #   test_project("bundlex_exs", :nif)
-  # end
+  test "bundlex.exs specified interface (NIF) test project" do
+    test_project("bundlex_exs", :nif)
+  end
 
-  # test "bundlex.exs specified interface (CNode) test project" do
-  #   test_project("bundlex_exs", :cnode)
-  # end
+  test "bundlex.exs specified interface (CNode) test project" do
+    test_project("bundlex_exs", :cnode)
+  end
 
   defp test_project(project, interface) do
     generate_cpp_code(project)
@@ -61,7 +61,7 @@ defmodule Unifex.IntegrationTest do
 
   defp test_particular(project, interface) do
     test_tie_header(project)
-    # test_main_files(project, interface)
+    test_main_files(project, interface)
   end
 
   defp test_tie_header(project) do

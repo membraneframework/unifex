@@ -1,3 +1,3 @@
 defmodule Nested.StructInner do
-  defstruct [:id, :name, :data]
+  defstruct [:id, :name]
 end

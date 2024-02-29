@@ -11,9 +11,10 @@ defmodule Mix.Tasks.Compile.Unifex do
 
   @impl Mix.Task
   def run(_args) do
-    Counter.start_link(0);
+    Counter.start_link(0)
 
     {:ok, _apps} = Application.ensure_all_started(:unifex)
+
     Helper.get_source_dir()
     |> InterfaceIO.get_interfaces_specs!()
     |> Enum.each(fn {name, dir, specs_file} ->
@@ -24,7 +25,5 @@ defmodule Mix.Tasks.Compile.Unifex do
       InterfaceIO.store_tie_header!(name, dir, tie_header)
       InterfaceIO.store_gitignore!(dir)
     end)
-
-    # :ok
   end
 end
