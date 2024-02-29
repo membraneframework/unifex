@@ -81,7 +81,7 @@ defmodule ExampleTest do
 
   test "nested struct list" do
     my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
-    nested_struct_list = %Nested.StructList{id: 1, inner_list: [my_struct]}
+    nested_struct_list = %Nested.StructList{id: 1, struct_list: [my_struct]}
     assert {:ok, ^nested_struct_list} = Example.test_nested_struct_list(nested_struct_list)
   end
 end
