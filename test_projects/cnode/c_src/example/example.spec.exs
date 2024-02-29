@@ -52,7 +52,7 @@ type nested_struct :: %Nested.Struct{
 spec test_nested_struct(in_struct :: nested_struct) :: {:ok :: label, out_struct :: nested_struct}
 
 type nested_struct_list :: %Nested.StructList{
-  inner_list: [my_struct],
+  struct_list: [my_struct],
   id: int
 }
 

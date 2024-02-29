@@ -1,3 +1,3 @@
 defmodule Nested.StructList do
-  defstruct [:id, :inner_list]
+  defstruct [:id, :struct_list]
 end
