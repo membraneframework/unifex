@@ -75,8 +75,8 @@ defmodule Unifex.CodeGenerators.NIF do
     ctx)}
 
     /*
-     * Bugged version of functions generated above, left for backwards compabiliy with older code using unifex
-     * Generating of these functions should be removed in unifex version 2.0.0
+     * Bugged version of functions returning nil, left for backwards compabiliy with older code using unifex
+     * Generating of these functions should be removed in unifex v2.0.0
      * For more information check: https://github.com/membraneframework/membrane_core/issues/758
      */
     #{generate_functions_declarations_bugged(specs.functions_results, ctx)}
@@ -111,8 +111,8 @@ defmodule Unifex.CodeGenerators.NIF do
     #{Utils.generate_functions(specs.functions_args, &generate_export_function/2, ctx)}
     #{generate_erlang_boilerplate(specs)}
     /*
-     * Bugged version of functions, generated for backwards compabiliy with older code using unifex
-     * Generating of these functions should be removed in unifex version 2.0.0
+     * Bugged version of functions returning nil, generated for backwards compabiliy with older code using unifex
+     * Generating of these functions should be removed in unifex v2.0.0
      * For more information check: https://github.com/membraneframework/membrane_core/issues/758
      */
     #{generate_functions_bugged(specs.functions_results, ctx)}
@@ -136,60 +136,6 @@ defmodule Unifex.CodeGenerators.NIF do
     Enum.flat_map(args, fn {name, type} ->
       BaseType.generate_declaration(type, name, mode, NIF, ctx)
     end)
-  end
-
-  defp generate_functions_declarations_bugged(config, ctx) do
-    config
-    |> Enum.map(fn {name, result} ->
-    {_result, meta} = generate_serialization(result, ctx)
-      args = meta |> Keyword.get_values(:arg)
-
-      args_declarations =
-        [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
-        |> Enum.join(", ")
-
-      labels =
-        meta
-        |> Keyword.get_values(:label)
-
-      if Enum.member?(labels, "nil") do
-        ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
-      else
-        ~g<>
-      end
-    end)
-    |> List.flatten()
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map_join("\n", &(&1 <> ";"))
-  end
-  def generate_functions_bugged(config, ctx) do
-    config
-    |> Enum.map(fn {name, result} ->
-      {_result, meta} = generate_serialization(result, ctx)
-      labels =
-        meta
-        |> Keyword.get_values(:label)
-
-      if Enum.member?(labels, "nil") do
-        ~g"""
-        #{
-          args = meta |> Keyword.get_values(:arg)
-
-          args_declarations =
-            [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
-            |> Enum.join(", ")
-
-          ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
-        } {
-          return #{BaseType.generate_arg_serialize(:atom, :"\"#{nil}\"", NIF, ctx)};
-        }
-        """
-      else
-        ~g<>
-      end
-    end)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map_join("\n", & &1)
   end
 
   defp generate_result_function({name, result}, ctx) do
@@ -522,5 +468,62 @@ defmodule Unifex.CodeGenerators.NIF do
 
   defp generate_struct_native_definition(struct_data, ctx) do
     Unifex.CodeGenerators.Common.generate_struct_native_definition(struct_data, NIF, ctx)
+  end
+
+  # This function generates bugged version of functions declarations returning nil and should be removed in v2.0.0
+  defp generate_functions_declarations_bugged(config, ctx) do
+    config
+    |> Enum.map(fn {name, result} ->
+    {_result, meta} = generate_serialization(result, ctx)
+      args = meta |> Keyword.get_values(:arg)
+
+      args_declarations =
+        [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+        |> Enum.join(", ")
+
+      labels =
+        meta
+        |> Keyword.get_values(:label)
+
+      if Enum.member?(labels, "nil") do
+        ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
+      else
+        ~g<>
+      end
+    end)
+    |> List.flatten()
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.map_join("\n", &(&1 <> ";"))
+  end
+
+  # This function generates bugged version of functions returning nil and should be removed in v2.0.0
+  defp generate_functions_bugged(config, ctx) do
+    config
+    |> Enum.map(fn {name, result} ->
+      {_result, meta} = generate_serialization(result, ctx)
+      labels =
+        meta
+        |> Keyword.get_values(:label)
+
+      if Enum.member?(labels, "nil") do
+        ~g"""
+        #{
+          args = meta |> Keyword.get_values(:arg)
+
+          args_declarations =
+            [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+            |> Enum.join(", ")
+
+          ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
+        } {
+          return #{BaseType.generate_arg_serialize(:atom, :"\"#{nil}\"", NIF, ctx)};
+        }
+        """
+      else
+        ~g<>
+      end
+    end)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.map_join("\n", & &1)
   end
 end
