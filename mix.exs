@@ -28,7 +28,8 @@ defmodule Unifex.MixProject do
 
   def application do
     [
-      extra_applications: []
+      extra_applications: [],
+      mod: {Unifex.App, []}
     ]
   end
 

@@ -79,14 +79,14 @@ typedef struct nested_struct_t nested_struct;
 
 #ifdef __cplusplus
 struct nested_struct_list {
-  my_struct *inner_list;
-  unsigned int inner_list_length;
+  my_struct *struct_list;
+  unsigned int struct_list_length;
   int id;
 };
 #else
 struct nested_struct_list_t {
-  my_struct *inner_list;
-  unsigned int inner_list_length;
+  my_struct *struct_list;
+  unsigned int struct_list_length;
   int id;
 };
 typedef struct nested_struct_list_t nested_struct_list;

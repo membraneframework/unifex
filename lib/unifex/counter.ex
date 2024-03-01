@@ -1,10 +1,9 @@
-defmodule Counter do
+defmodule Unifex.Counter do
   @moduledoc false
   use Agent
 
-  @spec start_link() ::
-          {:error, {:already_started, pid()}} | {:error, String.t()} | {:ok, pid()}
-  def start_link() do
+  @spec start_link(any) :: Agent.on_start()
+  def start_link(_opts) do
     Agent.start_link(fn -> 0 end, name: __MODULE__)
   end
 

@@ -11,8 +11,6 @@ defmodule Mix.Tasks.Compile.Unifex do
 
   @impl Mix.Task
   def run(_args) do
-    Counter.start_link()
-
     {:ok, _apps} = Application.ensure_all_started(:unifex)
 
     Helper.get_source_dir()
