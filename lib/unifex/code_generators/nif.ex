@@ -74,7 +74,11 @@ defmodule Unifex.CodeGenerators.NIF do
     &generate_result_function_declaration/2,
     ctx)}
 
-    // this function should be removed in 2.0
+    /*
+     * Bugged version of functions generated above, left for backwards compabiliy with older code using unifex
+     * Generating of these functions should be removed in unifex version 2.0.0
+     * For more information check: https://github.com/membraneframework/membrane_core/issues/758
+     */
     #{generate_functions_declarations_bugged(specs.functions_results, ctx)}
 
     /*
@@ -90,6 +94,48 @@ defmodule Unifex.CodeGenerators.NIF do
     }
     #endif
     """
+  end
+
+
+
+  @impl CodeGenerator
+  def generate_source(specs) do
+    ctx = Common.create_ctx(specs)
+
+    ~g"""
+    #include "#{specs.name}.h"
+    #{Utils.generate_functions(specs.functions_results, &generate_result_function/2, ctx)}
+    #{Utils.generate_functions(specs.sends, &generate_send_function/2, ctx)}
+    #{generate_state_related_functions(specs)}
+    #{generate_nif_lifecycle_callbacks(specs)}
+    #{Utils.generate_functions(specs.functions_args, &generate_export_function/2, ctx)}
+    #{generate_erlang_boilerplate(specs)}
+    /*
+     * Bugged version of functions, generated for backwards compabiliy with older code using unifex
+     * Generating of these functions should be removed in unifex version 2.0.0
+     * For more information check: https://github.com/membraneframework/membrane_core/issues/758
+     */
+    #{generate_functions_bugged(specs.functions_results, ctx)}
+    """
+  end
+
+  defp generate_implemented_function_declaration({name, args}, ctx) do
+    args_declarations =
+      [
+        ~g<UnifexEnv* env>
+        | Enum.flat_map(args, fn {name, type} ->
+            BaseType.generate_declaration(type, name, NIF, ctx)
+          end)
+      ]
+      |> Enum.join(", ")
+
+    ~g<UNIFEX_TERM #{name}(#{args_declarations})>
+  end
+
+  defp generate_args_declarations(args, mode, ctx) do
+    Enum.flat_map(args, fn {name, type} ->
+      BaseType.generate_declaration(type, name, mode, NIF, ctx)
+    end)
   end
 
   defp generate_functions_declarations_bugged(config, ctx) do
@@ -116,43 +162,6 @@ defmodule Unifex.CodeGenerators.NIF do
     |> Enum.filter(&(&1 != ""))
     |> Enum.map_join("\n", &(&1 <> ";"))
   end
-
-  @impl CodeGenerator
-  def generate_source(specs) do
-    ctx = Common.create_ctx(specs)
-
-    ~g"""
-    #include "#{specs.name}.h"
-    #{Utils.generate_functions(specs.functions_results, &generate_result_function/2, ctx)}
-    // this function should be removed in 2.0
-    #{generate_functions_bugged(specs.functions_results, ctx)}
-    #{Utils.generate_functions(specs.sends, &generate_send_function/2, ctx)}
-    #{generate_state_related_functions(specs)}
-    #{generate_nif_lifecycle_callbacks(specs)}
-    #{Utils.generate_functions(specs.functions_args, &generate_export_function/2, ctx)}
-    #{generate_erlang_boilerplate(specs)}
-    """
-  end
-
-  defp generate_implemented_function_declaration({name, args}, ctx) do
-    args_declarations =
-      [
-        ~g<UnifexEnv* env>
-        | Enum.flat_map(args, fn {name, type} ->
-            BaseType.generate_declaration(type, name, NIF, ctx)
-          end)
-      ]
-      |> Enum.join(", ")
-
-    ~g<UNIFEX_TERM #{name}(#{args_declarations})>
-  end
-
-  defp generate_args_declarations(args, mode, ctx) do
-    Enum.flat_map(args, fn {name, type} ->
-      BaseType.generate_declaration(type, name, mode, NIF, ctx)
-    end)
-  end
-
   def generate_functions_bugged(config, ctx) do
     config
     |> Enum.map(fn {name, result} ->
@@ -162,20 +171,17 @@ defmodule Unifex.CodeGenerators.NIF do
         |> Keyword.get_values(:label)
 
       if Enum.member?(labels, "nil") do
-        declaration_bugged = generate_result_function_declaration_bugged({name, result}, ctx)
-        {result_bugged, _meta} =
-          generate_serialization_bugged(
-            result,
-            %{
-              arg_serializer: fn type, name ->
-                BaseType.generate_arg_serialize(type, name, NIF, ctx)
-              end,
-              tuple_serializer: &generate_tuple_maker/1
-            }
-          )
         ~g"""
-        #{declaration_bugged} {
-          return #{result_bugged};
+        #{
+          args = meta |> Keyword.get_values(:arg)
+
+          args_declarations =
+            [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+            |> Enum.join(", ")
+
+          ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
+        } {
+          return #{BaseType.generate_arg_serialize(:atom, :"\"#{nil}\"", NIF, ctx)};
         }
         """
       else
@@ -197,13 +203,6 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  def generate_serialization_bugged(
-        {:"::", _meta, [nil, {:label, _meta2, _args}]},
-        serializers
-      ) do
-    {serializers.arg_serializer.(:atom, :"\"#{nil}\""), label: :nil}
-  end
-
   defp generate_result_function_declaration({name, result}, ctx) do
     {_result, meta} = generate_serialization(result, ctx)
     args = meta |> Keyword.get_values(:arg)
@@ -218,17 +217,6 @@ defmodule Unifex.CodeGenerators.NIF do
       |> Enum.join(", ")
 
     ~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>
-  end
-
-  defp generate_result_function_declaration_bugged({name, result}, ctx) do
-    {_result, meta} = generate_serialization(result, ctx)
-    args = meta |> Keyword.get_values(:arg)
-
-    args_declarations =
-      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
-      |> Enum.join(", ")
-
-    ~g<UNIFEX_TERM #{[name, :result | [""]] |> Enum.join("_")}(#{args_declarations})>
   end
 
   defp generate_send_function(sends, ctx) do
