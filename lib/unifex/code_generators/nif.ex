@@ -70,7 +70,11 @@ defmodule Unifex.CodeGenerators.NIF do
      * Functions that create the defined output from Nif.
      * They are automatically generated and don't need to be implemented.
      */
+    #{Utils.generate_functions_declarations(specs.functions_results,
+    &generate_result_function_declaration/2,
+    ctx)}
 
+    // this function should be removed in 2.0
     #{generate_functions_declarations_bugged(specs.functions_results, ctx)}
 
     /*
@@ -89,37 +93,28 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_functions_declarations_bugged(config, ctx) do
-    do_generate(config, &generate_result_function_declaration_bugged_header/2, &(&1 <> ";"), ctx)
-  end
-
-  defp do_generate(config, generator, mapper, ctx) do
     config
-    |> Enum.map(fn c -> generator.(c, ctx) end)
+    |> Enum.map(fn {name, result} ->
+    {_result, meta} = generate_serialization(result, ctx)
+      args = meta |> Keyword.get_values(:arg)
+
+      args_declarations =
+        [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+        |> Enum.join(", ")
+
+      labels =
+        meta
+        |> Keyword.get_values(:label)
+
+      if Enum.member?(labels, "nil") do
+        ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
+      else
+        ~g<>
+      end
+    end)
     |> List.flatten()
     |> Enum.filter(&(&1 != ""))
-    |> Enum.map_join("\n", mapper)
-  end
-
-  defp generate_result_function_declaration_bugged_header({name, result}, ctx) do
-    {_result, meta} = generate_serialization(result, ctx)
-    args = meta |> Keyword.get_values(:arg)
-
-    args_declarations =
-      [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
-      |> Enum.join(", ")
-
-    labels =
-      meta
-      |> Keyword.get_values(:label)
-
-    if Enum.member?(labels, "nil") do
-      [
-        ~g<UNIFEX_TERM #{[name, :result | ["nil"]] |> Enum.join("_")}(#{args_declarations})>,
-        ~g<UNIFEX_TERM #{[name, :result | [""]] |> Enum.join("_")}(#{args_declarations})>
-      ]
-    else
-      [~g<UNIFEX_TERM #{[name, :result | labels] |> Enum.join("_")}(#{args_declarations})>]
-    end
+    |> Enum.map_join("\n", &(&1 <> ";"))
   end
 
   @impl CodeGenerator
@@ -128,8 +123,9 @@ defmodule Unifex.CodeGenerators.NIF do
 
     ~g"""
     #include "#{specs.name}.h"
-
     #{Utils.generate_functions(specs.functions_results, &generate_result_function/2, ctx)}
+    // this function should be removed in 2.0
+    #{generate_functions_bugged(specs.functions_results, ctx)}
     #{Utils.generate_functions(specs.sends, &generate_send_function/2, ctx)}
     #{generate_state_related_functions(specs)}
     #{generate_nif_lifecycle_callbacks(specs)}
@@ -157,44 +153,37 @@ defmodule Unifex.CodeGenerators.NIF do
     end)
   end
 
-  defp generate_result_function({name, {_x, _y, tab} = result}, ctx) do
-    res = Enum.at(tab, 0, "")
+  def generate_functions_bugged(config, ctx) do
+    config
+    |> Enum.map(fn {name, result} ->
+      {_result, meta} = generate_serialization(result, ctx)
+      labels =
+        meta
+        |> Keyword.get_values(:label)
 
-    if is_nil(res) do
-      declaration_correct = generate_result_function_declaration({name, result}, ctx)
-      {result_correct, _meta} = generate_serialization(result, ctx)
-      declaration_bugged = generate_result_function_declaration_bugged({name, result}, ctx)
-
-      {result_bugged, _meta} =
-        Utils.generate_serialization_bugged(
-          result,
-          %{
-            arg_serializer: fn type, name ->
-              BaseType.generate_arg_serialize(type, name, NIF, ctx)
-            end,
-            tuple_serializer: &generate_tuple_maker/1
-          }
-        )
-
-      ~g"""
-      #{declaration_bugged} {
-        return #{result_bugged};
-      }
-
-      #{declaration_correct} {
-        return #{result_correct};
-      }
-      """
-    else
-      declaration = generate_result_function_declaration({name, result}, ctx)
-      {result, _meta} = generate_serialization(result, ctx)
-
-      ~g"""
-      #{declaration} {
-        return #{result};
-      }
-      """
-    end
+      if Enum.member?(labels, "nil") do
+        declaration_bugged = generate_result_function_declaration_bugged({name, result}, ctx)
+        {result_bugged, _meta} =
+          generate_serialization_bugged(
+            result,
+            %{
+              arg_serializer: fn type, name ->
+                BaseType.generate_arg_serialize(type, name, NIF, ctx)
+              end,
+              tuple_serializer: &generate_tuple_maker/1
+            }
+          )
+        ~g"""
+        #{declaration_bugged} {
+          return #{result_bugged};
+        }
+        """
+      else
+        ~g<>
+      end
+    end)
+    |> Enum.filter(&(&1 != ""))
+    |> Enum.map_join("\n", & &1)
   end
 
   defp generate_result_function({name, result}, ctx) do
@@ -206,6 +195,13 @@ defmodule Unifex.CodeGenerators.NIF do
       return #{result};
     }
     """
+  end
+
+  def generate_serialization_bugged(
+        {:"::", _meta, [nil, {:label, _meta2, _args}]},
+        serializers
+      ) do
+    {serializers.arg_serializer.(:atom, :"\"#{nil}\""), label: :nil}
   end
 
   defp generate_result_function_declaration({name, result}, ctx) do
