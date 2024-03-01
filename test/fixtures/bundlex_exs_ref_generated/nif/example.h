@@ -33,8 +33,14 @@ UNIFEX_TERM foo(UnifexEnv *env, int num);
  * Functions that create the defined output from Nif.
  * They are automatically generated and don't need to be implemented.
  */
-
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer);
+
+/*
+ * Bugged version of functions returning nil, left for backwards compabiliy with
+ * older code using unifex Generating of these functions should be removed in
+ * unifex v2.0.0 For more information check:
+ * https://github.com/membraneframework/membrane_core/issues/758
+ */
 
 /*
  * Functions that send the defined messages from Nif.

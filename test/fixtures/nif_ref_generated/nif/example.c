@@ -1,5 +1,4 @@
 #include "example.h"
-
 UNIFEX_TERM init_result_ok(UnifexEnv *env, int was_handle_load_called,
                            UnifexState *state) {
   return ({
@@ -33,8 +32,6 @@ UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int) {
     enif_make_tuple_from_array(env, terms, 2);
   });
 }
-
-UNIFEX_TERM test_nil_result_(UnifexEnv *env) { return enif_make_atom(env, ""); }
 
 UNIFEX_TERM test_nil_result_nil(UnifexEnv *env) {
   return enif_make_atom(env, "nil");
@@ -980,3 +977,11 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_my_enum", 1, export_test_my_enum, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)
+
+/*
+ * Bugged version of functions returning nil, generated for backwards compabiliy
+ * with older code using unifex Generating of these functions should be removed
+ * in unifex v2.0.0 For more information check:
+ * https://github.com/membraneframework/membrane_core/issues/758
+ */
+UNIFEX_TERM test_nil_result_(UnifexEnv *env) { return enif_make_atom(env, ""); }
