@@ -25,7 +25,6 @@ defmodule Unifex.MixProject do
       docs: docs()
     ]
   end
-  # ci fix ☎️
 
   def application do
     [
