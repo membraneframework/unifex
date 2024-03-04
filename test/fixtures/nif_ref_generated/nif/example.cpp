@@ -52,9 +52,9 @@ UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_list_length - 1; i >= 0; i--) {
-            list =
-                enif_make_list_cell(env, enif_make_int(env, out_list[i]), list);
+          for (int i_8 = out_list_length - 1; i_8 >= 0; i_8--) {
+            list = enif_make_list_cell(env, enif_make_int(env, out_list[i_8]),
+                                       list);
           }
           list;
         })
@@ -70,9 +70,9 @@ UNIFEX_TERM test_list_of_strings_result_ok(UnifexEnv *env, char **out_strings,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_strings_length - 1; i >= 0; i--) {
+          for (int i_10 = out_strings_length - 1; i_10 >= 0; i_10--) {
             list = enif_make_list_cell(
-                env, unifex_string_to_term(env, out_strings[i]), list);
+                env, unifex_string_to_term(env, out_strings[i_10]), list);
           }
           list;
         })
@@ -127,9 +127,9 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
           keys[1] = enif_make_atom(env, "data");
           values[1] = ({
             ERL_NIF_TERM list = enif_make_list(env, 0);
-            for (int i = out_struct.data_length - 1; i >= 0; i--) {
+            for (int i_12 = out_struct.data_length - 1; i_12 >= 0; i_12--) {
               list = enif_make_list_cell(
-                  env, enif_make_int(env, out_struct.data[i]), list);
+                  env, enif_make_int(env, out_struct.data[i_12]), list);
             }
             list;
           });
@@ -142,6 +142,75 @@ UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct) {
 
           ERL_NIF_TERM result;
           enif_make_map_from_arrays(env, keys, values, 4, &result);
+          result;
+        })
+
+    };
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_nested_struct_list_result_ok(UnifexEnv *env,
+                                              nested_struct_list out_struct) {
+  return ({
+    const ERL_NIF_TERM terms[] = {
+        enif_make_atom(env, "ok"), ({
+          ERL_NIF_TERM keys[3];
+          ERL_NIF_TERM values[3];
+
+          keys[0] = enif_make_atom(env, "struct_list");
+          values[0] = ({
+            ERL_NIF_TERM list = enif_make_list(env, 0);
+            for (int i_15 = out_struct.struct_list_length - 1; i_15 >= 0;
+                 i_15--) {
+              list = enif_make_list_cell(
+                  env, ({
+                    ERL_NIF_TERM keys[4];
+                    ERL_NIF_TERM values[4];
+
+                    keys[0] = enif_make_atom(env, "id");
+                    values[0] =
+                        enif_make_int(env, out_struct.struct_list[i_15].id);
+
+                    keys[1] = enif_make_atom(env, "data");
+                    values[1] = ({
+                      ERL_NIF_TERM list = enif_make_list(env, 0);
+                      for (int i_16 =
+                               out_struct.struct_list[i_15].data_length - 1;
+                           i_16 >= 0; i_16--) {
+                        list = enif_make_list_cell(
+                            env,
+                            enif_make_int(
+                                env, out_struct.struct_list[i_15].data[i_16]),
+                            list);
+                      }
+                      list;
+                    });
+
+                    keys[2] = enif_make_atom(env, "name");
+                    values[2] = unifex_string_to_term(
+                        env, out_struct.struct_list[i_15].name);
+
+                    keys[3] = enif_make_atom(env, "__struct__");
+                    values[3] = enif_make_atom(env, "Elixir.My.Struct");
+
+                    ERL_NIF_TERM result;
+                    enif_make_map_from_arrays(env, keys, values, 4, &result);
+                    result;
+                  }),
+                  list);
+            }
+            list;
+          });
+
+          keys[1] = enif_make_atom(env, "id");
+          values[1] = enif_make_int(env, out_struct.id);
+
+          keys[2] = enif_make_atom(env, "__struct__");
+          values[2] = enif_make_atom(env, "Elixir.Nested.StructList");
+
+          ERL_NIF_TERM result;
+          enif_make_map_from_arrays(env, keys, values, 3, &result);
           result;
         })
 
@@ -169,10 +238,10 @@ UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
             keys[1] = enif_make_atom(env, "data");
             values[1] = ({
               ERL_NIF_TERM list = enif_make_list(env, 0);
-              for (int i = out_struct.inner_struct.data_length - 1; i >= 0;
-                   i--) {
+              for (int i_18 = out_struct.inner_struct.data_length - 1;
+                   i_18 >= 0; i_18--) {
                 list = enif_make_list_cell(
-                    env, enif_make_int(env, out_struct.inner_struct.data[i]),
+                    env, enif_make_int(env, out_struct.inner_struct.data[i_18]),
                     list);
               }
               list;
@@ -214,18 +283,18 @@ test_list_of_structs_result_ok(UnifexEnv *env,
     const ERL_NIF_TERM terms[] = {
         enif_make_atom(env, "ok"), ({
           ERL_NIF_TERM list = enif_make_list(env, 0);
-          for (int i = out_struct_list_length - 1; i >= 0; i--) {
+          for (int i_20 = out_struct_list_length - 1; i_20 >= 0; i_20--) {
             list = enif_make_list_cell(
                 env, ({
                   ERL_NIF_TERM keys[3];
                   ERL_NIF_TERM values[3];
 
                   keys[0] = enif_make_atom(env, "id");
-                  values[0] = enif_make_int(env, out_struct_list[i].id);
+                  values[0] = enif_make_int(env, out_struct_list[i_20].id);
 
                   keys[1] = enif_make_atom(env, "name");
                   values[1] =
-                      unifex_string_to_term(env, out_struct_list[i].name);
+                      unifex_string_to_term(env, out_struct_list[i_20].name);
 
                   keys[2] = enif_make_atom(env, "__struct__");
                   values[2] = enif_make_atom(env, "Elixir.SimpleStruct");
@@ -463,16 +532,16 @@ static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
           }
 
           ERL_NIF_TERM list = argv[0];
-          for (unsigned int i = 0; i < in_list_length; i++) {
+          for (unsigned int i_21 = 0; i_21 < in_list_length; i_21++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            int in_list_i = in_list[i];
+            int in_list_i = in_list[i_21];
             if (!enif_get_int(env, elem, &in_list_i)) {
               result = unifex_raise_args_error(env, "in_list", "{:list, :int}");
               goto exit_export_test_list;
             }
 
-            in_list[i] = in_list_i;
+            in_list[i_21] = in_list_i;
           }
         }
         get_list_length_result;
@@ -485,7 +554,7 @@ static ERL_NIF_TERM export_test_list(ErlNifEnv *env, int argc,
   goto exit_export_test_list;
 exit_export_test_list:
   if (in_list != NULL) {
-    for (unsigned int i = 0; i < in_list_length; i++) {
+    for (unsigned int i_22 = 0; i_22 < in_list_length; i_22++) {
     }
     unifex_free(in_list);
   }
@@ -515,17 +584,17 @@ static ERL_NIF_TERM export_test_list_of_strings(ErlNifEnv *env, int argc,
           }
 
           ERL_NIF_TERM list = argv[0];
-          for (unsigned int i = 0; i < in_strings_length; i++) {
+          for (unsigned int i_23 = 0; i_23 < in_strings_length; i_23++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            char *in_strings_i = in_strings[i];
+            char *in_strings_i = in_strings[i_23];
             if (!unifex_string_from_term(env, elem, &in_strings_i)) {
               result = unifex_raise_args_error(env, "in_strings",
                                                "{:list, :string}");
               goto exit_export_test_list_of_strings;
             }
 
-            in_strings[i] = in_strings_i;
+            in_strings[i_23] = in_strings_i;
           }
         }
         get_list_length_result;
@@ -538,8 +607,8 @@ static ERL_NIF_TERM export_test_list_of_strings(ErlNifEnv *env, int argc,
   goto exit_export_test_list_of_strings;
 exit_export_test_list_of_strings:
   if (in_strings != NULL) {
-    for (unsigned int i = 0; i < in_strings_length; i++) {
-      unifex_free(in_strings[i]);
+    for (unsigned int i_24 = 0; i_24 < in_strings_length; i_24++) {
+      unifex_free(in_strings[i_24]);
     }
     unifex_free(in_strings);
   }
@@ -647,17 +716,18 @@ static ERL_NIF_TERM export_test_my_struct(ErlNifEnv *env, int argc,
                   }
 
                   ERL_NIF_TERM list = value_in_struct;
-                  for (unsigned int i = 0; i < in_struct.data_length; i++) {
+                  for (unsigned int i_25 = 0; i_25 < in_struct.data_length;
+                       i_25++) {
                     ERL_NIF_TERM elem;
                     enif_get_list_cell(env, list, &elem, &list);
-                    int in_struct_data_i = in_struct.data[i];
+                    int in_struct_data_i = in_struct.data[i_25];
                     if (!enif_get_int(env, elem, &in_struct_data_i)) {
                       result = unifex_raise_args_error(env, "in_struct",
                                                        ":my_struct");
                       goto exit_export_test_my_struct;
                     }
 
-                    in_struct.data[i] = in_struct_data_i;
+                    in_struct.data[i_25] = in_struct_data_i;
                   }
                 }
                 get_list_length_result;
@@ -687,12 +757,194 @@ static ERL_NIF_TERM export_test_my_struct(ErlNifEnv *env, int argc,
   goto exit_export_test_my_struct;
 exit_export_test_my_struct:
   if (in_struct.data != NULL) {
-    for (unsigned int i = 0; i < in_struct.data_length; i++) {
+    for (unsigned int i_26 = 0; i_26 < in_struct.data_length; i_26++) {
     }
     unifex_free(in_struct.data);
   }
 
   unifex_free(in_struct.name);
+  return result;
+}
+
+static ERL_NIF_TERM export_test_nested_struct_list(ErlNifEnv *env, int argc,
+                                                   const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  nested_struct_list in_struct;
+
+  in_struct.struct_list = NULL;
+
+  if (!({
+        ERL_NIF_TERM key_in_struct;
+        ERL_NIF_TERM value_in_struct;
+
+        key_in_struct = enif_make_atom(env, "struct_list");
+        int get_struct_list_result =
+            enif_get_map_value(env, argv[0], key_in_struct, &value_in_struct);
+        if (get_struct_list_result) {
+          if (!({
+                int get_list_length_result = enif_get_list_length(
+                    env, value_in_struct, &in_struct.struct_list_length);
+                if (get_list_length_result) {
+                  in_struct.struct_list = (my_struct *)enif_alloc(
+                      sizeof(my_struct) * in_struct.struct_list_length);
+
+                  for (unsigned int i = 0; i < in_struct.struct_list_length;
+                       i++) {
+                    in_struct.struct_list[i].data = NULL;
+                    in_struct.struct_list[i].name = NULL;
+                  }
+
+                  ERL_NIF_TERM list = value_in_struct;
+                  for (unsigned int i_27 = 0;
+                       i_27 < in_struct.struct_list_length; i_27++) {
+                    ERL_NIF_TERM elem;
+                    enif_get_list_cell(env, list, &elem, &list);
+                    my_struct in_struct_struct_list_i =
+                        in_struct.struct_list[i_27];
+                    if (!({
+                          ERL_NIF_TERM key_in_struct_struct_list_i;
+                          ERL_NIF_TERM value_in_struct_struct_list_i;
+
+                          key_in_struct_struct_list_i =
+                              enif_make_atom(env, "id");
+                          int get_id_result = enif_get_map_value(
+                              env, elem, key_in_struct_struct_list_i,
+                              &value_in_struct_struct_list_i);
+                          if (get_id_result) {
+                            if (!enif_get_int(env,
+                                              value_in_struct_struct_list_i,
+                                              &in_struct_struct_list_i.id)) {
+                              result = unifex_raise_args_error(
+                                  env, "in_struct", ":nested_struct_list");
+                              goto exit_export_test_nested_struct_list;
+                            }
+                          }
+
+                          key_in_struct_struct_list_i =
+                              enif_make_atom(env, "data");
+                          int get_data_result = enif_get_map_value(
+                              env, elem, key_in_struct_struct_list_i,
+                              &value_in_struct_struct_list_i);
+                          if (get_data_result) {
+                            if (!({
+                                  int get_list_length_result =
+                                      enif_get_list_length(
+                                          env, value_in_struct_struct_list_i,
+                                          &in_struct_struct_list_i.data_length);
+                                  if (get_list_length_result) {
+                                    in_struct_struct_list_i
+                                        .data = (int *)enif_alloc(
+                                        sizeof(int) *
+                                        in_struct_struct_list_i.data_length);
+
+                                    for (unsigned int i = 0;
+                                         i <
+                                         in_struct_struct_list_i.data_length;
+                                         i++) {
+                                    }
+
+                                    ERL_NIF_TERM list =
+                                        value_in_struct_struct_list_i;
+                                    for (unsigned int i_28 = 0;
+                                         i_28 <
+                                         in_struct_struct_list_i.data_length;
+                                         i_28++) {
+                                      ERL_NIF_TERM elem;
+                                      enif_get_list_cell(env, list, &elem,
+                                                         &list);
+                                      int in_struct_struct_list_i_data_i =
+                                          in_struct_struct_list_i.data[i_28];
+                                      if (!enif_get_int(
+                                              env, elem,
+                                              &in_struct_struct_list_i_data_i)) {
+                                        result = unifex_raise_args_error(
+                                            env, "in_struct",
+                                            ":nested_struct_list");
+                                        goto exit_export_test_nested_struct_list;
+                                      }
+
+                                      in_struct_struct_list_i.data[i_28] =
+                                          in_struct_struct_list_i_data_i;
+                                    }
+                                  }
+                                  get_list_length_result;
+                                })) {
+                              result = unifex_raise_args_error(
+                                  env, "in_struct", ":nested_struct_list");
+                              goto exit_export_test_nested_struct_list;
+                            }
+                          }
+
+                          key_in_struct_struct_list_i =
+                              enif_make_atom(env, "name");
+                          int get_name_result = enif_get_map_value(
+                              env, elem, key_in_struct_struct_list_i,
+                              &value_in_struct_struct_list_i);
+                          if (get_name_result) {
+                            if (!unifex_string_from_term(
+                                    env, value_in_struct_struct_list_i,
+                                    &in_struct_struct_list_i.name)) {
+                              result = unifex_raise_args_error(
+                                  env, "in_struct", ":nested_struct_list");
+                              goto exit_export_test_nested_struct_list;
+                            }
+                          }
+
+                          get_id_result &&get_data_result &&get_name_result;
+                        })) {
+                      result = unifex_raise_args_error(env, "in_struct",
+                                                       ":nested_struct_list");
+                      goto exit_export_test_nested_struct_list;
+                    }
+
+                    in_struct.struct_list[i_27] = in_struct_struct_list_i;
+                  }
+                }
+                get_list_length_result;
+              })) {
+            result = unifex_raise_args_error(env, "in_struct",
+                                             ":nested_struct_list");
+            goto exit_export_test_nested_struct_list;
+          }
+        }
+
+        key_in_struct = enif_make_atom(env, "id");
+        int get_id_result =
+            enif_get_map_value(env, argv[0], key_in_struct, &value_in_struct);
+        if (get_id_result) {
+          if (!enif_get_int(env, value_in_struct, &in_struct.id)) {
+            result = unifex_raise_args_error(env, "in_struct",
+                                             ":nested_struct_list");
+            goto exit_export_test_nested_struct_list;
+          }
+        }
+
+        get_struct_list_result &&get_id_result;
+      })) {
+    result = unifex_raise_args_error(env, "in_struct", ":nested_struct_list");
+    goto exit_export_test_nested_struct_list;
+  }
+
+  result = test_nested_struct_list(unifex_env, in_struct);
+  goto exit_export_test_nested_struct_list;
+exit_export_test_nested_struct_list:
+  if (in_struct.struct_list != NULL) {
+    for (unsigned int i_29 = 0; i_29 < in_struct.struct_list_length; i_29++) {
+      if (in_struct.struct_list[i_29].data != NULL) {
+        for (unsigned int i_30 = 0;
+             i_30 < in_struct.struct_list[i_29].data_length; i_30++) {
+        }
+        unifex_free(in_struct.struct_list[i_29].data);
+      }
+
+      unifex_free(in_struct.struct_list[i_29].name);
+    }
+    unifex_free(in_struct.struct_list);
+  }
+
   return result;
 }
 
@@ -750,12 +1002,13 @@ static ERL_NIF_TERM export_test_nested_struct(ErlNifEnv *env, int argc,
                           }
 
                           ERL_NIF_TERM list = value_in_struct_inner_struct;
-                          for (unsigned int i = 0;
-                               i < in_struct.inner_struct.data_length; i++) {
+                          for (unsigned int i_31 = 0;
+                               i_31 < in_struct.inner_struct.data_length;
+                               i_31++) {
                             ERL_NIF_TERM elem;
                             enif_get_list_cell(env, list, &elem, &list);
                             int in_struct_inner_struct_data_i =
-                                in_struct.inner_struct.data[i];
+                                in_struct.inner_struct.data[i_31];
                             if (!enif_get_int(env, elem,
                                               &in_struct_inner_struct_data_i)) {
                               result = unifex_raise_args_error(
@@ -763,7 +1016,7 @@ static ERL_NIF_TERM export_test_nested_struct(ErlNifEnv *env, int argc,
                               goto exit_export_test_nested_struct;
                             }
 
-                            in_struct.inner_struct.data[i] =
+                            in_struct.inner_struct.data[i_31] =
                                 in_struct_inner_struct_data_i;
                           }
                         }
@@ -818,7 +1071,8 @@ static ERL_NIF_TERM export_test_nested_struct(ErlNifEnv *env, int argc,
   goto exit_export_test_nested_struct;
 exit_export_test_nested_struct:
   if (in_struct.inner_struct.data != NULL) {
-    for (unsigned int i = 0; i < in_struct.inner_struct.data_length; i++) {
+    for (unsigned int i_32 = 0; i_32 < in_struct.inner_struct.data_length;
+         i_32++) {
     }
     unifex_free(in_struct.inner_struct.data);
   }
@@ -850,10 +1104,10 @@ static ERL_NIF_TERM export_test_list_of_structs(ErlNifEnv *env, int argc,
           }
 
           ERL_NIF_TERM list = argv[0];
-          for (unsigned int i = 0; i < struct_list_length; i++) {
+          for (unsigned int i_33 = 0; i_33 < struct_list_length; i_33++) {
             ERL_NIF_TERM elem;
             enif_get_list_cell(env, list, &elem, &list);
-            simple_struct struct_list_i = struct_list[i];
+            simple_struct struct_list_i = struct_list[i_33];
             if (!({
                   ERL_NIF_TERM key_struct_list_i;
                   ERL_NIF_TERM value_struct_list_i;
@@ -889,7 +1143,7 @@ static ERL_NIF_TERM export_test_list_of_structs(ErlNifEnv *env, int argc,
               goto exit_export_test_list_of_structs;
             }
 
-            struct_list[i] = struct_list_i;
+            struct_list[i_33] = struct_list_i;
           }
         }
         get_list_length_result;
@@ -903,8 +1157,8 @@ static ERL_NIF_TERM export_test_list_of_structs(ErlNifEnv *env, int argc,
   goto exit_export_test_list_of_structs;
 exit_export_test_list_of_structs:
   if (struct_list != NULL) {
-    for (unsigned int i = 0; i < struct_list_length; i++) {
-      unifex_free(struct_list[i].name);
+    for (unsigned int i_34 = 0; i_34 < struct_list_length; i_34++) {
+      unifex_free(struct_list[i_34].name);
     }
     unifex_free(struct_list);
   }
@@ -973,6 +1227,7 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_state", 1, export_test_state, 0},
     {"unifex_test_example_message", 1, export_test_example_message, 0},
     {"unifex_test_my_struct", 1, export_test_my_struct, 0},
+    {"unifex_test_nested_struct_list", 1, export_test_nested_struct_list, 0},
     {"unifex_test_nested_struct", 1, export_test_nested_struct, 0},
     {"unifex_test_list_of_structs", 1, export_test_list_of_structs, 0},
     {"unifex_test_my_enum", 1, export_test_my_enum, 0}};

@@ -107,6 +107,21 @@ struct nested_struct_t {
 typedef struct nested_struct_t nested_struct;
 #endif
 
+#ifdef __cplusplus
+struct nested_struct_list {
+  my_struct *struct_list;
+  unsigned int struct_list_length;
+  int id;
+};
+#else
+struct nested_struct_list_t {
+  my_struct *struct_list;
+  unsigned int struct_list_length;
+  int id;
+};
+typedef struct nested_struct_list_t nested_struct_list;
+#endif
+
 /*
  * Declaration of native functions for module Elixir.Example.
  * The implementation have to be provided by the user.
@@ -126,6 +141,8 @@ UNIFEX_TERM test_pid(UnifexEnv *env, UnifexPid in_pid);
 UNIFEX_TERM test_state(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_example_message(UnifexEnv *env, UnifexPid pid);
 UNIFEX_TERM test_my_struct(UnifexEnv *env, my_struct in_struct);
+UNIFEX_TERM test_nested_struct_list(UnifexEnv *env,
+                                    nested_struct_list in_struct);
 UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct *struct_list,
                                  unsigned int struct_list_length);
@@ -160,6 +177,8 @@ UNIFEX_TERM test_example_message_result_ok(UnifexEnv *env);
 UNIFEX_TERM test_example_message_result_error(UnifexEnv *env,
                                               char const *reason);
 UNIFEX_TERM test_my_struct_result_ok(UnifexEnv *env, my_struct out_struct);
+UNIFEX_TERM test_nested_struct_list_result_ok(UnifexEnv *env,
+                                              nested_struct_list out_struct);
 UNIFEX_TERM test_nested_struct_result_ok(UnifexEnv *env,
                                          nested_struct out_struct);
 UNIFEX_TERM test_list_of_structs_result_ok(UnifexEnv *env,

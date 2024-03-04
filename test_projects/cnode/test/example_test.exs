@@ -151,4 +151,11 @@ defmodule ExampleTest do
       Unifex.CNode.call(context[:cnode], :test_pid, [:abc])
     end
   end
+
+  test "nested struct list", context do
+    cnode = context[:cnode]
+    my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    nested_struct_list = %Nested.StructList{id: 1, struct_list: [my_struct]}
+    assert {:ok, ^nested_struct_list} = Unifex.CNode.call(cnode, :test_nested_struct_list, [nested_struct_list])
+  end
 end
