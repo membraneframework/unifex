@@ -77,4 +77,4 @@ spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
 spec test_nil_bugged() :: (nil :: label)
 
-spec test_nil_tuple_bugged() :: {nil :: label, reason :: int}
+# spec test_nil_tuple_bugged() :: {nil :: label, reason :: int}

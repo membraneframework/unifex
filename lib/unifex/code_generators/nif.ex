@@ -475,21 +475,19 @@ defmodule Unifex.CodeGenerators.NIF do
       {_result, meta} = generate_serialization(result, ctx)
       args = meta |> Keyword.get_values(:arg)
 
-      args_declarations =
-        [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
-        |> Enum.join(", ")
-
       labels =
         meta
         |> Keyword.get_values(:label)
 
       if Enum.member?(labels, "nil") do
+        args_declarations =
+          [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+          |> Enum.join(", ")
         ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
       else
         ~g<>
       end
     end)
-    |> List.flatten()
     |> Enum.filter(&(&1 != ""))
     |> Enum.map_join("\n", &(&1 <> ";"))
   end
