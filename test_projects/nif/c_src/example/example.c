@@ -95,6 +95,6 @@ UNIFEX_TERM test_nil_bugged(UnifexEnv* env) {
   return test_nil_bugged_result_(env);
 }
 
-// UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env) {
-//   return test_nil_tuple_bugged_result_(env, 1);
-// }
+UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env) {
+  return test_nil_tuple_bugged_result_(env, 1);
+}
