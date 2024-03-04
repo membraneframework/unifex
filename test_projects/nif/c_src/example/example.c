@@ -13,6 +13,10 @@ UNIFEX_TERM test_nil(UnifexEnv* env) {
   return test_nil_result_nil(env);
 }
 
+UNIFEX_TERM test_nil_tuple(UnifexEnv* env) {
+  return test_nil_tuple_result_nil(env, 1);
+}
+
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
   state->a = 42;
@@ -81,4 +85,16 @@ UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct* structs, unsigne
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
   state->a = 0;
+}
+
+// tests for bugged version of functions returning nil.
+// these tests should be removed in unifex v2.0.0. For more information check:
+// https://github.com/membraneframework/membrane_core/issues/758
+
+UNIFEX_TERM test_nil_bugged(UnifexEnv* env) {
+  return test_nil_bugged_result_(env);
+}
+
+UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env) {
+  return test_nil_tuple_bugged_result_(env, 1);
 }

@@ -12,6 +12,10 @@ defmodule ExampleTest do
     assert nil == Example.test_nil()
   end
 
+  test "nil tuple" do
+    assert {nil, 1} == Example.test_nil_tuple()
+  end
+
   test "atom" do
     assert {:ok, :unifex} = Example.test_atom(:unifex)
   end
@@ -78,4 +82,18 @@ defmodule ExampleTest do
       Example.test_my_enum(:option_not_mentioned)
     end
   end
+
+  # tests for bugged version of functions returning nil.
+  # these tests should be removed in unifex v2.0.0. For more information check:
+  # https://github.com/membraneframework/membrane_core/issues/758
+
+  test "nil bugged" do
+    assert :"" == Example.test_nil_bugged()
+  end
+
+  # this test fails
+  test "nil tuple bugged" do
+    assert {:"", 1} == Example.test_nil_tuple_bugged()
+  end
+
 end
