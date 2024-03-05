@@ -91,9 +91,8 @@ defmodule ExampleTest do
     assert :"" == Example.test_nil_bugged()
   end
 
-  # this test fails
+  # this test fails - i've run this on old version and this test should pass
   test "nil tuple bugged" do
     assert {:"", 1} == Example.test_nil_tuple_bugged()
   end
-
 end
