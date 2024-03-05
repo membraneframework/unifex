@@ -92,8 +92,8 @@ struct nested_struct_list_t {
 typedef struct nested_struct_list_t nested_struct_list;
 #endif
 
-UNIFEX_TERM test_uint64(UnifexEnv *env, uint64_t in_uint);
-UNIFEX_TERM test_int64(UnifexEnv *env, int64_t in_uint);
+UNIFEX_TERM test_uint64(UnifexEnv *env, uint64_t in_uint64);
+UNIFEX_TERM test_int64(UnifexEnv *env, int64_t in_int64);
 UNIFEX_TERM init(UnifexEnv *env);
 UNIFEX_TERM test_nil(UnifexEnv *env);
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
@@ -118,8 +118,8 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_nested_struct_list(UnifexEnv *env,
                                     nested_struct_list in_struct);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
-UNIFEX_TERM test_uint64_result_ok(UnifexEnv *env, uint64_t out_uint);
-UNIFEX_TERM test_int64_result_ok(UnifexEnv *env, int64_t out_uint);
+UNIFEX_TERM test_uint64_result_ok(UnifexEnv *env, uint64_t out_uint64);
+UNIFEX_TERM test_int64_result_ok(UnifexEnv *env, int64_t out_int64);
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state);
 UNIFEX_TERM test_nil_result_nil(UnifexEnv *env);
 UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
