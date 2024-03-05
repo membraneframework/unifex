@@ -4,7 +4,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Uint64 do
 
   Maps `uint64` Unifex type to a `uint64_t` native type.
 
-  Implemented only for NIF as function parameter as well as return type.
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
 
