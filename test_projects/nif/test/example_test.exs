@@ -13,7 +13,7 @@ defmodule ExampleTest do
   end
 
   test "nil tuple" do
-    assert {nil, 1} == Example.test_nil_tuple()
+    assert {nil, 1} == Example.test_nil_tuple(1)
   end
 
   test "atom" do
@@ -93,6 +93,6 @@ defmodule ExampleTest do
 
   # this test fails - i've run this on old version and this test should pass
   test "nil tuple bugged" do
-    assert {:"", 1} == Example.test_nil_tuple_bugged()
+    assert {:"", 1} == Example.test_nil_tuple_bugged(1)
   end
 end

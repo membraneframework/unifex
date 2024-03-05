@@ -13,8 +13,8 @@ UNIFEX_TERM test_nil(UnifexEnv* env) {
   return test_nil_result_nil(env);
 }
 
-UNIFEX_TERM test_nil_tuple(UnifexEnv* env) {
-  return test_nil_tuple_result_nil(env, 1);
+UNIFEX_TERM test_nil_tuple(UnifexEnv* env, int in_int) {
+  return test_nil_tuple_result_nil(env, in_int);
 }
 
 UNIFEX_TERM init(UnifexEnv *env) {
@@ -95,6 +95,6 @@ UNIFEX_TERM test_nil_bugged(UnifexEnv* env) {
   return test_nil_bugged_result_(env);
 }
 
-UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env) {
-  return test_nil_tuple_bugged_result_(env, 1);
+UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env, int in_int) {
+  return test_nil_tuple_bugged_result_(env, in_int);
 }

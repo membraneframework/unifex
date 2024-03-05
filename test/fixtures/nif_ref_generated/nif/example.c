@@ -37,6 +37,14 @@ UNIFEX_TERM test_nil_result_nil(UnifexEnv *env) {
   return enif_make_atom(env, "nil");
 }
 
+UNIFEX_TERM test_nil_tuple_result_nil(UnifexEnv *env, int out_int) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "nil"),
+                                  enif_make_int(env, out_int)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
@@ -276,6 +284,18 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   });
 }
 
+UNIFEX_TERM test_nil_bugged_result_nil(UnifexEnv *env) {
+  return enif_make_atom(env, "nil");
+}
+
+UNIFEX_TERM test_nil_tuple_bugged_result_nil(UnifexEnv *env, int out_int) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "nil"),
+                                  enif_make_int(env, out_int)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
 int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
   ERL_NIF_TERM term = ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "example_msg"),
@@ -415,6 +435,26 @@ static ERL_NIF_TERM export_test_nil(ErlNifEnv *env, int argc,
   result = test_nil(unifex_env);
   goto exit_export_test_nil;
 exit_export_test_nil:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_nil_tuple(ErlNifEnv *env, int argc,
+                                          const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  int in_int;
+
+  if (!enif_get_int(env, argv[0], &in_int)) {
+    result = unifex_raise_args_error(env, "in_int", ":int");
+    goto exit_export_test_nil_tuple;
+  }
+
+  result = test_nil_tuple(unifex_env, in_int);
+  goto exit_export_test_nil_tuple;
+exit_export_test_nil_tuple:
 
   return result;
 }
@@ -959,12 +999,47 @@ exit_export_test_my_enum:
   return result;
 }
 
+static ERL_NIF_TERM export_test_nil_bugged(ErlNifEnv *env, int argc,
+                                           const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+
+  result = test_nil_bugged(unifex_env);
+  goto exit_export_test_nil_bugged;
+exit_export_test_nil_bugged:
+
+  return result;
+}
+
+static ERL_NIF_TERM export_test_nil_tuple_bugged(ErlNifEnv *env, int argc,
+                                                 const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  int in_int;
+
+  if (!enif_get_int(env, argv[0], &in_int)) {
+    result = unifex_raise_args_error(env, "in_int", ":int");
+    goto exit_export_test_nil_tuple_bugged;
+  }
+
+  result = test_nil_tuple_bugged(unifex_env, in_int);
+  goto exit_export_test_nil_tuple_bugged;
+exit_export_test_nil_tuple_bugged:
+
+  return result;
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"unifex_init", 0, export_init, 0},
     {"unifex_test_atom", 1, export_test_atom, 0},
     {"unifex_test_float", 1, export_test_float, 0},
     {"unifex_test_int", 1, export_test_int, 0},
     {"unifex_test_nil", 0, export_test_nil, 0},
+    {"unifex_test_nil_tuple", 1, export_test_nil_tuple, 0},
     {"unifex_test_string", 1, export_test_string, 0},
     {"unifex_test_list", 1, export_test_list, 0},
     {"unifex_test_list_of_strings", 1, export_test_list_of_strings, 0},
@@ -974,7 +1049,9 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_my_struct", 1, export_test_my_struct, 0},
     {"unifex_test_nested_struct", 1, export_test_nested_struct, 0},
     {"unifex_test_list_of_structs", 1, export_test_list_of_structs, 0},
-    {"unifex_test_my_enum", 1, export_test_my_enum, 0}};
+    {"unifex_test_my_enum", 1, export_test_my_enum, 0},
+    {"unifex_test_nil_bugged", 0, export_test_nil_bugged, 0},
+    {"unifex_test_nil_tuple_bugged", 1, export_test_nil_tuple_bugged, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)
 
@@ -985,3 +1062,23 @@ ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)
  * https://github.com/membraneframework/membrane_core/issues/758
  */
 UNIFEX_TERM test_nil_result_(UnifexEnv *env) { return enif_make_atom(env, ""); }
+
+UNIFEX_TERM test_nil_tuple_result_(UnifexEnv *env, int out_int) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, ""),
+                                  enif_make_int(env, out_int)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
+UNIFEX_TERM test_nil_bugged_result_(UnifexEnv *env) {
+  return enif_make_atom(env, "");
+}
+
+UNIFEX_TERM test_nil_tuple_bugged_result_(UnifexEnv *env, int out_int) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, ""),
+                                  enif_make_int(env, out_int)};
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}

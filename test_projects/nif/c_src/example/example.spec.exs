@@ -23,7 +23,7 @@ spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
 spec test_nil() :: (nil :: label)
 
-spec test_nil_tuple() :: {nil :: label, reason :: int}
+spec test_nil_tuple(in_int :: int) :: {nil :: label, out_int :: int}
 
 @doc """
 test_string docs
@@ -77,4 +77,4 @@ spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
 spec test_nil_bugged() :: (nil :: label)
 
-spec test_nil_tuple_bugged() :: {nil :: label, reason :: int}
+spec test_nil_tuple_bugged(in_int :: int) :: {nil :: label, out_int :: int}

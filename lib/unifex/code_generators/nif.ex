@@ -496,20 +496,20 @@ defmodule Unifex.CodeGenerators.NIF do
   defp generate_functions_bugged(config, ctx) do
     config
     |> Enum.map(fn {name, result} ->
-      {_result, meta} = generate_serialization(result, ctx)
-
+      {result, meta} = generate_serialization(result, ctx)
       labels =
         meta
         |> Keyword.get_values(:label)
 
       if Enum.member?(labels, "nil") do
+        bugged_result = result |> String.replace("\"nil\"", "\"\"")
         ~g"""
         #{args = meta |> Keyword.get_values(:arg)
 
         args_declarations = [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)] |> Enum.join(", ")
 
         ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>} {
-          return #{BaseType.generate_arg_serialize(:atom, :"\"#{nil}\"", NIF, ctx)};
+          return #{bugged_result};
         }
         """
       else

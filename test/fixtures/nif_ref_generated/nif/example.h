@@ -117,6 +117,7 @@ UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
 UNIFEX_TERM test_float(UnifexEnv *env, double in_float);
 UNIFEX_TERM test_int(UnifexEnv *env, int in_int);
 UNIFEX_TERM test_nil(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple(UnifexEnv *env, int in_int);
 UNIFEX_TERM test_string(UnifexEnv *env, char *in_string);
 UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
                       unsigned int in_list_length);
@@ -130,6 +131,8 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct *struct_list,
                                  unsigned int struct_list_length);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
+UNIFEX_TERM test_nil_bugged(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv *env, int in_int);
 
 /*
  * Callbacks for nif lifecycle hooks.
@@ -148,6 +151,7 @@ UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_int_result_ok(UnifexEnv *env, int out_int);
 UNIFEX_TERM test_nil_result_nil(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple_result_nil(UnifexEnv *env, int out_int);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
@@ -165,6 +169,8 @@ UNIFEX_TERM test_list_of_structs_result_ok(UnifexEnv *env,
                                            simple_struct const *out_struct_list,
                                            unsigned int out_struct_list_length);
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
+UNIFEX_TERM test_nil_bugged_result_nil(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple_bugged_result_nil(UnifexEnv *env, int out_int);
 
 /*
  * Bugged version of functions returning nil, left for backwards compabiliy with
@@ -173,6 +179,9 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
  * https://github.com/membraneframework/membrane_core/issues/758
  */
 UNIFEX_TERM test_nil_result_(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple_result_(UnifexEnv *env, int out_int);
+UNIFEX_TERM test_nil_bugged_result_(UnifexEnv *env);
+UNIFEX_TERM test_nil_tuple_bugged_result_(UnifexEnv *env, int out_int);
 
 /*
  * Functions that send the defined messages from Nif.
