@@ -83,6 +83,12 @@ defmodule ExampleTest do
     end
   end
 
+  test "nested struct list" do
+    my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
+    nested_struct_list = %Nested.StructList{id: 1, struct_list: [my_struct]}
+    assert {:ok, ^nested_struct_list} = Example.test_nested_struct_list(nested_struct_list)
+  end
+  
   # tests for bugged version of functions returning nil.
   # these tests should be removed in unifex v2.0.0. For more information check:
   # https://github.com/membraneframework/membrane_core/issues/758
@@ -91,7 +97,6 @@ defmodule ExampleTest do
     assert :"" == Example.test_nil_bugged()
   end
 
-  # this test fails - i've run this on old version and this test should pass
   test "nil tuple bugged" do
     assert {:"", 1} == Example.test_nil_tuple_bugged(1)
   end

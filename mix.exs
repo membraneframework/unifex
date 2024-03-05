@@ -1,7 +1,8 @@
 defmodule Unifex.MixProject do
   use Mix.Project
 
-  @version "1.1.2"
+  @version "1.1.3"
+  
   @github_url "https://github.com/membraneframework/unifex"
 
   def project do
@@ -28,7 +29,8 @@ defmodule Unifex.MixProject do
 
   def application do
     [
-      extra_applications: []
+      extra_applications: [],
+      mod: {Unifex.App, []}
     ]
   end
 
