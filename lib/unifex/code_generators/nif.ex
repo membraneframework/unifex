@@ -483,6 +483,7 @@ defmodule Unifex.CodeGenerators.NIF do
         args_declarations =
           [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
           |> Enum.join(", ")
+
         ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
       else
         ~g<>
@@ -497,12 +498,14 @@ defmodule Unifex.CodeGenerators.NIF do
     config
     |> Enum.map(fn {name, result} ->
       {result, meta} = generate_serialization(result, ctx)
+
       labels =
         meta
         |> Keyword.get_values(:label)
 
       if Enum.member?(labels, "nil") do
         bugged_result = result |> String.replace("\"nil\"", "\"\"")
+
         ~g"""
         #{args = meta |> Keyword.get_values(:arg)
 
