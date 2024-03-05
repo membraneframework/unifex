@@ -12,9 +12,9 @@ state of work on remaining types.
 | `atom`      | `char *`                        | ✅                          | ✅                    | ✅                            | ✅                      |
 | `bool`      | `int`                           | ✅                          | ✅                    | ✅                            | ✅                      |
 | `unsigned`  | `unsigned int`                  | ✅                          | ✅                    | ✅                            | ✅                      |
-| `uint64`    | `uint64_t`                      | ✅                          | ✅                    | ❌                            | ❌                      |
+| `uint64`    | `uint64_t`                      | ✅                          | ✅                    | ✅                            | ✅                      |
 | `int`       | `int`                           | ✅                          | ✅                    | ✅                            | ✅                      |
-| `int64`     | `int64_t`                       | ✅                          | ✅                    | ❌                            | ❌                      |
+| `int64`     | `int64_t`                       | ✅                          | ✅                    | ✅                            | ✅                      |
 | `float`     | `double`                        | ✅                          | ✅                    | ✅                            | ✅                      |
 | `payload`   | `UnifexPayload`                 | ✅                          | ✅                    | ✅                            | ✅                      |
 | `pid`       | `UnifexPid`                     | ✅                          | ✅                    | ✅                            | ✅                      |

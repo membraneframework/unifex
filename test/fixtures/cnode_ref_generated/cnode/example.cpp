@@ -15,6 +15,34 @@ void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
   free(state);
 }
 
+UNIFEX_TERM test_uint64_result_ok(UnifexEnv *env, uint64_t out_uint) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    uint64_t tmp_int = out_uint;
+    ei_x_encode_ulonglong(out_buff, (long long)tmp_int);
+  });
+
+  return out_buff;
+}
+
+UNIFEX_TERM test_int64_result_ok(UnifexEnv *env, int64_t out_uint) {
+  UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
+  unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
+
+  ei_x_encode_tuple_header(out_buff, 2);
+  ei_x_encode_atom(out_buff, "ok");
+  ({
+    int64_t tmp_int = out_uint;
+    ei_x_encode_longlong(out_buff, (long long)tmp_int);
+  });
+
+  return out_buff;
+}
+
 UNIFEX_TERM init_result_ok(UnifexEnv *env, UnifexState *state) {
   UNIFEX_TERM out_buff = (ei_x_buff *)malloc(sizeof(ei_x_buff));
   unifex_cnode_prepare_ei_x_buff(env, out_buff, "result");
@@ -417,6 +445,54 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   });
 
   return out_buff;
+}
+
+UNIFEX_TERM test_uint64_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+  uint64_t in_uint;
+
+  if (({
+        unsigned long long tmp_ulonglong;
+        int result =
+            ei_decode_ulonglong(in_buff->buff, in_buff->index, &tmp_ulonglong);
+        in_uint = (uint64_t)tmp_ulonglong;
+        result;
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'in_uint' of type ':uint64'");
+    goto exit_test_uint64_caller;
+  }
+
+  result = test_uint64(env, in_uint);
+  goto exit_test_uint64_caller;
+exit_test_uint64_caller:
+
+  return result;
+}
+
+UNIFEX_TERM test_int64_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
+  UNIFEX_MAYBE_UNUSED(in_buff);
+  UNIFEX_TERM result;
+  int64_t in_uint;
+
+  if (({
+        long long tmp_longlong;
+        int result =
+            ei_decode_longlong(in_buff->buff, in_buff->index, &tmp_longlong);
+        in_uint = (int64_t)tmp_longlong;
+        result;
+      })) {
+    result = unifex_raise(
+        env, "Unifex CNode: cannot parse argument 'in_uint' of type ':int64'");
+    goto exit_test_int64_caller;
+  }
+
+  result = test_int64(env, in_uint);
+  goto exit_test_int64_caller;
+exit_test_int64_caller:
+
+  return result;
 }
 
 UNIFEX_TERM init_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff) {
@@ -1687,7 +1763,11 @@ int send_example_msg(UnifexEnv *env, UnifexPid pid, int flags, int num) {
 
 UNIFEX_TERM unifex_cnode_handle_message(UnifexEnv *env, char *fun_name,
                                         UnifexCNodeInBuff *in_buff) {
-  if (strcmp(fun_name, "init") == 0) {
+  if (strcmp(fun_name, "test_uint64") == 0) {
+    return test_uint64_caller(env, in_buff);
+  } else if (strcmp(fun_name, "test_int64") == 0) {
+    return test_int64_caller(env, in_buff);
+  } else if (strcmp(fun_name, "init") == 0) {
     return init_caller(env, in_buff);
   } else if (strcmp(fun_name, "test_nil") == 0) {
     return test_nil_caller(env, in_buff);

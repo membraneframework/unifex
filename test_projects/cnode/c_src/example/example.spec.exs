@@ -6,6 +6,10 @@ callback :main
 
 state_type "MyState"
 
+spec test_uint64(in_uint :: uint64) :: {:ok :: label, out_uint :: uint64}
+
+spec test_int64(in_uint :: int64) :: {:ok :: label, out_uint :: int64}
+
 spec init() :: {:ok :: label, state}
 
 spec test_nil() :: nil :: label

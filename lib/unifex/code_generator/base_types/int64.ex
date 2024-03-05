@@ -27,4 +27,31 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int64 do
         })>
     end
   end
+
+  defmodule CNode do
+    @moduledoc false
+    use Unifex.CodeGenerator.BaseType
+
+    @impl true
+    def generate_arg_parse(argument, name, _ctx) do
+      ~g"""
+      ({
+        long long tmp_longlong;
+        int result = ei_decode_longlong(#{argument}->buff, #{argument}->index, &tmp_longlong);
+        #{name} = (int64_t)tmp_longlong;
+        result;
+      })
+      """
+    end
+
+    @impl true
+    def generate_arg_serialize(name, _ctx) do
+      ~g"""
+      ({
+      int64_t tmp_int = #{name};
+      ei_x_encode_longlong(out_buff, (long long)tmp_int);
+      });
+      """
+    end
+  end
 end
