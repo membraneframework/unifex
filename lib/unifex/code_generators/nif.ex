@@ -471,7 +471,7 @@ defmodule Unifex.CodeGenerators.NIF do
   # This function generates bugged version of functions declarations returning nil and should be removed in v2.0.0
   defp generate_functions_declarations_bugged(config, ctx) do
     config
-    |> Enum.map(fn {name, result} ->
+    |> Enum.flat_map(fn {name, result} ->
       {_result, meta} = generate_serialization(result, ctx)
       args = meta |> Keyword.get_values(:arg)
 
@@ -484,19 +484,18 @@ defmodule Unifex.CodeGenerators.NIF do
           [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
           |> Enum.join(", ")
 
-        ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>
+        [~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations});>]
       else
-        ~g<>
+        []
       end
     end)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map_join("\n", &(&1 <> ";"))
+    |> Enum.join("\n")
   end
 
   # This function generates bugged version of functions returning nil and should be removed in v2.0.0
   defp generate_functions_bugged(config, ctx) do
     config
-    |> Enum.map(fn {name, result} ->
+    |> Enum.flat_map(fn {name, result} ->
       {result, meta} = generate_serialization(result, ctx)
 
       labels =
@@ -504,22 +503,23 @@ defmodule Unifex.CodeGenerators.NIF do
         |> Keyword.get_values(:label)
 
       if Enum.member?(labels, "nil") do
-        bugged_result = result |> String.replace("\"nil\"", "\"\"")
+        args = meta |> Keyword.get_values(:arg)
 
-        ~g"""
-        #{args = meta |> Keyword.get_values(:arg)
+        args_declarations =
+          [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)]
+          |> Enum.join(", ")
 
-        args_declarations = [~g<UnifexEnv* env> | generate_args_declarations(args, :const_unless_ptr_on_ptr, ctx)] |> Enum.join(", ")
-
-        ~g<UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations})>} {
-          return #{bugged_result};
-        }
-        """
+        [
+          ~g"""
+          UNIFEX_TERM #{[name, :result, ""] |> Enum.join("_")}(#{args_declarations}) {
+            return #{result |> String.replace("\"nil\"", "\"\"")};
+          }
+          """
+        ]
       else
-        ~g<>
+        []
       end
     end)
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map_join("\n", & &1)
+    |> Enum.join("\n")
   end
 end
