@@ -31,12 +31,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Uint64 do
 
     @impl true
     def generate_arg_serialize(name, _ctx) do
-      ~g"""
-      ({
-      uint64_t tmp_int = #{name};
-      ei_x_encode_ulonglong(out_buff, (long long)tmp_int);
-      });
-      """
+      ~g<ei_x_encode_ulonglong(out_buff, (long long)#{name});>
     end
   end
 end
