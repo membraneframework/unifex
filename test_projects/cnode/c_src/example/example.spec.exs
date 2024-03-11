@@ -18,6 +18,10 @@ spec test_float(in_float :: float) :: {:ok :: label, out_float :: float}
 
 spec test_uint(in_uint :: unsigned) :: {:ok :: label, out_uint :: unsigned}
 
+spec test_uint64(in_uint64 :: uint64) :: {:ok :: label, out_uint64 :: uint64}
+
+spec test_int64(in_int64 :: int64) :: {:ok :: label, out_int64 :: int64}
+
 spec test_string(in_string :: string) :: {:ok :: label, out_string :: string}
 
 spec test_list(in_list :: [int]) :: {:ok :: label, out_list :: [int]}

@@ -8,6 +8,19 @@ defmodule ExampleTest do
     [cnode: cnode]
   end
 
+  test "uint64", context do
+    assert {:ok, 0} = Unifex.CNode.call(context[:cnode], :test_uint64, [0])
+    # max uint64 value
+    assert {:ok, 18446744073709551615} = Unifex.CNode.call(context[:cnode], :test_uint64, [18446744073709551615])
+  end
+
+  test "int64", context do
+    assert {:ok, 0} = Unifex.CNode.call(context[:cnode], :test_int64, [0])
+    # max int64 value
+    assert {:ok, 9223372036854775807} = Unifex.CNode.call(context[:cnode], :test_int64, [9223372036854775807])
+    assert {:ok, -9223372036854775807} = Unifex.CNode.call(context[:cnode], :test_int64, [-9223372036854775807])
+  end
+
   test "nil", context do
     assert nil == Unifex.CNode.call(context[:cnode], :test_nil, [])
   end

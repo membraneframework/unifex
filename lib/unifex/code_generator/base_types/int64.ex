@@ -4,7 +4,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int64 do
 
   Maps `int64` Unifex type to an `int64_t` native type.
 
-  Implemented only for NIF as function parameter as well as return type.
+  Implemented both for NIF and CNode as function parameter as well as return type.
   """
   use Unifex.CodeGenerator.BaseType
 
@@ -25,6 +25,28 @@ defmodule Unifex.CodeGenerator.BaseTypes.Int64 do
         #{variable} = (int64_t)temp;
         success;
         })>
+    end
+  end
+
+  defmodule CNode do
+    @moduledoc false
+    use Unifex.CodeGenerator.BaseType
+
+    @impl true
+    def generate_arg_parse(argument, name, _ctx) do
+      ~g"""
+      ({
+        long long tmp_longlong;
+        int result = ei_decode_longlong(#{argument}->buff, #{argument}->index, &tmp_longlong);
+        #{name} = (int64_t)tmp_longlong;
+        result;
+      })
+      """
+    end
+
+    @impl true
+    def generate_arg_serialize(name, _ctx) do
+      ~g<ei_x_encode_longlong(out_buff, (long long)#{name});>
     end
   end
 end

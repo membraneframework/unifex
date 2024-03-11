@@ -98,6 +98,8 @@ UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom);
 UNIFEX_TERM test_bool(UnifexEnv *env, int in_bool);
 UNIFEX_TERM test_float(UnifexEnv *env, double in_float);
 UNIFEX_TERM test_uint(UnifexEnv *env, unsigned int in_uint);
+UNIFEX_TERM test_uint64(UnifexEnv *env, uint64_t in_uint64);
+UNIFEX_TERM test_int64(UnifexEnv *env, int64_t in_int64);
 UNIFEX_TERM test_string(UnifexEnv *env, char *in_string);
 UNIFEX_TERM test_list(UnifexEnv *env, int *in_list,
                       unsigned int in_list_length);
@@ -122,6 +124,8 @@ UNIFEX_TERM test_atom_result_ok(UnifexEnv *env, char const *out_atom);
 UNIFEX_TERM test_bool_result_ok(UnifexEnv *env, int out_bool);
 UNIFEX_TERM test_float_result_ok(UnifexEnv *env, double out_float);
 UNIFEX_TERM test_uint_result_ok(UnifexEnv *env, unsigned int out_uint);
+UNIFEX_TERM test_uint64_result_ok(UnifexEnv *env, uint64_t out_uint64);
+UNIFEX_TERM test_int64_result_ok(UnifexEnv *env, int64_t out_int64);
 UNIFEX_TERM test_string_result_ok(UnifexEnv *env, char const *out_string);
 UNIFEX_TERM test_list_result_ok(UnifexEnv *env, int const *out_list,
                                 unsigned int out_list_length);
@@ -151,6 +155,8 @@ UNIFEX_TERM test_atom_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_bool_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_float_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_uint_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_uint64_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
+UNIFEX_TERM test_int64_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_string_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_list_caller(UnifexEnv *env, UnifexCNodeInBuff *in_buff);
 UNIFEX_TERM test_list_of_strings_caller(UnifexEnv *env,

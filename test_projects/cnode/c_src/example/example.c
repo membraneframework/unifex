@@ -8,6 +8,15 @@ UNIFEX_TERM init(UnifexEnv *env) {
   return res;
 }
 
+UNIFEX_TERM test_uint64(UnifexEnv *env, uint64_t in_uint64) {
+  return test_uint64_result_ok(env, in_uint64);
+}
+
+UNIFEX_TERM test_int64(UnifexEnv *env, int64_t in_int64) {
+  return test_int64_result_ok(env, in_int64);
+}
+
+
 UNIFEX_TERM test_nil(UnifexEnv* env) {
   return test_nil_result_nil(env);
 }
