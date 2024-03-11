@@ -23,6 +23,8 @@ spec test_int(in_int :: int) :: {:ok :: label, out_int :: int}
 
 spec test_nil() :: (nil :: label)
 
+spec test_nil_tuple(in_int :: int) :: {nil :: label, out_int :: int}
+
 @doc """
 test_string docs
 """
@@ -75,3 +77,11 @@ type my_enum :: :option_one | :option_two | :option_three | :option_four | :opti
 test_my_enum docs
 """
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
+
+# tests for bugged version of functions returning nil.
+# these tests should be removed in unifex v2.0.0. For more information check:
+# https://github.com/membraneframework/membrane_core/issues/758
+
+spec test_nil_bugged() :: (nil :: label)
+
+spec test_nil_tuple_bugged(in_int :: int) :: {nil :: label, out_int :: int}

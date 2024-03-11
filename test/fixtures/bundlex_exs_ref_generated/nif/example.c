@@ -1,5 +1,4 @@
 #include "example.h"
-
 UNIFEX_TERM foo_result_ok(UnifexEnv *env, int answer) {
   return ({
     const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"),
@@ -46,3 +45,10 @@ exit_export_foo:
 static ErlNifFunc nif_funcs[] = {{"unifex_foo", 1, export_foo, 0}};
 
 ERL_NIF_INIT(Elixir.Example.Nif, nif_funcs, unifex_load_nif, NULL, NULL, NULL)
+
+/*
+ * Bugged version of functions returning nil, generated for backwards compabiliy
+ * with older code using unifex Generating of these functions should be removed
+ * in unifex v2.0.0 For more information check:
+ * https://github.com/membraneframework/membrane_core/issues/758
+ */
