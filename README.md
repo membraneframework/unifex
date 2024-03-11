@@ -17,6 +17,9 @@ Unifex uses [Bundlex](https://github.com/membraneframework/bundlex) to compile a
 
 This tool is maintained by the [Membrane Framework](https://membraneframework.org/) team.
 
+This version supports bugged version of functions returning nil, as well as fixed ones. This functionality should be removed in version 2.0.0
+For more info see: [Issue](https://github.com/membraneframework/membrane_core/issues/758)
+
 ## Installation
 
 To install, you need to configure Mix project as follows:
@@ -36,7 +39,7 @@ defmodule MyApp.Mixfile do
 
   defp deps() do
     [
-      {:unifex, "~>> 1.1.3"}
+      {:unifex, "~>> 1.1.2"}
     ]
   end
 end
