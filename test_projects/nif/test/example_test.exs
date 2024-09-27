@@ -99,7 +99,7 @@ defmodule ExampleTest do
     nested_struct_list = %Nested.StructList{id: 1, struct_list: [my_struct]}
     assert {:ok, ^nested_struct_list} = Example.test_nested_struct_list(nested_struct_list)
   end
-  
+
   # tests for bugged version of functions returning nil.
   # these tests should be removed in unifex v2.0.0. For more information check:
   # https://github.com/membraneframework/membrane_core/issues/758
