@@ -265,6 +265,10 @@ defmodule Unifex.Specs.DSL do
     [type_name]
   end
 
+  defp parse_enum_types({type_name, val}) when is_atom(type_name) and is_integer(val) do
+    [{type_name, val}]
+  end
+
   defp parse_enum_types({:|, _meta, [first_arg, second_arg]}) do
     parse_enum_types(first_arg) ++ parse_enum_types(second_arg)
   end
