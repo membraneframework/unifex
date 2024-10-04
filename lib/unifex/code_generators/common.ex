@@ -81,7 +81,10 @@ defmodule Unifex.CodeGenerators.Common do
   @spec generate_enum_native_definition(Specs.enum_t(), map) :: CodeGenerator.code_t()
   def generate_enum_native_definition({enum_name, enum_types}, _ctx) do
     enum_types =
-      Enum.map_join(enum_types, ",\n", fn type -> String.upcase("#{enum_name}_#{type}") end)
+      Enum.map_join(enum_types, ",\n", fn
+        {type, val} -> String.upcase("#{enum_name}_#{type} = #{val}")
+        type -> String.upcase("#{enum_name}_#{type}")
+      end)
 
     enum_name =
       enum_name

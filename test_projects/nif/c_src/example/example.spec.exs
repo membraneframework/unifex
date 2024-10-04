@@ -78,6 +78,8 @@ test_my_enum docs
 """
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
 
+spec my_explicit_enum :: {:a, 1} | :b | {:c, 4} | {:d, 8}
+
 # tests for bugged version of functions returning nil.
 # these tests should be removed in unifex v2.0.0. For more information check:
 # https://github.com/membraneframework/membrane_core/issues/758
