@@ -235,6 +235,10 @@ defmodule Unifex.Specs.DSL do
 
       type my_enum :: :option_one | :option_two | :option_three | ...
 
+  Enum constants can be given an explicit value with `enum_value`
+
+      type my_explicit_enum :: enum_value(:option_one, 1) | :option_two | :option_three | ...
+
   Struct or enums specified in such way can be used in like any other supported type, E.g.
 
       spec my_function(in_enum :: my_enum) :: {:ok :: label, out_struct :: my_struct}
