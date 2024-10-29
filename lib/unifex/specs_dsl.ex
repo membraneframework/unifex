@@ -265,7 +265,8 @@ defmodule Unifex.Specs.DSL do
     [type_name]
   end
 
-  defp parse_enum_types({:enum_value, _meta, [type_name, value]}) when is_atom(type_name) and is_integer(value) do
+  defp parse_enum_types({:enum_value, _meta, [type_name, value]})
+       when is_atom(type_name) and is_integer(value) do
     [{type_name, value}]
   end
 
