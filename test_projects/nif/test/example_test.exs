@@ -84,10 +84,10 @@ defmodule ExampleTest do
   end
 
   test "explicit enum" do
-    assert {:ok, :a} = Example.test_explicit_enum(:a)
-    assert {:ok, :b} = Example.test_explicit_enum(:b)
-    assert {:ok, :c} = Example.test_explicit_enum(:c)
-    assert {:ok, :d} = Example.test_explicit_enum(:d)
+    assert {:ok, :a} = Example.test_my_explicit_enum(:a)
+    assert {:ok, :b} = Example.test_my_explicit_enum(:b)
+    assert {:ok, :c} = Example.test_my_explicit_enum(:c)
+    assert {:ok, :d} = Example.test_my_explicit_enum(:d)
 
     assert_raise ErlangError, ~r/unifex_parse_arg.*in_enum.*my_explicit_enum/i, fn ->
       Example.test_my_explicit_enum(:option_not_mentioned)
