@@ -353,6 +353,35 @@ UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum) {
   });
 }
 
+UNIFEX_TERM test_my_explicit_enum_result_ok(UnifexEnv *env,
+                                            MyExplicitEnum out_enum) {
+  return ({
+    const ERL_NIF_TERM terms[] = {enif_make_atom(env, "ok"), ({
+                                    ERL_NIF_TERM res;
+                                    if (out_enum == MY_EXPLICIT_ENUM_A) {
+                                      const char *enum_as_string = "a";
+                                      res = enif_make_atom(env, enum_as_string);
+
+                                    } else if (out_enum == MY_EXPLICIT_ENUM_B) {
+                                      const char *enum_as_string = "b";
+                                      res = enif_make_atom(env, enum_as_string);
+
+                                    } else if (out_enum == MY_EXPLICIT_ENUM_C) {
+                                      const char *enum_as_string = "c";
+                                      res = enif_make_atom(env, enum_as_string);
+
+                                    } else {
+                                      const char *enum_as_string = "d";
+                                      res = enif_make_atom(env, enum_as_string);
+                                    }
+                                    res;
+                                  })
+
+    };
+    enif_make_tuple_from_array(env, terms, 2);
+  });
+}
+
 UNIFEX_TERM test_nil_bugged_result_nil(UnifexEnv *env) {
   return enif_make_atom(env, "nil");
 }
@@ -1253,6 +1282,51 @@ exit_export_test_my_enum:
   return result;
 }
 
+static ERL_NIF_TERM export_test_my_explicit_enum(ErlNifEnv *env, int argc,
+                                                 const ERL_NIF_TERM argv[]) {
+  UNIFEX_MAYBE_UNUSED(argc);
+  UNIFEX_MAYBE_UNUSED(argv);
+  ERL_NIF_TERM result;
+  UnifexEnv *unifex_env = env;
+  MyExplicitEnum in_enum;
+
+  if (!({
+        int res = 0;
+        char *enum_as_string = NULL;
+
+        if (unifex_alloc_and_get_atom(env, argv[0], &enum_as_string)) {
+          if (strcmp(enum_as_string, "a") == 0) {
+            in_enum = MY_EXPLICIT_ENUM_A;
+            res = 1;
+          } else if (strcmp(enum_as_string, "b") == 0) {
+            in_enum = MY_EXPLICIT_ENUM_B;
+            res = 1;
+          } else if (strcmp(enum_as_string, "c") == 0) {
+            in_enum = MY_EXPLICIT_ENUM_C;
+            res = 1;
+          } else if (strcmp(enum_as_string, "d") == 0) {
+            in_enum = MY_EXPLICIT_ENUM_D;
+            res = 1;
+          }
+
+          if (enum_as_string != NULL) {
+            unifex_free((void *)enum_as_string);
+          }
+        }
+
+        res;
+      })) {
+    result = unifex_raise_args_error(env, "in_enum", ":my_explicit_enum");
+    goto exit_export_test_my_explicit_enum;
+  }
+
+  result = test_my_explicit_enum(unifex_env, in_enum);
+  goto exit_export_test_my_explicit_enum;
+exit_export_test_my_explicit_enum:
+
+  return result;
+}
+
 static ERL_NIF_TERM export_test_nil_bugged(ErlNifEnv *env, int argc,
                                            const ERL_NIF_TERM argv[]) {
   UNIFEX_MAYBE_UNUSED(argc);
@@ -1305,6 +1379,7 @@ static ErlNifFunc nif_funcs[] = {
     {"unifex_test_nested_struct", 1, export_test_nested_struct, 0},
     {"unifex_test_list_of_structs", 1, export_test_list_of_structs, 0},
     {"unifex_test_my_enum", 1, export_test_my_enum, 0},
+    {"unifex_test_my_explicit_enum", 1, export_test_my_explicit_enum, 0},
     {"unifex_test_nil_bugged", 0, export_test_nil_bugged, 0},
     {"unifex_test_nil_tuple_bugged", 1, export_test_nil_tuple_bugged, 0}};
 
