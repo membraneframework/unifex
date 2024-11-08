@@ -239,6 +239,9 @@ defmodule Unifex.Specs.DSL do
 
       type my_explicit_enum :: enum_value(:option_one, 1) | :option_two | :option_three | ...
 
+  The numeric value assigned to any enum constant can only be used from C/C++.
+  In Elixir, the atom must be used.
+
   Struct or enums specified in such way can be used in like any other supported type, E.g.
 
       spec my_function(in_enum :: my_enum) :: {:ok :: label, out_struct :: my_struct}
