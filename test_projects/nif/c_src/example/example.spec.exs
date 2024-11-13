@@ -73,10 +73,15 @@ spec test_list_of_structs(struct_list :: [simple_struct]) :: {:ok :: label, out_
 
 type my_enum :: :option_one | :option_two | :option_three | :option_four | :option_five
 
+type my_explicit_enum :: enum_value(:a, 1) | :b | enum_value(:c, 4) | enum_value(:d, 8)
+
 @doc """
 test_my_enum docs
 """
 spec test_my_enum(in_enum :: my_enum) :: {:ok :: label, out_enum :: my_enum}
+
+
+spec test_my_explicit_enum(in_enum :: my_explicit_enum) :: {:ok :: label, out_enum :: my_explicit_enum}
 
 # tests for bugged version of functions returning nil.
 # these tests should be removed in unifex v2.0.0. For more information check:

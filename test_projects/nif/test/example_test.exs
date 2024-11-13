@@ -83,12 +83,23 @@ defmodule ExampleTest do
     end
   end
 
+  test "explicit enum" do
+    assert {:ok, :a} = Example.test_my_explicit_enum(:a)
+    assert {:ok, :b} = Example.test_my_explicit_enum(:b)
+    assert {:ok, :c} = Example.test_my_explicit_enum(:c)
+    assert {:ok, :d} = Example.test_my_explicit_enum(:d)
+
+    assert_raise ErlangError, ~r/unifex_parse_arg.*in_enum.*my_explicit_enum/i, fn ->
+      Example.test_my_explicit_enum(:option_not_mentioned)
+    end
+  end
+
   test "nested struct list" do
     my_struct = %My.Struct{id: 1, name: "Jan Kowlaski", data: [1, 2, 3, 4, 5, 6, 7, 8, 9]}
     nested_struct_list = %Nested.StructList{id: 1, struct_list: [my_struct]}
     assert {:ok, ^nested_struct_list} = Example.test_nested_struct_list(nested_struct_list)
   end
-  
+
   # tests for bugged version of functions returning nil.
   # these tests should be removed in unifex v2.0.0. For more information check:
   # https://github.com/membraneframework/membrane_core/issues/758

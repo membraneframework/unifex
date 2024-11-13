@@ -235,6 +235,13 @@ defmodule Unifex.Specs.DSL do
 
       type my_enum :: :option_one | :option_two | :option_three | ...
 
+  Enum constants can be given an explicit value with `enum_value`
+
+      type my_explicit_enum :: enum_value(:option_one, 1) | :option_two | :option_three | ...
+
+  The numeric value assigned to any enum constant can only be used from C/C++.
+  In Elixir, the atom must be used.
+
   Struct or enums specified in such way can be used in like any other supported type, E.g.
 
       spec my_function(in_enum :: my_enum) :: {:ok :: label, out_struct :: my_struct}
@@ -263,6 +270,11 @@ defmodule Unifex.Specs.DSL do
 
   defp parse_enum_types(type_name) when is_atom(type_name) do
     [type_name]
+  end
+
+  defp parse_enum_types({:enum_value, _meta, [type_name, value]})
+       when is_atom(type_name) and is_integer(value) do
+    [{type_name, value}]
   end
 
   defp parse_enum_types({:|, _meta, [first_arg, second_arg]}) do

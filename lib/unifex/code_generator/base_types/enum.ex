@@ -14,7 +14,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
 
   @impl true
   def generate_native_type(ctx) do
-    ~g<#{ctx.type_spec.name |> Atom.to_string() |> Macro.camelize()}>
+    ~g<#{ctx.type_spec.name |> enum_to_string() |> Macro.camelize()}>
   end
 
   defmodule NIF do
@@ -114,7 +114,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
     enum_name = ctx.type_spec.name
 
     ctx.type_spec.types
-    |> Enum.map(&Atom.to_string/1)
+    |> Enum.map(&enum_to_string/1)
     |> Enum.map_join(" else ", fn type ->
       ~g"""
       if (strcmp(enum_as_string, "#{type}") == 0) {
@@ -134,11 +134,11 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
           CodeGenerator.code_t()
   def do_generate_arg_serialize_if_statements(name, ctx, serializer) do
     {last_type, types} = List.pop_at(ctx.type_spec.types, -1)
-    last_type = Atom.to_string(last_type)
+    last_type = enum_to_string(last_type)
     enum_name = ctx.type_spec.name
 
     types
-    |> Enum.map(&Atom.to_string/1)
+    |> Enum.map(&enum_to_string/1)
     |> Enum.map(fn type ->
       ~g"""
       if (#{name} == #{String.upcase("#{enum_name}_#{type}")}) {
@@ -149,4 +149,7 @@ defmodule Unifex.CodeGenerator.BaseTypes.Enum do
     |> Enum.concat(["{ #{serializer.(last_type, ctx)} }"])
     |> Enum.join(" else ")
   end
+
+  defp enum_to_string(name) when is_atom(name), do: Atom.to_string(name)
+  defp enum_to_string({name, _val}) when is_atom(name), do: Atom.to_string(name)
 end

@@ -65,6 +65,23 @@ typedef enum MyEnum_t MyEnum;
 #endif
 
 #ifdef __cplusplus
+enum MyExplicitEnum {
+  MY_EXPLICIT_ENUM_A = 1,
+  MY_EXPLICIT_ENUM_B,
+  MY_EXPLICIT_ENUM_C = 4,
+  MY_EXPLICIT_ENUM_D = 8
+};
+#else
+enum MyExplicitEnum_t {
+  MY_EXPLICIT_ENUM_A = 1,
+  MY_EXPLICIT_ENUM_B,
+  MY_EXPLICIT_ENUM_C = 4,
+  MY_EXPLICIT_ENUM_D = 8
+};
+typedef enum MyExplicitEnum_t MyExplicitEnum;
+#endif
+
+#ifdef __cplusplus
 struct my_struct {
   int id;
   int *data;
@@ -148,6 +165,7 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct);
 UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct *struct_list,
                                  unsigned int struct_list_length);
 UNIFEX_TERM test_my_enum(UnifexEnv *env, MyEnum in_enum);
+UNIFEX_TERM test_my_explicit_enum(UnifexEnv *env, MyExplicitEnum in_enum);
 UNIFEX_TERM test_nil_bugged(UnifexEnv *env);
 UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv *env, int in_int);
 
@@ -188,6 +206,8 @@ UNIFEX_TERM test_list_of_structs_result_ok(UnifexEnv *env,
                                            simple_struct const *out_struct_list,
                                            unsigned int out_struct_list_length);
 UNIFEX_TERM test_my_enum_result_ok(UnifexEnv *env, MyEnum out_enum);
+UNIFEX_TERM test_my_explicit_enum_result_ok(UnifexEnv *env,
+                                            MyExplicitEnum out_enum);
 UNIFEX_TERM test_nil_bugged_result_nil(UnifexEnv *env);
 UNIFEX_TERM test_nil_tuple_bugged_result_nil(UnifexEnv *env, int out_int);
 
