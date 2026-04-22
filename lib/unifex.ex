@@ -20,7 +20,7 @@ defmodule Unifex do
   end
 
   @impl Preprocessor
-  def preprocess_native(native) do
+  def preprocess_native(%Native{} = native) do
     %Native{app: app, name: name, interface: interface, language: language} = native
 
     {:ok, project_dir} = Bundlex.Helper.MixHelper.get_project_dir(app)
