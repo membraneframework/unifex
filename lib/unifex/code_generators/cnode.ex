@@ -340,7 +340,7 @@ defmodule Unifex.CodeGenerators.CNode do
         {n, 1} when n > 1 ->
           []
 
-        {_, tuple_size} ->
+        {_n, tuple_size} ->
           [~g<ei_x_encode_tuple_header(out_buff, #{tuple_size});>]
       end
 
