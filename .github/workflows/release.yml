@@ -21,3 +21,7 @@ jobs:
     uses: membraneframework/membrane_actions/.github/workflows/hex-publish.yml@main
     secrets:
       HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+
+  gh_release:
+    needs: [hex_publish]
+    uses: membraneframework/membrane_actions/.github/workflows/github-release.yml@main
