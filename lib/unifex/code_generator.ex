@@ -7,7 +7,7 @@ defmodule Unifex.CodeGenerator do
 
   @type t :: module
   @type code_t :: String.t()
-  @type generated_code_t :: {header :: code_t, source :: code_t, generator :: t}
+  @type generated_code_t :: %{header: code_t, types_header: code_t, source: code_t, generator: t}
 
   @callback identification_constant() :: String.t()
   @callback interface_io_name() :: String.t()
