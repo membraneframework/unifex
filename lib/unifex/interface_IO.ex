@@ -5,6 +5,7 @@ defmodule Unifex.InterfaceIO do
 
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
+  @types_header_sufix "_types_definitions"
 
   @spec user_header_path(Specs.native_name_t()) :: String.t()
   def user_header_path(name) do
@@ -34,7 +35,7 @@ defmodule Unifex.InterfaceIO do
           extension :: String.t()
         ) :: String.t()
   def out_path(name, dir, generator, extension \\ "") do
-    Path.join(out_dir(dir, generator), "#{name}#{extension}")
+    out_dir(dir, generator) |> Path.join("#{name}#{extension}")
   end
 
   @spec out_dir(base_dir :: String.t(), CodeGenerator.t()) :: String.t()
@@ -47,10 +48,14 @@ defmodule Unifex.InterfaceIO do
           dir :: String.t(),
           code :: CodeGenerator.generated_code_t()
         ) :: :ok
-  def store_interface!(name, dir, {header, source, generator}) do
+  def store_interface!(name, dir, generated_code) do
+    %{header: header, types_header: types_header, source: source, generator: generator} =
+      generated_code
+
     File.mkdir_p!(out_dir(dir, generator))
     out_base_path = out_path(name, dir, generator)
     File.write!("#{out_base_path}.h", header)
+    File.write!("#{out_base_path}#{@types_header_sufix}.h", types_header)
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
 
@@ -62,6 +67,7 @@ defmodule Unifex.InterfaceIO do
           "-style={BasedOnStyle: llvm, IndentWidth: 2}",
           "-i",
           "#{out_base_path}.h",
+          "#{out_base_path}#{@types_header_sufix}.h",
           "#{out_base_path}.c",
           "#{out_base_path}.cpp"
         ]
@@ -93,5 +99,10 @@ defmodule Unifex.InterfaceIO do
     """)
 
     :ok
+  end
+
+  @spec types_header_filename(Specs.native_name_t()) :: String.t()
+  def types_header_filename(name) do
+    "#{name}#{@types_header_sufix}.h"
   end
 end

@@ -11,7 +11,8 @@ defmodule Unifex.CodeGenerator do
 
   @callback identification_constant() :: String.t()
   @callback interface_io_name() :: String.t()
-  @callback generate_header(specs :: Specs.t()) :: code_t
+  @callback generate_main_header(specs :: Specs.t()) :: code_t
+  @callback generate_types_header(specs :: Specs.t()) :: code_t
   @callback generate_source(specs :: Specs.t()) :: code_t
 
   @doc """
@@ -20,9 +21,16 @@ defmodule Unifex.CodeGenerator do
   @spec generate_code(Specs.t()) :: [generated_code_t()]
   def generate_code(specs) do
     for generator <- get_generators(specs) do
-      header = generator.generate_header(specs)
+      header = generator.generate_main_header(specs)
+      types_header = generator.generate_types_header(specs)
       source = generator.generate_source(specs)
-      {header, source, generator}
+
+      %{
+        header: header,
+        types_header: types_header,
+        source: source,
+        generator: generator
+      }
     end
   end
 

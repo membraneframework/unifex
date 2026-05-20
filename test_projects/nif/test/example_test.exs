@@ -21,7 +21,7 @@ defmodule ExampleTest do
   end
 
   test "float" do
-    assert {:ok, 0.0} = Example.test_float(0.0)
+    assert {:ok, +0.0} = Example.test_float(+0.0)
     assert {:ok, 0.1} = Example.test_float(0.1)
     assert {:ok, -0.1} = Example.test_float(-0.1)
     refute match?({:ok, 1}, Example.test_float(1.0))

@@ -19,7 +19,7 @@ defmodule Example.BundlexProject do
 
   def project() do
     [
-      natives: natives(Bundlex.platform())
+      natives: natives(Bundlex.get_target())
     ]
   end
 

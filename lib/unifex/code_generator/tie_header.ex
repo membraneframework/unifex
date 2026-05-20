@@ -6,7 +6,10 @@ defmodule Unifex.CodeGenerator.TieHeader do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator
 
-  @spec generate_header(name :: Unifex.Specs.native_name_t(), generators :: [CodeGenerator.t()]) ::
+  @spec generate_header(
+          name :: Unifex.Specs.native_name_t(),
+          generators :: [CodeGenerator.t()]
+        ) ::
           CodeGenerator.code_t()
   def generate_header(name, generators) do
     ~g"""
@@ -21,9 +24,15 @@ defmodule Unifex.CodeGenerator.TieHeader do
   end
 
   defp generate_include(name, generator) do
+    main_header = "#{generator.interface_io_name()}/#{name}.h"
+
+    types_header =
+      "#{generator.interface_io_name()}/#{Unifex.InterfaceIO.types_header_filename(name)}"
+
     ~g"""
     #ifdef #{generator.identification_constant()}
-    #include "#{generator.interface_io_name()}/#{name}.h"
+    #include "#{main_header}"
+    #include "#{types_header}"
     #endif
     """
   end

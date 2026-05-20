@@ -1,0 +1,29 @@
+
+#ifndef EXAMPLE_TYPES_DEFINITIONS
+#define EXAMPLE_TYPES_DEFINITIONS
+
+// required for ei.h to work
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
+
+#include <ei.h>
+#include <ei_connect.h>
+
+#include <unifex/unifex.h>
+#include <unifex/cnode.h>
+#include <unifex/payload.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
