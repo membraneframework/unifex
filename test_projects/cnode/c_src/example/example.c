@@ -3,6 +3,7 @@
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
   state->int_field = 42;
+  state->enum_field = MY_ENUM_OPTION_ONE;
   UNIFEX_TERM res = init_result_ok(env, state);
   unifex_release_state(env, state);
   return res;

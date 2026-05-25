@@ -18,6 +18,7 @@ UNIFEX_TERM test_nil_tuple(UnifexEnv *env, int in_int) {
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
   state->int_field = 42;
+  state->enum_field = MY_ENUM_OPTION_ONE;
   UNIFEX_TERM res = init_result_ok(env, example_was_handle_load_called, state);
   unifex_release_state(env, state);
   return res;

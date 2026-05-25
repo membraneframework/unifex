@@ -6,4 +6,5 @@ typedef struct MyState MyState;
 struct MyState {
   int int_field;
   my_struct struct_field;
+  MyEnum enum_field;
 };

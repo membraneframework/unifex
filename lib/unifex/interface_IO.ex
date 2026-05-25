@@ -5,7 +5,7 @@ defmodule Unifex.InterfaceIO do
 
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
-  @types_header_sufix "_types"
+  @types_header_suffix "_types"
 
   @spec user_header_path(Specs.native_name_t()) :: String.t()
   def user_header_path(name) do
@@ -55,14 +55,14 @@ defmodule Unifex.InterfaceIO do
     File.mkdir_p!(out_dir(dir, generator))
     out_base_path = out_path(name, dir, generator)
     File.write!("#{out_base_path}.h", header)
-    File.write!("#{out_base_path}#{@types_header_sufix}.h", types_header)
+    File.write!("#{out_base_path}#{@types_header_suffix}.h", types_header)
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
 
     :ok =
       run_clang_format_if_installed([
         "#{out_base_path}.h",
-        "#{out_base_path}#{@types_header_sufix}.h",
+        "#{out_base_path}#{@types_header_suffix}.h",
         "#{out_base_path}.c",
         "#{out_base_path}.cpp"
       ])
@@ -115,6 +115,6 @@ defmodule Unifex.InterfaceIO do
 
   @spec types_header_filename(Specs.native_name_t()) :: String.t()
   def types_header_filename(name) do
-    "#{name}#{@types_header_sufix}.h"
+    "#{name}#{@types_header_suffix}.h"
   end
 end
