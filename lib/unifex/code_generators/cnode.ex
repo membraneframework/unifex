@@ -21,27 +21,13 @@ defmodule Unifex.CodeGenerators.CNode do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #pragma once
-
-    #include <stdio.h>
-    #include <stdint.h>
-    #include <string.h>
-    #include <stdlib.h>
-
-    // required for ei.h to work
-    #ifndef _REENTRANT
-    #define _REENTRANT
-    #endif
-
-    #include <ei.h>
-    #include <ei_connect.h>
-
-    #include <unifex/unifex.h>
-    #include <unifex/cnode.h>
-    #include <unifex/payload.h>
-    #include "#{InterfaceIO.user_header_path(specs.name)}"
+    #{pargma_and_includes()}
+    // we disable clang-format here, because types header might contain definitions of some types
+    // used by the user header
+    // clang-format off
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
-
+    #include "#{InterfaceIO.user_header_path(specs.name)}"
+    // clang-format on
 
     #ifdef __cplusplus
     extern "C" {
@@ -100,7 +86,7 @@ defmodule Unifex.CodeGenerators.CNode do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #include <stdio.h>
+    #{pargma_and_includes()}
     #include "#{specs.name}.h"
 
     #{generate_state_related_functions(specs)}
@@ -112,6 +98,29 @@ defmodule Unifex.CodeGenerators.CNode do
     #{generate_handle_message(specs.functions_args)}
 
     #{generate_main_function(specs.callbacks)}
+    """
+  end
+
+  defp pargma_and_includes() do
+    ~g"""
+    #pragma once
+
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <string.h>
+    #include <stdlib.h>
+
+    // required for ei.h to work
+    #ifndef _REENTRANT
+    #define _REENTRANT
+    #endif
+
+    #include <ei.h>
+    #include <ei_connect.h>
+
+    #include <unifex/unifex.h>
+    #include <unifex/cnode.h>
+    #include <unifex/payload.h>
     """
   end
 

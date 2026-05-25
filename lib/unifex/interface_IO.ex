@@ -5,7 +5,7 @@ defmodule Unifex.InterfaceIO do
 
   @spec_name_sufix ".spec.exs"
   @generated_dir_name "_generated"
-  @types_header_sufix "_types_definitions"
+  @types_header_sufix "_types"
 
   @spec user_header_path(Specs.native_name_t()) :: String.t()
   def user_header_path(name) do
@@ -79,12 +79,24 @@ defmodule Unifex.InterfaceIO do
 
   @spec store_tie_header!(Specs.native_name_t(), dir :: String.t(), CodeGenerator.code_t()) ::
           :ok
-  def store_tie_header!(name, dir, code) do
+  def store_tie_header!(name, dir, code), do: do_store_tie_header!(name, dir, code, :main)
+
+  @spec store_types_tie_header!(Specs.native_name_t(), dir :: String.t(), CodeGenerator.code_t()) ::
+          :ok
+  def store_types_tie_header!(name, dir, code), do: do_store_tie_header!(name, dir, code, :types)
+
+  defp do_store_tie_header!(name, dir, code, mode) when mode in [:main, :types] do
     out_dir_name = Path.join(dir, @generated_dir_name)
     File.mkdir_p!(out_dir_name)
-    out_base_path = Path.join(out_dir_name, "#{name}.h")
+
+    filename =
+      case mode do
+        :main -> "#{name}.h"
+        :types -> "#{name}#{@types_header_sufix}.h"
+      end
+
+    out_base_path = Path.join(out_dir_name, filename)
     File.write!(out_base_path, code)
-    :ok
   end
 
   @spec store_gitignore!(String.t()) :: :ok

@@ -21,15 +21,13 @@ defmodule Unifex.CodeGenerators.NIF do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #pragma once
-
-    #include <stdio.h>
-    #include <stdint.h>
-    #include <erl_nif.h>
-    #include <unifex/unifex.h>
-    #include <unifex/payload.h>
-    #include "#{InterfaceIO.user_header_path(specs.name)}"
+    #{pargma_and_includes()}
+    // we disable clang-format here, because types header might contain definitions of some types
+    // used by the user header
+    // clang-format off
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
+    #include "#{InterfaceIO.user_header_path(specs.name)}"
+    // clang-format on
 
     #ifdef __cplusplus
     extern "C" {
@@ -92,7 +90,7 @@ defmodule Unifex.CodeGenerators.NIF do
   @impl CodeGenerator
   def generate_types_header(specs) do
     ~g"""
-    #pragma once
+    #{pargma_and_includes()}
 
     #ifdef __cplusplus
     extern "C" {
@@ -109,6 +107,18 @@ defmodule Unifex.CodeGenerators.NIF do
     #ifdef __cplusplus
     }
     #endif
+    """
+  end
+
+  defp pargma_and_includes() do
+    ~g"""
+    #pragma once
+
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <erl_nif.h>
+    #include <unifex/unifex.h>
+    #include <unifex/payload.h>
     """
   end
 

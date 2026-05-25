@@ -6,33 +6,47 @@ defmodule Unifex.CodeGenerator.TieHeader do
   import Unifex.CodeGenerator.Utils, only: [sigil_g: 2]
   alias Unifex.CodeGenerator
 
-  @spec generate_header(
+  @spec generate_main_header(
           name :: Unifex.Specs.native_name_t(),
           generators :: [CodeGenerator.t()]
         ) ::
           CodeGenerator.code_t()
-  def generate_header(name, generators) do
+  def generate_main_header(name, generators) do
     ~g"""
     #pragma once
-
-    #{generate_includes(name, generators)}
+    #{generate_includes(name, :main, generators)}
     """
   end
 
-  defp generate_includes(name, generators) do
-    Enum.map_join(generators, "\n", &generate_include(name, &1))
+  @spec generate_types_header(
+          name :: Unifex.Specs.native_name_t(),
+          generators :: [CodeGenerator.t()]
+        ) ::
+          CodeGenerator.code_t()
+  def generate_types_header(name, generators) do
+    ~g"""
+    #pragma once
+    #{generate_includes(name, :types, generators)}
+    """
   end
 
-  defp generate_include(name, generator) do
-    main_header = "#{generator.interface_io_name()}/#{name}.h"
+  defp generate_includes(name, mode, generators) do
+    Enum.map_join(generators, "\n", &generate_include(name, &1, mode))
+  end
+
+  defp generate_include(name, generator, mode) do
+    maybe_main_header =
+      if mode == :main,
+        do: "#include \"#{generator.interface_io_name()}/#{name}.h\"",
+        else: ""
 
     types_header =
-      "#{generator.interface_io_name()}/#{Unifex.InterfaceIO.types_header_filename(name)}"
+      "#include \"#{generator.interface_io_name()}/#{Unifex.InterfaceIO.types_header_filename(name)}\""
 
     ~g"""
     #ifdef #{generator.identification_constant()}
-    #include "#{main_header}"
-    #include "#{types_header}"
+    #{maybe_main_header}
+    #{types_header}
     #endif
     """
   end
