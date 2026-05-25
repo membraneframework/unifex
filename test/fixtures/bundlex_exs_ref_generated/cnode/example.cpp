@@ -1,5 +1,23 @@
-#include "example.h"
+#pragma once
+
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// required for ei.h to work
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
+
+#include <ei.h>
+#include <ei_connect.h>
+
+#include <unifex/cnode.h>
+#include <unifex/payload.h>
+#include <unifex/unifex.h>
+
+#include "example.h"
 
 void unifex_cnode_destroy_state(UnifexEnv *env, void *state) {
   UNIFEX_MAYBE_UNUSED(env);

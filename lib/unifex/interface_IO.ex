@@ -59,20 +59,13 @@ defmodule Unifex.InterfaceIO do
     File.write!("#{out_base_path}.c", source)
     File.write!("#{out_base_path}.cpp", source)
 
-    # Format generated code only when clang-format is available
-    if Unifex.Utils.clang_format_installed?() do
-      System.cmd(
-        "clang-format",
-        [
-          "-style={BasedOnStyle: llvm, IndentWidth: 2}",
-          "-i",
-          "#{out_base_path}.h",
-          "#{out_base_path}#{@types_header_sufix}.h",
-          "#{out_base_path}.c",
-          "#{out_base_path}.cpp"
-        ]
-      )
-    end
+    :ok =
+      run_clang_format_if_installed([
+        "#{out_base_path}.h",
+        "#{out_base_path}#{@types_header_sufix}.h",
+        "#{out_base_path}.c",
+        "#{out_base_path}.cpp"
+      ])
 
     :ok
   end
@@ -96,8 +89,28 @@ defmodule Unifex.InterfaceIO do
       end
 
     out_base_path = Path.join(out_dir_name, filename)
-    File.write!(out_base_path, code)
+    :ok = File.write!(out_base_path, code)
+    :ok = run_clang_format_if_installed(out_base_path)
+
+    :ok
   end
+
+  defp run_clang_format_if_installed(files) when is_list(files) do
+    if Unifex.Utils.clang_format_installed?() do
+      System.cmd(
+        "clang-format",
+        [
+          "-style={BasedOnStyle: llvm, IndentWidth: 2}",
+          "-i"
+        ] ++ files
+      )
+    end
+
+    :ok
+  end
+
+  defp run_clang_format_if_installed(file) when is_binary(file),
+    do: run_clang_format_if_installed([file])
 
   @spec store_gitignore!(String.t()) :: :ok
   def store_gitignore!(dir) do

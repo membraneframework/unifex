@@ -22,12 +22,8 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #{pargma_and_includes()}
-    // we disable clang-format here, because types header might contain definitions of some types
-    // used by the user header
-    // clang-format off
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
-    // clang-format on
 
     #ifdef __cplusplus
     extern "C" {
@@ -59,7 +55,6 @@ defmodule Unifex.CodeGenerators.CNode do
   @impl CodeGenerator
   def generate_types_header(specs) do
     ~g"""
-
     #pragma once
 
     #ifdef __cplusplus
@@ -77,7 +72,6 @@ defmodule Unifex.CodeGenerators.CNode do
     #ifdef __cplusplus
     }
     #endif
-
     """
   end
 

@@ -24,23 +24,6 @@ typedef enum MyEnum_t MyEnum;
 #endif
 
 #ifdef __cplusplus
-enum MyExplicitEnum {
-  MY_EXPLICIT_ENUM_A = 1,
-  MY_EXPLICIT_ENUM_B,
-  MY_EXPLICIT_ENUM_C = 4,
-  MY_EXPLICIT_ENUM_D = 8
-};
-#else
-enum MyExplicitEnum_t {
-  MY_EXPLICIT_ENUM_A = 1,
-  MY_EXPLICIT_ENUM_B,
-  MY_EXPLICIT_ENUM_C = 4,
-  MY_EXPLICIT_ENUM_D = 8
-};
-typedef enum MyExplicitEnum_t MyExplicitEnum;
-#endif
-
-#ifdef __cplusplus
 struct my_struct {
   int id;
   int *data;
@@ -55,19 +38,6 @@ struct my_struct_t {
   char *name;
 };
 typedef struct my_struct_t my_struct;
-#endif
-
-#ifdef __cplusplus
-struct simple_struct {
-  int id;
-  char *name;
-};
-#else
-struct simple_struct_t {
-  int id;
-  char *name;
-};
-typedef struct simple_struct_t simple_struct;
 #endif
 
 #ifdef __cplusplus

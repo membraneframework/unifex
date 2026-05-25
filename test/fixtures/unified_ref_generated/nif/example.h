@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../../example.h"
-#include "example_types_definitions.h"
 #include <erl_nif.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <unifex/payload.h>
 #include <unifex/unifex.h>
+
+#include "../../example.h"
+#include "example_types.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -22,12 +22,8 @@ defmodule Unifex.CodeGenerators.NIF do
 
     ~g"""
     #{pargma_and_includes()}
-    // we disable clang-format here, because types header might contain definitions of some types
-    // used by the user header
-    // clang-format off
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
-    // clang-format on
 
     #ifdef __cplusplus
     extern "C" {

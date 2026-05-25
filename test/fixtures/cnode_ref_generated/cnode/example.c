@@ -1,5 +1,23 @@
-#include "example.h"
+#pragma once
+
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// required for ei.h to work
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
+
+#include <ei.h>
+#include <ei_connect.h>
+
+#include <unifex/cnode.h>
+#include <unifex/payload.h>
+#include <unifex/unifex.h>
+
+#include "example.h"
 
 UnifexState *unifex_alloc_state(UnifexEnv *_env) {
   UNIFEX_UNUSED(_env);

@@ -61,21 +61,23 @@ defmodule Unifex.IntegrationTest do
   end
 
   defp test_particular(project, interface) do
-    test_tie_header(project)
-    test_main_files(project, interface)
-  end
+    tie_headers =
+      File.ls!("test_projects/#{project}/c_src/example/_generated")
+      |> Enum.filter(&String.ends_with?(&1, ".h"))
 
-  defp test_tie_header(project) do
-    assert File.read!("test_projects/#{project}/c_src/example/_generated/example.h") ==
-             File.read!("test/fixtures/#{project}_ref_generated/example.h")
-  end
+    assert Enum.count(tie_headers) == 2
 
-  defp test_main_files(project, interface) do
-    "test/fixtures/#{project}_ref_generated/#{interface}"
-    |> File.ls!()
-    |> Enum.each(fn ref ->
-      assert File.read!("test_projects/#{project}/c_src/example/_generated/#{interface}/#{ref}") ==
-               File.read!("test/fixtures/#{project}_ref_generated/#{interface}/#{ref}")
+    main_files =
+      File.ls!("test_projects/#{project}/c_src/example/_generated/#{interface}")
+      |> Enum.map(&Path.join("#{interface}", &1))
+
+    (tie_headers ++ main_files)
+    |> Enum.each(fn file ->
+      ref_file_path = "test/fixtures/#{project}_ref_generated/#{file}"
+      generated_file_path = "test_projects/#{project}/c_src/example/_generated/#{file}"
+
+      assert File.exists?(ref_file_path)
+      assert File.read!(generated_file_path) == File.read!(ref_file_path)
     end)
   end
 

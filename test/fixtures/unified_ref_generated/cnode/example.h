@@ -13,11 +13,12 @@
 #include <ei.h>
 #include <ei_connect.h>
 
-#include "../../example.h"
-#include "example_types_definitions.h"
 #include <unifex/cnode.h>
 #include <unifex/payload.h>
 #include <unifex/unifex.h>
+
+#include "../../example.h"
+#include "example_types.h"
 
 #ifdef __cplusplus
 extern "C" {
