@@ -72,23 +72,10 @@ defmodule Unifex.InterfaceIO do
 
   @spec store_tie_header!(Specs.native_name_t(), dir :: String.t(), CodeGenerator.code_t()) ::
           :ok
-  def store_tie_header!(name, dir, code), do: do_store_tie_header!(name, dir, code, :main)
-
-  @spec store_types_tie_header!(Specs.native_name_t(), dir :: String.t(), CodeGenerator.code_t()) ::
-          :ok
-  def store_types_tie_header!(name, dir, code), do: do_store_tie_header!(name, dir, code, :types)
-
-  defp do_store_tie_header!(name, dir, code, mode) when mode in [:main, :types] do
+  def store_tie_header!(name, dir, code) do
     out_dir_name = Path.join(dir, @generated_dir_name)
     File.mkdir_p!(out_dir_name)
-
-    filename =
-      case mode do
-        :main -> "#{name}.h"
-        :types -> "#{name}#{@types_header_sufix}.h"
-      end
-
-    out_base_path = Path.join(out_dir_name, filename)
+    out_base_path = Path.join(out_dir_name, "#{name}.h")
     :ok = File.write!(out_base_path, code)
     :ok = run_clang_format_if_installed(out_base_path)
 

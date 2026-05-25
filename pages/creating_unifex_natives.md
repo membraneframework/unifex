@@ -152,6 +152,40 @@ UNIFEX_TERM example_function(UnifexEnv *env, MyEnum in_enum, nested_struct in_st
 ```
 
 If you want to pass enum to Unifex function on Elixir side, you have to use atom (this same, that was used in enum definition in `*.spec.exs` file). By analogy, the result of Unifex function returning enum will be visible as an atom on the Elixir side. What is important, declaration of a specific struct in `*.spec.exs` will not automatically make it available in your Elixir code - you are responsible for providing struct module on your own.
+
+### Using custom types in your state
+
+Your native `state_type` struct can hold fields of any enum or struct declared in `*.spec.exs`. Forward-declare the state above the generated header include, and put the full definition below it.
+
+For example, with this `example.spec.exs`:
+
+```elixir
+state_type "MyState"
+
+type my_struct :: %My.Struct{
+  id: int,
+  name: string
+}
+
+type my_enum :: :option_one | :option_two | :option_three
+```
+
+your `example.h` becomes:
+
+```c
+#pragma once
+
+typedef struct MyState MyState;
+
+#include "_generated/example.h"
+
+struct MyState {
+  int int_field;
+  my_struct struct_field;
+  MyEnum enum_field;
+};
+```
+
 ## Running code
 
 ### NIF

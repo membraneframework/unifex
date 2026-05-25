@@ -65,7 +65,7 @@ defmodule Unifex.IntegrationTest do
       File.ls!("test_projects/#{project}/c_src/example/_generated")
       |> Enum.filter(&String.ends_with?(&1, ".h"))
 
-    assert Enum.count(tie_headers) == 2
+    assert Enum.count(tie_headers) == 1
 
     main_files =
       File.ls!("test_projects/#{project}/c_src/example/_generated/#{interface}")

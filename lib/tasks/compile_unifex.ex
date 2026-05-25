@@ -21,11 +21,8 @@ defmodule Mix.Tasks.Compile.Unifex do
 
       generators = codes |> Enum.map(& &1.generator)
 
-      tie_header = Unifex.CodeGenerator.TieHeader.generate_main_header(name, generators)
+      tie_header = Unifex.CodeGenerator.TieHeader.generate_header(name, generators)
       InterfaceIO.store_tie_header!(name, dir, tie_header)
-
-      types_tie_header = Unifex.CodeGenerator.TieHeader.generate_types_header(name, generators)
-      InterfaceIO.store_types_tie_header!(name, dir, types_tie_header)
 
       InterfaceIO.store_gitignore!(dir)
     end)
