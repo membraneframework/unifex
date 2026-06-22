@@ -85,6 +85,8 @@ defmodule Unifex.CodeGenerators.NIF do
 
   @impl CodeGenerator
   def generate_types_header(specs) do
+    ctx = Common.create_ctx(specs)
+    
     ~g"""
     #{pargma_and_includes()}
 
@@ -94,11 +96,11 @@ defmodule Unifex.CodeGenerators.NIF do
 
     #{Utils.generate_enums_definitions(specs.enums,
     &Common.generate_enum_native_definition/2,
-    %{})}
+    ctx)}
 
     #{Utils.generate_structs_definitions(specs.structs,
     &generate_struct_native_definition/2,
-    %{})}
+    ctx)}
 
     #ifdef __cplusplus
     }
