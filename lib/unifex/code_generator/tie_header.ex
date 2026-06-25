@@ -24,8 +24,8 @@ defmodule Unifex.CodeGenerator.TieHeader do
 
     ~g"""
     #ifdef #{generator.identification_constant()}
-    #include "#{generator.interface_io_name()}/#{name}.h"
     #include "#{generator.interface_io_name()}/#{types_header_filename}"
+    #include "#{generator.interface_io_name()}/#{name}.h"
     #endif
     """
   end

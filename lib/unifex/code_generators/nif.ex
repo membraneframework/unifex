@@ -21,7 +21,7 @@ defmodule Unifex.CodeGenerators.NIF do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #{pargma_and_includes()}
+    #{pragma_and_includes()}
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
 
@@ -86,9 +86,9 @@ defmodule Unifex.CodeGenerators.NIF do
   @impl CodeGenerator
   def generate_types_header(specs) do
     ctx = Common.create_ctx(specs)
-    
+
     ~g"""
-    #{pargma_and_includes()}
+    #{pragma_and_includes()}
 
     #ifdef __cplusplus
     extern "C" {
@@ -108,7 +108,7 @@ defmodule Unifex.CodeGenerators.NIF do
     """
   end
 
-  defp pargma_and_includes() do
+  defp pragma_and_includes() do
     ~g"""
     #pragma once
 
