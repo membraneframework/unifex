@@ -9,17 +9,16 @@ int handle_load(UnifexEnv *env, void **priv_data) {
   return 0;
 }
 
-UNIFEX_TERM test_nil(UnifexEnv* env) {
-  return test_nil_result_nil(env);
-}
+UNIFEX_TERM test_nil(UnifexEnv *env) { return test_nil_result_nil(env); }
 
-UNIFEX_TERM test_nil_tuple(UnifexEnv* env, int in_int) {
+UNIFEX_TERM test_nil_tuple(UnifexEnv *env, int in_int) {
   return test_nil_tuple_result_nil(env, in_int);
 }
 
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
-  state->a = 42;
+  state->int_field = 42;
+  state->enum_field = MY_ENUM_OPTION_ONE;
   UNIFEX_TERM res = init_result_ok(env, example_was_handle_load_called, state);
   unifex_release_state(env, state);
   return res;
@@ -82,27 +81,29 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct) {
   return test_nested_struct_result_ok(env, in_struct);
 }
 
-UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct* structs, unsigned int structs_length) {
+UNIFEX_TERM test_list_of_structs(UnifexEnv *env, simple_struct *structs,
+                                 unsigned int structs_length) {
   return test_list_of_structs_result_ok(env, structs, structs_length);
 }
 
-UNIFEX_TERM test_nested_struct_list(UnifexEnv *env, nested_struct_list in_struct) {
+UNIFEX_TERM test_nested_struct_list(UnifexEnv *env,
+                                    nested_struct_list in_struct) {
   return test_nested_struct_list_result_ok(env, in_struct);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
-  state->a = 0;
+  state->int_field = 0;
 }
 
 // tests for bugged version of functions returning nil.
 // these tests should be removed in unifex v2.0.0. For more information check:
 // https://github.com/membraneframework/membrane_core/issues/758
 
-UNIFEX_TERM test_nil_bugged(UnifexEnv* env) {
+UNIFEX_TERM test_nil_bugged(UnifexEnv *env) {
   return test_nil_bugged_result_(env);
 }
 
-UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv* env, int in_int) {
+UNIFEX_TERM test_nil_tuple_bugged(UnifexEnv *env, int in_int) {
   return test_nil_tuple_bugged_result_(env, in_int);
 }

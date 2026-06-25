@@ -17,28 +17,12 @@ defmodule Unifex.CodeGenerators.CNode do
   def interface_io_name(), do: "cnode"
 
   @impl CodeGenerator
-  def generate_header(specs) do
+  def generate_main_header(specs) do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #pragma once
-
-    #include <stdio.h>
-    #include <stdint.h>
-    #include <string.h>
-    #include <stdlib.h>
-
-    // required for ei.h to work
-    #ifndef _REENTRANT
-    #define _REENTRANT
-    #endif
-
-    #include <ei.h>
-    #include <ei_connect.h>
-
-    #include <unifex/unifex.h>
-    #include <unifex/cnode.h>
-    #include <unifex/payload.h>
+    #{pragma_and_includes()}
+    #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
 
     #ifdef __cplusplus
@@ -47,13 +31,6 @@ defmodule Unifex.CodeGenerators.CNode do
 
     #{generate_state_related_declarations(specs)}
 
-    #{Utils.generate_enums_definitions(specs.enums,
-    &Common.generate_enum_native_definition/2,
-    ctx)}
-
-    #{Utils.generate_structs_definitions(specs.structs,
-    &generate_struct_native_definition/2,
-    ctx)}
 
     #{Utils.generate_functions_declarations(specs.functions_args,
     &generate_implemented_function_declaration/2,
@@ -76,11 +53,34 @@ defmodule Unifex.CodeGenerators.CNode do
   end
 
   @impl CodeGenerator
+  def generate_types_header(specs) do
+    ~g"""
+    #pragma once
+
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
+    #{Utils.generate_enums_definitions(specs.enums,
+    &Common.generate_enum_native_definition/2,
+    %{})}
+
+    #{Utils.generate_structs_definitions(specs.structs,
+    &generate_struct_native_definition/2,
+    %{})}
+
+    #ifdef __cplusplus
+    }
+    #endif
+    """
+  end
+
+  @impl CodeGenerator
   def generate_source(specs) do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #include <stdio.h>
+    #{pragma_and_includes()}
     #include "#{specs.name}.h"
 
     #{generate_state_related_functions(specs)}
@@ -92,6 +92,29 @@ defmodule Unifex.CodeGenerators.CNode do
     #{generate_handle_message(specs.functions_args)}
 
     #{generate_main_function(specs.callbacks)}
+    """
+  end
+
+  defp pragma_and_includes() do
+    ~g"""
+    #pragma once
+
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <string.h>
+    #include <stdlib.h>
+
+    // required for ei.h to work
+    #ifndef _REENTRANT
+    #define _REENTRANT
+    #endif
+
+    #include <ei.h>
+    #include <ei_connect.h>
+
+    #include <unifex/unifex.h>
+    #include <unifex/cnode.h>
+    #include <unifex/payload.h>
     """
   end
 

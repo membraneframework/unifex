@@ -36,7 +36,7 @@ defmodule ExampleTest do
   end
 
   test "float", context do
-    assert {:ok, 0.0} = Unifex.CNode.call(context[:cnode], :test_float, [0.0])
+    assert {:ok, +0.0} = Unifex.CNode.call(context[:cnode], :test_float, [+0.0])
     assert {:ok, 0.1} = Unifex.CNode.call(context[:cnode], :test_float, [0.1])
     assert {:ok, -0.1} = Unifex.CNode.call(context[:cnode], :test_float, [-0.1])
     refute match?({:ok, 1}, Unifex.CNode.call(context[:cnode], :test_float, [1.0]))
