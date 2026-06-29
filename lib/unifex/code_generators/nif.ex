@@ -22,6 +22,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
     ~g"""
     #pragma once
+
     #{includes()}
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
@@ -90,6 +91,7 @@ defmodule Unifex.CodeGenerators.NIF do
 
     ~g"""
     #pragma once
+
     #{includes()}
 
     #ifdef __cplusplus

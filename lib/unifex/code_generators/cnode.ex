@@ -22,6 +22,7 @@ defmodule Unifex.CodeGenerators.CNode do
 
     ~g"""
     #pragma once
+
     #{includes()}
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
@@ -98,8 +99,6 @@ defmodule Unifex.CodeGenerators.CNode do
 
   defp includes() do
     ~g"""
-    #pragma once
-
     #include <stdio.h>
     #include <stdint.h>
     #include <string.h>
