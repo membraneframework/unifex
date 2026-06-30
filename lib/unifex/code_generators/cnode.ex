@@ -21,7 +21,9 @@ defmodule Unifex.CodeGenerators.CNode do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #{pragma_and_includes()}
+    #pragma once
+
+    #{includes()}
     #include "#{InterfaceIO.types_header_filename(specs.name)}"
     #include "#{InterfaceIO.user_header_path(specs.name)}"
 
@@ -80,7 +82,7 @@ defmodule Unifex.CodeGenerators.CNode do
     ctx = Common.create_ctx(specs)
 
     ~g"""
-    #{pragma_and_includes()}
+    #{includes()}
     #include "#{specs.name}.h"
 
     #{generate_state_related_functions(specs)}
@@ -95,10 +97,8 @@ defmodule Unifex.CodeGenerators.CNode do
     """
   end
 
-  defp pragma_and_includes() do
+  defp includes() do
     ~g"""
-    #pragma once
-
     #include <stdio.h>
     #include <stdint.h>
     #include <string.h>
