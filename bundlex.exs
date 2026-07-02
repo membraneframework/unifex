@@ -12,7 +12,7 @@ defmodule Unifex.BundlexProject do
       unifex: [
         deps: [shmex: :shmex],
         src_base: "unifex/nif/unifex",
-        sources: ["unifex.c", "payload.c", "../../logger/logger.c"],
+        sources: ["unifex.c", "payload.c", "../../unifex/logger.c"],
         interface: :nif
       ],
       unifex: [
