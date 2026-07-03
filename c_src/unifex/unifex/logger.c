@@ -3,10 +3,13 @@
  *
  * Provides a thread-safe queue for handling log messages from C code
  * without blocking the main execution thread.
+ *
+ * This implementation works with both NIF and CNode backends.
+ * The user must provide a backend-specific send function via
+ * unifex_logger_register_send_func().
  */
 
 #include "logger.h"
-#include <erl_nif.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
@@ -18,29 +21,61 @@ static UnifexLoggerQueue queue;
 // Target process name
 static const char *target_pid_name = "Elixir.Unifex.Logger";
 
-// Function to send a log message (defined in the user's code or generated)
-static int (*send_log_func)(UnifexEnv *env, UnifexPid pid, int flags,
-                            char const *level, char const *message,
-                            uint64_t timestamp, char **tags,
-                            unsigned int tags_length) = NULL;
+// Function to send a log message (to be provided by the backend)
+static UnifexLoggerSendFunc send_log_func = NULL;
 
-// Register the send function (to be called from NIF load)
-void unifex_logger_register_send_func(int (*func)(UnifexEnv *env, UnifexPid pid,
-                                                  int flags, char const *level,
-                                                  char const *message,
-                                                  uint64_t timestamp, char **tags,
-                                                  unsigned int tags_length)) {
-  send_log_func = func;
-}
+// Global environment reference (for backends that need it, like CNode)
+// This is optional - if set, it will be passed to the send function
+static void *global_env = NULL;
 
-// Note: target_pid_name is const, so this function is not implemented
-// To change the target, modify the target_pid_name constant and recompile
-// void unifex_logger_set_target(const char *name) {
-//   (void)name;
-// }
+// Whether the queue/worker thread are currently initialized. Guards against
+// double-cleanup: a CNode's unifex_cnode_destroy() calls unifex_logger_cleanup()
+// explicitly before tearing down its socket, and the library destructor calls
+// it again at process exit.
+static bool logger_active = false;
 
 // Forward declaration
 void *unifex_logger_worker(void *arg);
+
+static void free_tags_copy(char **tags, unsigned int tags_length) {
+  if (!tags) {
+    return;
+  }
+  for (unsigned int i = 0; i < tags_length; i++) {
+    free((void *)tags[i]);
+  }
+  free(tags);
+}
+
+void unifex_logger_set_target(const char *name) {
+  target_pid_name = name;
+}
+
+const char *unifex_logger_get_target() {
+  return target_pid_name;
+}
+
+uint64_t unifex_logger_get_timestamp() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  // Convert to microseconds since epoch
+  return (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
+}
+
+// Register the send function (to be called from backend initialization)
+void unifex_logger_register_send_func(UnifexLoggerSendFunc func) {
+  send_log_func = func;
+}
+
+// Set the global environment (for backends that need it)
+void unifex_logger_set_env(void *env) {
+  global_env = env;
+}
+
+// Get the global environment
+void *unifex_logger_get_env() {
+  return global_env;
+}
 
 void unifex_logger_init() {
   queue.head = 0;
@@ -52,11 +87,17 @@ void unifex_logger_init() {
   pthread_cond_init(&queue.cond, NULL);
 
   // Start worker thread
-  unifex_thread_create("unifex_logger_worker", &queue.worker_thread,
-                       unifex_logger_worker, NULL);
+  pthread_create(&queue.worker_thread, NULL, unifex_logger_worker, NULL);
+
+  logger_active = true;
 }
 
 void unifex_logger_cleanup() {
+  if (!logger_active) {
+    return;
+  }
+  logger_active = false;
+
   pthread_mutex_lock(&queue.mutex);
   queue.running = false;
   // Signal the worker thread to wake up and exit, while holding the mutex so
@@ -66,7 +107,7 @@ void unifex_logger_cleanup() {
   pthread_mutex_unlock(&queue.mutex);
 
   // Wait for worker thread to finish
-  unifex_thread_join(queue.worker_thread, NULL);
+  pthread_join(queue.worker_thread, NULL);
 
   pthread_mutex_destroy(&queue.mutex);
   pthread_cond_destroy(&queue.cond);
@@ -74,19 +115,14 @@ void unifex_logger_cleanup() {
 
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  
-  // Convert to microseconds since epoch
-  uint64_t timestamp = (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
+  uint64_t timestamp = unifex_logger_get_timestamp();
 
   return unifex_logger_queue_push((char *)level, (char *)message, timestamp,
-                                  (char **)tags, tags_length, 0);
+                                  (char **)tags, tags_length);
 }
 
 bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
-                              char **tags, unsigned int tags_length,
-                              int is_threaded) {
+                              char **tags, unsigned int tags_length) {
   // Create deep copies of the strings since we'll own them now
   char *level_copy = strdup(level);
   char *message_copy = strdup(message);
@@ -109,14 +145,9 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
   }
 
   if (!level_copy || !message_copy || tags_alloc_failed) {
-    free(level_copy);
-    free(message_copy);
-    if (tags_copy) {
-      for (unsigned int i = 0; i < tags_length; i++) {
-        free(tags_copy[i]);
-      }
-      free(tags_copy);
-    }
+    free((void *)level_copy);
+    free((void *)message_copy);
+    free_tags_copy(tags_copy, tags_length);
     return false;
   }
 
@@ -125,14 +156,9 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
   // If queue is full, return false (non-blocking) and free the copies
   if (queue.count >= UNIFEX_LOGGER_MAX_QUEUE_SIZE) {
     pthread_mutex_unlock(&queue.mutex);
-    free(level_copy);
-    free(message_copy);
-    if (tags_copy) {
-      for (unsigned int i = 0; i < tags_length; i++) {
-        free(tags_copy[i]);
-      }
-      free(tags_copy);
-    }
+    free((void *)level_copy);
+    free((void *)message_copy);
+    free_tags_copy(tags_copy, tags_length);
     return false;
   }
 
@@ -142,7 +168,6 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
   queue.messages[queue.tail].timestamp = timestamp;
   queue.messages[queue.tail].tags = tags_copy;
   queue.messages[queue.tail].tags_length = tags_length;
-  queue.messages[queue.tail].is_threaded = is_threaded;
 
   queue.tail = (queue.tail + 1) % UNIFEX_LOGGER_MAX_QUEUE_SIZE;
   queue.count++;
@@ -157,7 +182,7 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
 
 // Worker thread function
 void *unifex_logger_worker(void *arg) {
-  UNIFEX_UNUSED(arg);
+  (void)arg;
 
   while (queue.running) {
     pthread_mutex_lock(&queue.mutex);
@@ -167,7 +192,9 @@ void *unifex_logger_worker(void *arg) {
       pthread_cond_wait(&queue.cond, &queue.mutex);
     }
 
-    if (!queue.running) {
+    // Only stop once shutdown was requested AND the queue has been fully
+    // drained, so messages queued right before shutdown are not lost.
+    if (!queue.running && queue.count == 0) {
       pthread_mutex_unlock(&queue.mutex);
       break;
     }
@@ -181,65 +208,22 @@ void *unifex_logger_worker(void *arg) {
       // Release the mutex while processing to allow more messages to be queued
       pthread_mutex_unlock(&queue.mutex);
 
-      // Send the message to the target process
-      UnifexPid target_pid;
-      int get_pid_flags =
-          msg.is_threaded ? UNIFEX_FROM_CREATED_THREAD : UNIFEX_NO_FLAGS;
-
-      // Try to get the target PID
-      // Note: We pass NULL as env since we're in a worker thread
-      if (unifex_get_pid_by_name(NULL, target_pid_name, get_pid_flags,
-                                 &target_pid)) {
-        // Create an environment for this thread
-        UnifexEnv *env = enif_alloc_env();
-        if (env && send_log_func) {
-          int send_flags =
-              msg.is_threaded ? UNIFEX_SEND_THREADED : UNIFEX_NO_FLAGS;
-          // Call the registered send function
-          send_log_func(env, target_pid, send_flags, msg.level, msg.message,
-                        msg.timestamp, msg.tags, msg.tags_length);
-          // Clear the environment
-          unifex_clear_env(env);
-        } else if (env) {
-          // If no send function registered, create the message manually
-          // and send it directly
-          int send_flags =
-              msg.is_threaded ? UNIFEX_SEND_THREADED : UNIFEX_NO_FLAGS;
-
-          // Create the message tuple: {:unifex_logger, level, message, timestamp,
-          // [tags]}
-          ERL_NIF_TERM term = ({
-            const ERL_NIF_TERM terms[] = {
-                enif_make_atom(env, "unifex_logger"),
-                enif_make_atom(env, msg.level),
-                unifex_string_to_term(env, msg.message),
-                enif_make_uint64(env, msg.timestamp), ({
-                  ERL_NIF_TERM list = enif_make_list(env, 0);
-                  for (int i = msg.tags_length - 1; i >= 0; i--) {
-                    list = enif_make_list_cell(
-                        env, unifex_string_to_term(env, msg.tags[i]), list);
-                  }
-                  list;
-                })};
-            enif_make_tuple_from_array(env, terms, 5);
-          });
-
-          // Send directly using unifex_send
-          unifex_send(env, &target_pid, term, send_flags);
-          unifex_clear_env(env);
-        }
-        // If we couldn't create an env, just free the message
+      // If a send function is registered, use it
+      if (send_log_func) {
+        // Call the registered send function with the global environment
+        // The send function is responsible for:
+        // 1. Using the environment (or creating one if needed)
+        // 2. Finding the target PID
+        // 3. Creating the message term
+        // 4. Sending the message
+        send_log_func(global_env, msg.level, msg.message, msg.timestamp,
+                      msg.tags, msg.tags_length);
       }
-
+      
       // Clean up the message data
-      free(msg.level);
-      free(msg.message);
-      if (msg.tags) {
-        for (unsigned int i = 0; i < msg.tags_length; i++) {
-          free(msg.tags[i]);
-        }
-        free(msg.tags);
-      }
+      free((void *)msg.level);
+      free((void *)msg.message);
+      free_tags_copy(msg.tags, msg.tags_length);
 
       // Re-acquire the mutex for the next iteration
       pthread_mutex_lock(&queue.mutex);
@@ -251,8 +235,13 @@ void *unifex_logger_worker(void *arg) {
   return NULL;
 }
 
-// Initialize the queue when the library is loaded
-static void __attribute__((constructor)) unifex_logger_constructor() {
+// Initialize the queue when the library is loaded. Runs at priority
+// UNIFEX_LOGGER_QUEUE_CTOR_PRIORITY (see logger.h), after the backend's own
+// constructor (UNIFEX_LOGGER_BACKEND_CTOR_PRIORITY) has registered the send
+// function, so the worker thread never starts draining before a send
+// function is available.
+static void __attribute__((
+    constructor(UNIFEX_LOGGER_QUEUE_CTOR_PRIORITY))) unifex_logger_constructor() {
   unifex_logger_init();
 }
 
