@@ -8,6 +8,7 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // Include unifex.h for type definitions
 #include "../nif/unifex/unifex.h"
@@ -22,7 +23,7 @@ extern "C" {
 typedef struct {
   char *level;
   char *message;
-  char *time;
+  uint64_t timestamp;
   char **tags;
   unsigned int tags_length;
   int is_threaded;
@@ -47,16 +48,21 @@ void unifex_logger_init();
 void unifex_logger_cleanup();
 
 // Add a message to the queue (non-blocking, returns false if queue is full)
-bool unifex_logger_queue_push(char *level, char *message, char *time,
+bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
                               char **tags, unsigned int tags_length,
                               int is_threaded);
+
+// Simpler wrapper: log with level, message, and optional tags (auto-generates
+// timestamp)
+bool unifex_log(const char *level, const char *message, const char **tags,
+                unsigned int tags_length);
 
 // Register a custom send function (optional)
 // If not registered, messages are sent directly using unifex_send
 void unifex_logger_register_send_func(int (*func)(UnifexEnv *env, UnifexPid pid,
                                                   int flags, char const *level,
                                                   char const *message,
-                                                  char const *time, char **tags,
+                                                  uint64_t timestamp, char **tags,
                                                   unsigned int tags_length));
 
 #ifdef __cplusplus

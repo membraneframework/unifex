@@ -9,24 +9,26 @@
 #include <erl_nif.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <time.h>
 
 // Global queue instance
 static UnifexLoggerQueue queue;
 
 // Target process name
-static const char *target_pid_name = "Elixir.Unifex.UnifexLogger";
+static const char *target_pid_name = "Elixir.Unifex.Logger";
 
 // Function to send a log message (defined in the user's code or generated)
 static int (*send_log_func)(UnifexEnv *env, UnifexPid pid, int flags,
                             char const *level, char const *message,
-                            char const *time, char **tags,
+                            uint64_t timestamp, char **tags,
                             unsigned int tags_length) = NULL;
 
 // Register the send function (to be called from NIF load)
 void unifex_logger_register_send_func(int (*func)(UnifexEnv *env, UnifexPid pid,
                                                   int flags, char const *level,
                                                   char const *message,
-                                                  char const *time, char **tags,
+                                                  uint64_t timestamp, char **tags,
                                                   unsigned int tags_length)) {
   send_log_func = func;
 }
@@ -66,13 +68,24 @@ void unifex_logger_cleanup() {
   pthread_cond_destroy(&queue.cond);
 }
 
-bool unifex_logger_queue_push(char *level, char *message, char *time,
+bool unifex_log(const char *level, const char *message, const char **tags,
+                unsigned int tags_length) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  
+  // Convert to microseconds since epoch
+  uint64_t timestamp = (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
+
+  return unifex_logger_queue_push((char *)level, (char *)message, timestamp,
+                                  (char **)tags, tags_length, 0);
+}
+
+bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
                               char **tags, unsigned int tags_length,
                               int is_threaded) {
   // Create deep copies of the strings since we'll own them now
   char *level_copy = strdup(level);
   char *message_copy = strdup(message);
-  char *time_copy = strdup(time);
 
   // For tags, we need to copy the array and each string
   char **tags_copy = NULL;
@@ -90,7 +103,6 @@ bool unifex_logger_queue_push(char *level, char *message, char *time,
     pthread_mutex_unlock(&queue.mutex);
     free(level_copy);
     free(message_copy);
-    free(time_copy);
     if (tags_copy) {
       for (unsigned int i = 0; i < tags_length; i++) {
         free(tags_copy[i]);
@@ -103,7 +115,7 @@ bool unifex_logger_queue_push(char *level, char *message, char *time,
   // Add to queue
   queue.messages[queue.tail].level = level_copy;
   queue.messages[queue.tail].message = message_copy;
-  queue.messages[queue.tail].time = time_copy;
+  queue.messages[queue.tail].timestamp = timestamp;
   queue.messages[queue.tail].tags = tags_copy;
   queue.messages[queue.tail].tags_length = tags_length;
   queue.messages[queue.tail].is_threaded = is_threaded;
@@ -161,7 +173,7 @@ void *unifex_logger_worker(void *arg) {
               msg.is_threaded ? UNIFEX_SEND_THREADED : UNIFEX_NO_FLAGS;
           // Call the registered send function
           send_log_func(env, target_pid, send_flags, msg.level, msg.message,
-                        msg.time, msg.tags, msg.tags_length);
+                        msg.timestamp, msg.tags, msg.tags_length);
           // Clear the environment
           unifex_clear_env(env);
         } else if (env) {
@@ -170,14 +182,14 @@ void *unifex_logger_worker(void *arg) {
           int send_flags =
               msg.is_threaded ? UNIFEX_SEND_THREADED : UNIFEX_NO_FLAGS;
 
-          // Create the message tuple: {:unifex_logger, level, message, time,
+          // Create the message tuple: {:unifex_logger, level, message, timestamp,
           // [tags]}
           ERL_NIF_TERM term = ({
             const ERL_NIF_TERM terms[] = {
                 enif_make_atom(env, "unifex_logger"),
                 enif_make_atom(env, msg.level),
                 unifex_string_to_term(env, msg.message),
-                unifex_string_to_term(env, msg.time), ({
+                enif_make_uint64(env, msg.timestamp), ({
                   ERL_NIF_TERM list = enif_make_list(env, 0);
                   for (int i = msg.tags_length - 1; i >= 0; i--) {
                     list = enif_make_list_cell(
@@ -198,7 +210,6 @@ void *unifex_logger_worker(void *arg) {
       // Clean up the message data
       free(msg.level);
       free(msg.message);
-      free(msg.time);
       if (msg.tags) {
         for (unsigned int i = 0; i < msg.tags_length; i++) {
           free(msg.tags[i]);

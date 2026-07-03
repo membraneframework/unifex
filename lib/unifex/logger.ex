@@ -21,9 +21,9 @@ defmodule Unifex.Logger do
   end
 
   @impl true
-  def handle_info({:unifex_logger, level, message, time, tags}, state) do
-    metadata = [tags: tags, unifex_nif: true, timestamp: time]
-    formatted_message = format_message(message, tags, time)
+  def handle_info({:unifex_logger, level, message, timestamp, tags}, state) do
+    metadata = [tags: tags, unifex_nif: true, timestamp: timestamp]
+    formatted_message = format_message(message, tags, timestamp)
     Logger.log(level, formatted_message, metadata)
     {:noreply, state}
   end
@@ -34,8 +34,20 @@ defmodule Unifex.Logger do
     {:noreply, state}
   end
 
-  defp format_message(message, tags, time) do
+  defp format_message(message, tags, timestamp) do
     tags_str = Enum.map(tags, &"[#{&1}]") |> Enum.join(" ")
-    "#{time} #{tags_str} #{message}"
+    time_str = format_timestamp(timestamp)
+
+    if tags_str == "" do
+      "[#{time_str}] #{message}"
+    else
+      "[#{time_str}] #{tags_str} #{message}"
+    end
+  end
+
+  defp format_timestamp(timestamp) do
+    timestamp
+    |> DateTime.from_unix!(:microsecond)
+    |> DateTime.to_iso8601()
   end
 end
