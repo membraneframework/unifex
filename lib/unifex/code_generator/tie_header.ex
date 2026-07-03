@@ -11,7 +11,6 @@ defmodule Unifex.CodeGenerator.TieHeader do
   def generate_header(name, generators) do
     ~g"""
     #pragma once
-
     #{generate_includes(name, generators)}
     """
   end
@@ -21,8 +20,11 @@ defmodule Unifex.CodeGenerator.TieHeader do
   end
 
   defp generate_include(name, generator) do
+    types_header_filename = Unifex.InterfaceIO.types_header_filename(name)
+
     ~g"""
     #ifdef #{generator.identification_constant()}
+    #include "#{generator.interface_io_name()}/#{types_header_filename}"
     #include "#{generator.interface_io_name()}/#{name}.h"
     #endif
     """

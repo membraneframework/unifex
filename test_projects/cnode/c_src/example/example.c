@@ -2,7 +2,8 @@
 
 UNIFEX_TERM init(UnifexEnv *env) {
   MyState *state = unifex_alloc_state(env);
-  state->a = 42;
+  state->int_field = 42;
+  state->enum_field = MY_ENUM_OPTION_ONE;
   UNIFEX_TERM res = init_result_ok(env, state);
   unifex_release_state(env, state);
   return res;
@@ -16,10 +17,7 @@ UNIFEX_TERM test_int64(UnifexEnv *env, int64_t in_int64) {
   return test_int64_result_ok(env, in_int64);
 }
 
-
-UNIFEX_TERM test_nil(UnifexEnv* env) {
-  return test_nil_result_nil(env);
-}
+UNIFEX_TERM test_nil(UnifexEnv *env) { return test_nil_result_nil(env); }
 
 UNIFEX_TERM test_atom(UnifexEnv *env, char *in_atom) {
   return test_atom_result_ok(env, in_atom);
@@ -64,7 +62,8 @@ UNIFEX_TERM test_list_with_other_args(UnifexEnv *env, int *in_list,
 
 UNIFEX_TERM test_payload(UnifexEnv *env, UnifexPayload *in_payload) {
   UnifexPayload out_payload;
-  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size, &out_payload);
+  unifex_payload_alloc(env, UNIFEX_PAYLOAD_BINARY, in_payload->size,
+                       &out_payload);
   memcpy(out_payload.data, in_payload->data, out_payload.size);
   out_payload.data[0]++;
   UNIFEX_TERM result = test_payload_result_ok(env, &out_payload);
@@ -97,13 +96,14 @@ UNIFEX_TERM test_nested_struct(UnifexEnv *env, nested_struct in_struct) {
   return test_nested_struct_result_ok(env, in_struct);
 }
 
-UNIFEX_TERM test_nested_struct_list(UnifexEnv *env, nested_struct_list in_struct) {
+UNIFEX_TERM test_nested_struct_list(UnifexEnv *env,
+                                    nested_struct_list in_struct) {
   return test_nested_struct_list_result_ok(env, in_struct);
 }
 
 void handle_destroy_state(UnifexEnv *env, MyState *state) {
   UNIFEX_UNUSED(env);
-  state->a = 0;
+  state->int_field = 0;
 }
 
 int handle_main(int argc, char **argv) {
