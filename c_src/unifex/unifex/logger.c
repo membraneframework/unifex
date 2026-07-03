@@ -52,17 +52,21 @@ void unifex_logger_init() {
   pthread_cond_init(&queue.cond, NULL);
 
   // Start worker thread
-  pthread_create(&queue.worker_thread, NULL, unifex_logger_worker, NULL);
+  unifex_thread_create("unifex_logger_worker", &queue.worker_thread,
+                       unifex_logger_worker, NULL);
 }
 
 void unifex_logger_cleanup() {
+  pthread_mutex_lock(&queue.mutex);
   queue.running = false;
-
-  // Signal the worker thread to wake up and exit
+  // Signal the worker thread to wake up and exit, while holding the mutex so
+  // the signal can't be missed between the worker's `running` check and its
+  // wait on the condition variable.
   pthread_cond_signal(&queue.cond);
+  pthread_mutex_unlock(&queue.mutex);
 
   // Wait for worker thread to finish
-  pthread_join(queue.worker_thread, NULL);
+  unifex_thread_join(queue.worker_thread, NULL);
 
   pthread_mutex_destroy(&queue.mutex);
   pthread_cond_destroy(&queue.cond);
@@ -89,11 +93,31 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
 
   // For tags, we need to copy the array and each string
   char **tags_copy = NULL;
+  bool tags_alloc_failed = false;
   if (tags && tags_length > 0) {
     tags_copy = malloc(tags_length * sizeof(char *));
-    for (unsigned int i = 0; i < tags_length; i++) {
-      tags_copy[i] = tags[i] ? strdup(tags[i]) : NULL;
+    if (!tags_copy) {
+      tags_alloc_failed = true;
+    } else {
+      for (unsigned int i = 0; i < tags_length; i++) {
+        tags_copy[i] = tags[i] ? strdup(tags[i]) : NULL;
+        if (tags[i] && !tags_copy[i]) {
+          tags_alloc_failed = true;
+        }
+      }
     }
+  }
+
+  if (!level_copy || !message_copy || tags_alloc_failed) {
+    free(level_copy);
+    free(message_copy);
+    if (tags_copy) {
+      for (unsigned int i = 0; i < tags_length; i++) {
+        free(tags_copy[i]);
+      }
+      free(tags_copy);
+    }
+    return false;
   }
 
   pthread_mutex_lock(&queue.mutex);
@@ -193,7 +217,7 @@ void *unifex_logger_worker(void *arg) {
                   ERL_NIF_TERM list = enif_make_list(env, 0);
                   for (int i = msg.tags_length - 1; i >= 0; i--) {
                     list = enif_make_list_cell(
-                        env, enif_make_atom(env, msg.tags[i]), list);
+                        env, unifex_string_to_term(env, msg.tags[i]), list);
                   }
                   list;
                 })};

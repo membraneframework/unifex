@@ -11,6 +11,8 @@ defmodule Unifex.Logger do
 
   @router_name :"Elixir.Unifex.Logger"
 
+  @valid_levels ~w(emergency alert critical error warning notice info debug)a
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: @router_name)
   end
@@ -24,7 +26,7 @@ defmodule Unifex.Logger do
   def handle_info({:unifex_logger, level, message, timestamp, tags}, state) do
     metadata = [tags: tags, unifex_nif: true, timestamp: timestamp]
     formatted_message = format_message(message, tags, timestamp)
-    Logger.log(level, formatted_message, metadata)
+    Logger.log(normalize_level(level), formatted_message, metadata)
     {:noreply, state}
   end
 
@@ -32,6 +34,16 @@ defmodule Unifex.Logger do
   def handle_info(msg, state) do
     Logger.warning("Unifex.Logger received unknown message: #{inspect(msg)}")
     {:noreply, state}
+  end
+
+  defp normalize_level(level) when level in @valid_levels, do: level
+
+  defp normalize_level(level) do
+    Logger.warning(
+      "Unifex.Logger received unknown log level #{inspect(level)}, defaulting to :info"
+    )
+
+    :info
   end
 
   defp format_message(message, tags, timestamp) do

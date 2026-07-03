@@ -38,7 +38,7 @@ typedef struct {
   pthread_mutex_t mutex;
   pthread_cond_t cond;
   bool running;
-  pthread_t worker_thread;
+  UnifexTid worker_thread;
 } UnifexLoggerQueue;
 
 // Initialize the logger queue
