@@ -491,7 +491,7 @@ defmodule Unifex.CodeGenerators.NIF do
   end
 
   defp generate_struct_native_definition(struct_data, ctx) do
-    Unifex.CodeGenerators.Common.generate_struct_native_definition(struct_data, NIF, ctx)
+    Common.generate_struct_native_definition(struct_data, NIF, ctx)
   end
 
   # This function generates bugged version of functions declarations returning nil and should be removed in v2.0.0

@@ -22,7 +22,13 @@ defmodule Unifex.BundlexProject do
       ],
       unifex: [
         src_base: "unifex/cnode/unifex",
-        sources: ["unifex.c", "cnode.c", "payload.c", "../../unifex/logger.c", "../../unifex/logger_cnode.c"],
+        sources: [
+          "unifex.c",
+          "cnode.c",
+          "payload.c",
+          "../../unifex/logger.c",
+          "../../unifex/logger_cnode.c"
+        ],
         includes: [Path.join(__DIR__, "c_src/unifex")],
         libs: ["pthread"],
         interface: :cnode

@@ -35,7 +35,8 @@ defmodule Unifex.LoggerTest do
     end
 
     test "formats message without tags" do
-      timestamp = 1700000000000000  # microseconds since epoch
+      # microseconds since epoch
+      timestamp = 1_700_000_000_000_000
       message = "Test message"
       tags = []
 
@@ -43,11 +44,12 @@ defmodule Unifex.LoggerTest do
 
       # Should contain the message and timestamp
       assert String.contains?(formatted, message)
-      assert String.contains?(formatted, "2023-11-14")  # Approximate date for timestamp
+      # Approximate date for timestamp
+      assert String.contains?(formatted, "2023-11-14")
     end
 
     test "formats message with tags" do
-      timestamp = 1700000000000000
+      timestamp = 1_700_000_000_000_000
       message = "Test message"
       tags = ["tag1", "tag2"]
 
@@ -60,19 +62,21 @@ defmodule Unifex.LoggerTest do
 
     test "formats timestamp correctly" do
       # Test with a known timestamp
-      timestamp = 1700000000000000  # 2023-11-14T22:13:20.000000Z
+      # 2023-11-14T22:13:20.000000Z
+      timestamp = 1_700_000_000_000_000
       formatted_timestamp = Unifex.Logger.format_timestamp(timestamp)
       assert formatted_timestamp == "2023-11-14T22:13:20.000000Z"
     end
 
     test "handles nil tags gracefully" do
-      timestamp = 1700000000000000
+      timestamp = 1_700_000_000_000_000
       message = "Test message"
       tags = [nil, "valid_tag", nil]
 
       formatted = Unifex.Logger.format_message(message, tags, timestamp)
 
-      assert String.contains?(formatted, "[]")  # nil tags become empty brackets
+      # nil tags become empty brackets
+      assert String.contains?(formatted, "[]")
       assert String.contains?(formatted, "[valid_tag]")
     end
 
@@ -84,7 +88,7 @@ defmodule Unifex.LoggerTest do
           # Send a log message directly to the logger process
           level = :info
           message = "Test integration message"
-          timestamp = 1700000000000000
+          timestamp = 1_700_000_000_000_000
           tags = ["integration", "test"]
 
           send(pid, {:unifex_logger, level, message, timestamp, tags})
@@ -96,8 +100,14 @@ defmodule Unifex.LoggerTest do
         end
       else
         {:ok, pid} = Unifex.Logger.start_link([])
+
         try do
-          send(pid, {:unifex_logger, :info, "Test integration message", 1700000000000000, ["integration", "test"]})
+          send(
+            pid,
+            {:unifex_logger, :info, "Test integration message", 1_700_000_000_000_000,
+             ["integration", "test"]}
+          )
+
           assert Process.alive?(pid)
         after
           GenServer.stop(pid)
@@ -117,6 +127,7 @@ defmodule Unifex.LoggerTest do
         end
       else
         {:ok, pid} = Unifex.Logger.start_link([])
+
         try do
           send(pid, {:unknown, :message})
           assert Process.alive?(pid)
@@ -134,7 +145,7 @@ defmodule Unifex.LoggerTest do
       # #define UNIFEX_LOG_LEVEL_INFO "info"
       # #define UNIFEX_LOG_LEVEL_WARN "warning"
       # #define UNIFEX_LOG_LEVEL_ERROR "error"
-      
+
       # We verify that these atom values are valid Elixir logger levels
       # (note: the C code sends string levels which get normalized to atoms)
       assert :debug in @valid_levels
