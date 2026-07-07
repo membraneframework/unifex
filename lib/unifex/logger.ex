@@ -27,6 +27,8 @@ defmodule Unifex.Logger do
   end
 
   @impl true
+  @spec handle_info({:unifex_logger, atom(), String.t(), integer(), list(atom())}, map()) ::
+          {:noreply, map()}
   def handle_info({:unifex_logger, level, message, timestamp, tags}, state) do
     metadata = [tags: tags, unifex_nif: true, timestamp: timestamp]
 

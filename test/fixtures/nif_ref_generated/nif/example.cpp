@@ -815,7 +815,7 @@ static ERL_NIF_TERM export_test_my_struct(ErlNifEnv *env, int argc,
           }
         }
 
-        get_id_result &&get_data_result &&get_name_result;
+        get_id_result && get_data_result && get_name_result;
       })) {
     result = unifex_raise_args_error(env, "in_struct", ":my_struct");
     goto exit_export_test_my_struct;
@@ -961,7 +961,7 @@ static ERL_NIF_TERM export_test_nested_struct_list(ErlNifEnv *env, int argc,
                             }
                           }
 
-                          get_id_result &&get_data_result &&get_name_result;
+                          get_id_result && get_data_result && get_name_result;
                         })) {
                       result = unifex_raise_args_error(env, "in_struct",
                                                        ":nested_struct_list");
@@ -1110,7 +1110,7 @@ static ERL_NIF_TERM export_test_nested_struct(ErlNifEnv *env, int argc,
                   }
                 }
 
-                get_id_result &&get_data_result &&get_name_result;
+                get_id_result && get_data_result && get_name_result;
               })) {
             result =
                 unifex_raise_args_error(env, "in_struct", ":nested_struct");

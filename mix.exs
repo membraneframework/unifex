@@ -54,7 +54,8 @@ defmodule Unifex.MixProject do
         "LICENSE",
         "pages/creating_unifex_natives.md",
         "pages/creating_unifex_nif.md",
-        "pages/supported_types.md"
+        "pages/supported_types.md",
+        "pages/logger.md"
       ],
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [
