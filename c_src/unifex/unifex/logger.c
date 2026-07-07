@@ -9,6 +9,11 @@
  * unifex_logger_register_send_func().
  */
 
+// Required for strdup, which is POSIX (not ISO C) and thus not declared by
+// string.h unless a feature test macro requesting it is defined before any
+// system header is included.
+#define _POSIX_C_SOURCE 200809L
+
 #include "logger.h"
 #include <stdio.h>
 #include <stdlib.h>
