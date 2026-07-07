@@ -55,13 +55,9 @@ int unifex_logger_cnode_send(void *env_ptr, const char *level, const char *messa
   }
   ei_x_encode_empty_list(&out_buff);
 
-  // The socket fd is shared with the main receive loop, so serialize on
-  // socket_mutex before writing.
   const char *target_name = unifex_logger_get_target();
-  pthread_mutex_lock(&env->socket_mutex);
-  int result = ei_reg_send(&env->ec, env->ei_socket_fd, (char *)target_name,
-                           out_buff.buff, out_buff.index);
-  pthread_mutex_unlock(&env->socket_mutex);
+  int result = unifex_cnode_locked_reg_send(env, target_name, out_buff.buff,
+                                            out_buff.index);
 
   ei_x_free(&out_buff);
 

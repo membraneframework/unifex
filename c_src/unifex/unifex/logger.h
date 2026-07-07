@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define UNIFEX_LOGGER_MAX_QUEUE_SIZE 1024
+#define UNIFEX_LOGGER_MAX_QUEUE_SIZE 256
 
 // __attribute__((constructor(N))) priorities: lower N runs earlier. C gives
 // no guaranteed relative order between plain (unnumbered) constructors in
@@ -51,6 +51,10 @@ typedef struct {
   unsigned int head;
   unsigned int tail;
   unsigned int count;
+  // Messages rejected since the last overflow report was sent (see
+  // unifex_logger_worker), because the queue was full when unifex_log() was
+  // called.
+  uint64_t dropped_count;
   pthread_mutex_t mutex;
   pthread_cond_t cond;
   bool running;
@@ -65,8 +69,8 @@ typedef struct {
 // is not known to this backend-agnostic header - the registered send
 // function is responsible for casting it back to the real type.
 typedef int (*UnifexLoggerSendFunc)(void *env, const char *level,
-                                     const char *message, uint64_t timestamp,
-                                     char **tags, unsigned int tags_length);
+                                    const char *message, uint64_t timestamp,
+                                    char **tags, unsigned int tags_length);
 
 // Initialize the logger queue
 void unifex_logger_init();
@@ -74,12 +78,8 @@ void unifex_logger_init();
 // Cleanup the logger queue
 void unifex_logger_cleanup();
 
-// Add a message to the queue (non-blocking, returns false if queue is full)
-bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
-                              char **tags, unsigned int tags_length);
-
-// Simpler wrapper: log with level, message, and optional tags (auto-generates
-// timestamp)
+// Log with level, message, and optional tags (auto-generates timestamp).
+// Non-blocking: returns false if the queue is full.
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length);
 
@@ -93,14 +93,8 @@ void unifex_logger_register_send_func(UnifexLoggerSendFunc func);
 // Accepts an opaque pointer for the same reason as UnifexLoggerSendFunc above.
 void unifex_logger_set_env(void *env);
 
-// Get the global environment
-void *unifex_logger_get_env();
-
-// Set the target process name for logging
-// This is used by the default send implementation to find the target PID
-void unifex_logger_set_target(const char *name);
-
-// Get the current target process name
+// Get the target process name that send functions deliver log messages to
+// (defaults to "Elixir.Unifex.Logger")
 const char *unifex_logger_get_target();
 
 // Helper to get timestamp in microseconds since epoch

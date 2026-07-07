@@ -10,6 +10,7 @@
  */
 
 #include "logger.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
@@ -47,8 +48,11 @@ static void free_tags_copy(char **tags, unsigned int tags_length) {
   free(tags);
 }
 
-void unifex_logger_set_target(const char *name) {
-  target_pid_name = name;
+static void free_pending_message(char *level, char *message, char **tags,
+                                 unsigned int tags_length) {
+  free((void *)level);
+  free((void *)message);
+  free_tags_copy(tags, tags_length);
 }
 
 const char *unifex_logger_get_target() {
@@ -72,15 +76,11 @@ void unifex_logger_set_env(void *env) {
   global_env = env;
 }
 
-// Get the global environment
-void *unifex_logger_get_env() {
-  return global_env;
-}
-
 void unifex_logger_init() {
   queue.head = 0;
   queue.tail = 0;
   queue.count = 0;
+  queue.dropped_count = 0;
   queue.running = true;
 
   pthread_mutex_init(&queue.mutex, NULL);
@@ -115,14 +115,19 @@ void unifex_logger_cleanup() {
 
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length) {
+  // Fast-reject before doing any allocation if the queue is already full.
+  pthread_mutex_lock(&queue.mutex);
+  bool full = queue.count >= UNIFEX_LOGGER_MAX_QUEUE_SIZE;
+  if (full) {
+    queue.dropped_count++;
+  }
+  pthread_mutex_unlock(&queue.mutex);
+  if (full) {
+    return false;
+  }
+
   uint64_t timestamp = unifex_logger_get_timestamp();
 
-  return unifex_logger_queue_push((char *)level, (char *)message, timestamp,
-                                  (char **)tags, tags_length);
-}
-
-bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
-                              char **tags, unsigned int tags_length) {
   // Create deep copies of the strings since we'll own them now
   char *level_copy = strdup(level);
   char *message_copy = strdup(message);
@@ -145,20 +150,18 @@ bool unifex_logger_queue_push(char *level, char *message, uint64_t timestamp,
   }
 
   if (!level_copy || !message_copy || tags_alloc_failed) {
-    free((void *)level_copy);
-    free((void *)message_copy);
-    free_tags_copy(tags_copy, tags_length);
+    free_pending_message(level_copy, message_copy, tags_copy, tags_length);
     return false;
   }
 
   pthread_mutex_lock(&queue.mutex);
 
-  // If queue is full, return false (non-blocking) and free the copies
+  // The queue could have filled up since the check above; re-check before
+  // committing to the insert (non-blocking: free the copies and give up).
   if (queue.count >= UNIFEX_LOGGER_MAX_QUEUE_SIZE) {
+    queue.dropped_count++;
     pthread_mutex_unlock(&queue.mutex);
-    free((void *)level_copy);
-    free((void *)message_copy);
-    free_tags_copy(tags_copy, tags_length);
+    free_pending_message(level_copy, message_copy, tags_copy, tags_length);
     return false;
   }
 
@@ -221,15 +224,28 @@ void *unifex_logger_worker(void *arg) {
       }
       
       // Clean up the message data
-      free((void *)msg.level);
-      free((void *)msg.message);
-      free_tags_copy(msg.tags, msg.tags_length);
+      free_pending_message(msg.level, msg.message, msg.tags, msg.tags_length);
 
       // Re-acquire the mutex for the next iteration
       pthread_mutex_lock(&queue.mutex);
     }
 
+    // Report and reset any messages dropped due to a full queue since the
+    // last report, now that the queue has been drained and there's room to
+    // enqueue (or, here, directly send) a report about it.
+    uint64_t dropped = queue.dropped_count;
+    queue.dropped_count = 0;
+
     pthread_mutex_unlock(&queue.mutex);
+
+    if (dropped > 0 && send_log_func) {
+      char overflow_message[128];
+      snprintf(overflow_message, sizeof(overflow_message),
+                "Unifex logger queue overflowed: dropped %llu log message(s)",
+                (unsigned long long)dropped);
+      send_log_func(global_env, UNIFEX_LOG_LEVEL_WARN, overflow_message,
+                    unifex_logger_get_timestamp(), NULL, 0);
+    }
   }
 
   return NULL;

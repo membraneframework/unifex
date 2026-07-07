@@ -22,11 +22,28 @@ void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
   ei_x_encode_atom(buff, msg_type);
 }
 
+// The socket fd is shared between the main receive loop and a background
+// logger thread (see logger_cnode.c), so every send on it must go through
+// one of these to stay serialized via socket_mutex.
+int unifex_cnode_locked_send(UnifexEnv *env, erlang_pid *pid, char *buff,
+                             int len) {
+  pthread_mutex_lock(&env->socket_mutex);
+  int result = ei_send(env->ei_socket_fd, pid, buff, len);
+  pthread_mutex_unlock(&env->socket_mutex);
+  return result;
+}
+
+int unifex_cnode_locked_reg_send(UnifexEnv *env, const char *name, char *buff,
+                                 int len) {
+  pthread_mutex_lock(&env->socket_mutex);
+  int result = ei_reg_send(&env->ec, env->ei_socket_fd, (char *)name, buff, len);
+  pthread_mutex_unlock(&env->socket_mutex);
+  return result;
+}
+
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
                                 UNIFEX_TERM out_buff) {
-  pthread_mutex_lock(&env->socket_mutex);
-  ei_send(env->ei_socket_fd, pid, out_buff->buff, out_buff->index);
-  pthread_mutex_unlock(&env->socket_mutex);
+  unifex_cnode_locked_send(env, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
   free(out_buff);
 }

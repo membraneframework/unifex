@@ -26,11 +26,6 @@ typedef erlang_pid UnifexPid;
 
 #define UNIFEX_UNUSED(x) (void)(x)
 
-// Flags for send operations
-#define UNIFEX_NO_FLAGS 0
-#define UNIFEX_SEND_THREADED 1
-#define UNIFEX_FROM_CREATED_THREAD UNIFEX_SEND_THREADED
-
 typedef struct UnifexLinkedList {
   void *head;
   struct UnifexLinkedList *tail;
@@ -49,9 +44,6 @@ typedef struct UnifexCNodeContext {
   // worker thread can write to the socket concurrently with the main thread.
   pthread_mutex_t socket_mutex;
 } UnifexEnv;
-
-// Function declarations for send operations
-int unifex_send(UnifexEnv *env, UnifexPid *pid, UNIFEX_TERM term, int flags);
 
 static inline void *unifex_alloc(size_t size) { return malloc(size); }
 

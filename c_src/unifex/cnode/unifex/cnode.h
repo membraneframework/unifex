@@ -13,6 +13,10 @@ typedef struct UnifexCNodeInBuff {
 
 void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
                                     const char *msg_type);
+int unifex_cnode_locked_send(UnifexEnv *env, erlang_pid *pid, char *buff,
+                             int len);
+int unifex_cnode_locked_reg_send(UnifexEnv *env, const char *name, char *buff,
+                                 int len);
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
                                 UNIFEX_TERM out_buff);
 void unifex_cnode_reply_and_free(UnifexEnv *env, UNIFEX_TERM out_buff);
