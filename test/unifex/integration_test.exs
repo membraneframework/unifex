@@ -26,6 +26,16 @@ defmodule Unifex.IntegrationTest do
     test_project("bundlex_exs", :cnode)
   end
 
+  @tag :logger
+  test "logger test project (NIF)" do
+    test_logger_project("logger_test", :nif)
+  end
+
+  @tag :logger
+  test "logger test project (CNode)" do
+    test_logger_project("logger_test", :cnode)
+  end
+
   defp test_project(project, interface) do
     generate_cpp_code(project)
 
@@ -79,6 +89,18 @@ defmodule Unifex.IntegrationTest do
       assert File.exists?(ref_file_path)
       assert File.read!(generated_file_path) == File.read!(ref_file_path)
     end)
+  end
+
+  defp test_logger_project(project, interface) do
+    for language <- [:c, :cpp] do
+      do_logger_test_project(project, interface, language)
+    end
+  end
+
+  defp do_logger_test_project(project, interface, language) do
+    run_projects_tests(project, language)
+    # Logger test project doesn't need the same fixture checks as other projects
+    # since it's specifically for testing logger functionality
   end
 
   defp generate_cpp_code(project) do
