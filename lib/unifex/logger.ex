@@ -4,6 +4,10 @@ defmodule Unifex.Logger do
 
   This process receives log messages from C code and forwards them to Elixir's Logger.
   It can be used by any NIF library that needs to log messages to the BEAM.
+
+  Not started by default. Enable it with:
+
+      config :unifex, enable_logger: true
   """
 
   use GenServer
@@ -25,8 +29,9 @@ defmodule Unifex.Logger do
   @impl true
   def handle_info({:unifex_logger, level, message, timestamp, tags}, state) do
     metadata = [tags: tags, unifex_nif: true, timestamp: timestamp]
-    formatted_message = format_message(message, tags, timestamp)
-    Logger.log(normalize_level(level), formatted_message, metadata)
+
+    Logger.log(normalize_level(level), fn -> format_message(message, tags, timestamp) end, metadata)
+
     {:noreply, state}
   end
 
@@ -36,9 +41,11 @@ defmodule Unifex.Logger do
     {:noreply, state}
   end
 
-  defp normalize_level(level) when level in @valid_levels, do: level
+  @doc false
+  def normalize_level(level) when level in @valid_levels, do: level
 
-  defp normalize_level(level) do
+  @doc false
+  def normalize_level(level) do
     Logger.warning(
       "Unifex.Logger received unknown log level #{inspect(level)}, defaulting to :info"
     )
@@ -46,18 +53,14 @@ defmodule Unifex.Logger do
     :info
   end
 
-  defp format_message(message, tags, timestamp) do
-    tags_str = Enum.map(tags, &"[#{&1}]") |> Enum.join(" ")
-    time_str = format_timestamp(timestamp)
-
-    if tags_str == "" do
-      "[#{time_str}] #{message}"
-    else
-      "[#{time_str}] #{tags_str} #{message}"
-    end
+  @doc false
+  def format_message(message, tags, timestamp) do
+    tag_parts = Enum.map(tags, &"[#{&1}]")
+    Enum.join(["[#{format_timestamp(timestamp)}]"] ++ tag_parts ++ [message], " ")
   end
 
-  defp format_timestamp(timestamp) do
+  @doc false
+  def format_timestamp(timestamp) do
     timestamp
     |> DateTime.from_unix!(:microsecond)
     |> DateTime.to_iso8601()

@@ -83,14 +83,16 @@ void unifex_logger_cleanup();
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length);
 
-// Register a custom send function
-// This function MUST be called before any logging occurs
-// The send_func should know how to create terms and send messages for the
-// specific backend (NIF or CNode)
+// Register a custom send function. Process-wide: a process only ever hosts
+// one active backend at a time (see logger.c), so there's no per-env
+// distinction to make. This function MUST be called before any logging
+// occurs. The send_func should know how to create terms and send messages
+// for the specific backend (NIF or CNode)
 void unifex_logger_register_send_func(UnifexLoggerSendFunc func);
 
-// Set the global environment (for backends that need it, like CNode)
-// Accepts an opaque pointer for the same reason as UnifexLoggerSendFunc above.
+// Set the environment passed through to the registered send function (for
+// backends that need it, like CNode). Accepts an opaque pointer for the same
+// reason as UnifexLoggerSendFunc above.
 void unifex_logger_set_env(void *env);
 
 // Get the target process name that send functions deliver log messages to

@@ -13,7 +13,11 @@
 // external env was set via unifex_logger_set_env(): unifex_logger_nif_send()
 // only ever runs on the logger's single dedicated worker thread, so one
 // cleared-and-reused env is safe here and avoids an alloc_env/free_env pair
-// on every log message. Left allocated for the process lifetime.
+// on every log message. Allocated lazily on first use (rather than eagerly
+// from a library constructor) both to retry if a transient allocation
+// failure occurs, and because enif_alloc_env() is only documented to be safe
+// once the NIF's own load callback has run, which a dlopen-time constructor
+// cannot guarantee. Left allocated for the process lifetime once it succeeds.
 static UnifexEnv *fallback_env = NULL;
 
 // NIF-specific send function for logger

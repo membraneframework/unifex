@@ -22,11 +22,17 @@ static UnifexLoggerQueue queue;
 // Target process name
 static const char *target_pid_name = "Elixir.Unifex.Logger";
 
-// Function to send a log message (to be provided by the backend)
+// Function to send a log message (to be provided by the backend). Process-wide
+// by design, not per-env: a CNode process hosts exactly one UnifexEnv for its
+// entire lifetime (see unifex_cnode_main_function), and a NIF's log target is
+// resolved by process name (unifex_logger_get_target()), not by which env
+// logged - so there is never more than one backend to route to in a process.
 static UnifexLoggerSendFunc send_log_func = NULL;
 
-// Global environment reference (for backends that need it, like CNode)
-// This is optional - if set, it will be passed to the send function
+// Environment passed through to send_log_func (for backends that need it,
+// like CNode - see the comment on send_log_func above for why one process-wide
+// value is sufficient). Optional: NULL if the backend supplies its own (e.g.
+// the NIF backend's fallback_env, see logger_nif.c).
 static void *global_env = NULL;
 
 // Whether the queue/worker thread are currently initialized. Guards against
@@ -86,10 +92,16 @@ void unifex_logger_init() {
   pthread_mutex_init(&queue.mutex, NULL);
   pthread_cond_init(&queue.cond, NULL);
 
-  // Start worker thread
-  pthread_create(&queue.worker_thread, NULL, unifex_logger_worker, NULL);
-
-  logger_active = true;
+  // Start worker thread. If this fails, leave logger_active false so
+  // unifex_logger_cleanup() doesn't later join a thread that was never
+  // created (undefined behavior) - logging is simply unavailable instead.
+  if (pthread_create(&queue.worker_thread, NULL, unifex_logger_worker, NULL) ==
+      0) {
+    logger_active = true;
+  } else {
+    pthread_mutex_destroy(&queue.mutex);
+    pthread_cond_destroy(&queue.cond);
+  }
 }
 
 void unifex_logger_cleanup() {
@@ -115,6 +127,10 @@ void unifex_logger_cleanup() {
 
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length) {
+  if (!message) {
+    return false;
+  }
+
   // Fast-reject before doing any allocation if the queue is already full.
   pthread_mutex_lock(&queue.mutex);
   bool full = queue.count >= UNIFEX_LOGGER_MAX_QUEUE_SIZE;
@@ -202,33 +218,15 @@ void *unifex_logger_worker(void *arg) {
       break;
     }
 
-    // Process all available messages
-    while (queue.count > 0) {
-      UnifexLoggerMessage msg = queue.messages[queue.head];
+    // Drain every currently queued message into a local batch under a single
+    // lock/unlock pair, instead of re-acquiring queue.mutex per message.
+    unsigned int batch_size = queue.count;
+    UnifexLoggerMessage batch[UNIFEX_LOGGER_MAX_QUEUE_SIZE];
+    for (unsigned int i = 0; i < batch_size; i++) {
+      batch[i] = queue.messages[queue.head];
       queue.head = (queue.head + 1) % UNIFEX_LOGGER_MAX_QUEUE_SIZE;
-      queue.count--;
-
-      // Release the mutex while processing to allow more messages to be queued
-      pthread_mutex_unlock(&queue.mutex);
-
-      // If a send function is registered, use it
-      if (send_log_func) {
-        // Call the registered send function with the global environment
-        // The send function is responsible for:
-        // 1. Using the environment (or creating one if needed)
-        // 2. Finding the target PID
-        // 3. Creating the message term
-        // 4. Sending the message
-        send_log_func(global_env, msg.level, msg.message, msg.timestamp,
-                      msg.tags, msg.tags_length);
-      }
-      
-      // Clean up the message data
-      free_pending_message(msg.level, msg.message, msg.tags, msg.tags_length);
-
-      // Re-acquire the mutex for the next iteration
-      pthread_mutex_lock(&queue.mutex);
     }
+    queue.count -= batch_size;
 
     // Report and reset any messages dropped due to a full queue since the
     // last report, now that the queue has been drained and there's room to
@@ -237,6 +235,17 @@ void *unifex_logger_worker(void *arg) {
     queue.dropped_count = 0;
 
     pthread_mutex_unlock(&queue.mutex);
+
+    // Send and free the batch outside the lock so producers aren't blocked
+    // while messages are delivered.
+    for (unsigned int i = 0; i < batch_size; i++) {
+      if (send_log_func) {
+        send_log_func(global_env, batch[i].level, batch[i].message,
+                      batch[i].timestamp, batch[i].tags, batch[i].tags_length);
+      }
+      free_pending_message(batch[i].level, batch[i].message, batch[i].tags,
+                           batch[i].tags_length);
+    }
 
     if (dropped > 0 && send_log_func) {
       char overflow_message[128];

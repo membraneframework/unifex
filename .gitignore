@@ -1,4 +1,5 @@
 compile_commands.json
+compile_flags.txt
 .elixir_ls
 
 # Created by https://www.gitignore.io/api/c,vim,linux,macos,elixir,windows,visualstudiocode
