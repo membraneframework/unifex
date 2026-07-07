@@ -97,7 +97,7 @@ defmodule Unifex.IntegrationTest do
     end
   end
 
-  defp do_logger_test_project(project, interface, language) do
+  defp do_logger_test_project(project, _interface, language) do
     run_projects_tests(project, language)
     # Logger test project doesn't need the same fixture checks as other projects
     # since it's specifically for testing logger functionality
