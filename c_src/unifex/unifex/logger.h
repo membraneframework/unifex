@@ -20,13 +20,6 @@ extern "C" {
 
 #define UNIFEX_LOGGER_MAX_QUEUE_SIZE 256
 
-// __attribute__((constructor(N))) priorities: lower N runs earlier. C gives
-// no guaranteed relative order between plain (unnumbered) constructors in
-// different translation units, so the backend's send-function registration
-// (logger_nif.c) must be pinned to run strictly before the queue's worker
-// thread is started (logger.c) - otherwise a message queued by some other
-// early constructor could be dequeued and dropped before a send function is
-// registered.
 #define UNIFEX_LOGGER_BACKEND_CTOR_PRIORITY 1000
 #define UNIFEX_LOGGER_QUEUE_CTOR_PRIORITY 2000
 
@@ -36,7 +29,6 @@ extern "C" {
 #define UNIFEX_LOG_LEVEL_WARN "warning"
 #define UNIFEX_LOG_LEVEL_ERROR "error"
 
-// Log message structure
 typedef struct {
   char *level;
   char *message;
@@ -45,15 +37,11 @@ typedef struct {
   unsigned int tags_length;
 } UnifexLoggerMessage;
 
-// Queue structure
 typedef struct {
   UnifexLoggerMessage messages[UNIFEX_LOGGER_MAX_QUEUE_SIZE];
   unsigned int head;
   unsigned int tail;
   unsigned int count;
-  // Messages rejected since the last overflow report was sent (see
-  // unifex_logger_worker), because the queue was full when unifex_log() was
-  // called.
   uint64_t dropped_count;
   pthread_mutex_t mutex;
   pthread_cond_t cond;
@@ -61,45 +49,23 @@ typedef struct {
   pthread_t worker_thread;
 } UnifexLoggerQueue;
 
-// Callback type for sending log messages
-// The backend-specific implementation should provide this function
-// Note: env may be NULL, in which case the send function should create/use
-// the appropriate environment. It is passed through as an opaque pointer
-// here since its real type (UnifexEnv, defined by the NIF or CNode backend)
-// is not known to this backend-agnostic header - the registered send
-// function is responsible for casting it back to the real type.
 typedef int (*UnifexLoggerSendFunc)(void *env, const char *level,
                                     const char *message, uint64_t timestamp,
                                     char **tags, unsigned int tags_length);
 
-// Initialize the logger queue
 void unifex_logger_init();
 
-// Cleanup the logger queue
 void unifex_logger_cleanup();
 
-// Log with level, message, and optional tags (auto-generates timestamp).
-// Non-blocking: returns false if the queue is full.
 bool unifex_log(const char *level, const char *message, const char **tags,
                 unsigned int tags_length);
 
-// Register a custom send function. Process-wide: a process only ever hosts
-// one active backend at a time (see logger.c), so there's no per-env
-// distinction to make. This function MUST be called before any logging
-// occurs. The send_func should know how to create terms and send messages
-// for the specific backend (NIF or CNode)
 void unifex_logger_register_send_func(UnifexLoggerSendFunc func);
 
-// Set the environment passed through to the registered send function (for
-// backends that need it, like CNode). Accepts an opaque pointer for the same
-// reason as UnifexLoggerSendFunc above.
 void unifex_logger_set_env(void *env);
 
-// Get the target process name that send functions deliver log messages to
-// (defaults to "Elixir.Unifex.Logger")
 const char *unifex_logger_get_target();
 
-// Helper to get timestamp in microseconds since epoch
 uint64_t unifex_logger_get_timestamp();
 
 #ifdef __cplusplus

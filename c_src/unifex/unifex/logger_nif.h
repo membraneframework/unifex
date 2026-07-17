@@ -13,8 +13,6 @@
 extern "C" {
 #endif
 
-// Initialize the logger for NIF backend
-// Call this during NIF load
 static inline void unifex_logger_nif_init() {
   unifex_logger_register_send_func(unifex_logger_nif_send);
 }

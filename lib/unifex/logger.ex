@@ -1,25 +1,14 @@
 defmodule Unifex.Logger do
-  @moduledoc """
-  Generic logger for handling log messages from C NIFs via Unifex.
-
-  This process receives log messages from C code and forwards them to Elixir's Logger.
-  It can be used by any NIF library that needs to log messages to the BEAM.
-
-  Not started by default. Enable it with:
-
-      config :unifex, enable_logger: true
-  """
+  @moduledoc false
 
   use GenServer
   require Logger
-
-  @router_name :"Elixir.Unifex.Logger"
 
   @valid_levels ~w(emergency alert critical error warning notice info debug)a
 
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(_opts) do
-    GenServer.start_link(__MODULE__, [], name: @router_name)
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   @impl true

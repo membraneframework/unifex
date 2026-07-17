@@ -57,6 +57,7 @@ defmodule Unifex.MixProject do
         "pages/supported_types.md",
         "pages/logger.md"
       ],
+      skip_undefined_reference_warnings_on: ["pages/logger.md"],
       source_ref: "v#{@version}",
       nest_modules_by_prefix: [
         Unifex.CodeGenerators,
