@@ -50,13 +50,13 @@ UNIFEX_TERM process(UnifexEnv *env, int num) {
 ### `unifex_log`
 
 ```c
-bool unifex_log(const char *level, const char *message, const char **tags,
+bool unifex_log(UnifexLogLevel level, const char *message, const char **tags,
                 unsigned int tags_length);
 ```
 
-* `level` - one of the `UNIFEX_LOG_LEVEL_DEBUG` / `_INFO` / `_WARN` / `_ERROR` constants
-  (or any other string; it's copied, so any level your `Unifex.Logger` handler
-  understands works).
+* `level` - one of the `UNIFEX_LOG_LEVEL_DEBUG`, `UNIFEX_LOG_LEVEL_INFO`,
+  `UNIFEX_LOG_LEVEL_WARN`, or `UNIFEX_LOG_LEVEL_ERROR` enum values. This is a
+  typed enum, so the compiler will catch typos or invalid values at compile time.
 * `message` - the log message. Must not be `NULL`.
 * `tags` / `tags_length` - an optional array of extra tag strings attached to the
   message (pass `NULL, 0` for none).

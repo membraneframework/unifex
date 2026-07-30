@@ -4,8 +4,6 @@ defmodule Unifex.Logger do
   use GenServer
   require Logger
 
-  @valid_levels ~w(emergency alert critical error warning notice info debug)a
-
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -17,13 +15,16 @@ defmodule Unifex.Logger do
   end
 
   @impl true
-  @spec handle_info({:unifex_logger, atom(), String.t(), integer(), list(atom())}, map()) ::
+  @spec handle_info(
+          {:unifex_logger, atom() | String.t(), String.t(), integer(), list(String.t())},
+          map()
+        ) ::
           {:noreply, map()}
   def handle_info({:unifex_logger, level, message, timestamp, tags}, state) do
     metadata = [tags: tags, unifex_nif: true, timestamp: timestamp]
 
     Logger.log(
-      normalize_level(level),
+      level,
       fn -> format_message(message, tags, timestamp) end,
       metadata
     )
@@ -38,21 +39,7 @@ defmodule Unifex.Logger do
   end
 
   @doc false
-  @spec normalize_level(atom()) :: atom()
-  def normalize_level(level) when level in @valid_levels, do: level
-
-  @doc false
-  @spec normalize_level(any()) :: atom()
-  def normalize_level(level) do
-    Logger.warning(
-      "Unifex.Logger received unknown log level #{inspect(level)}, defaulting to :info"
-    )
-
-    :info
-  end
-
-  @doc false
-  @spec format_message(String.t(), list(atom()), integer()) :: String.t()
+  @spec format_message(String.t(), list(String.t()), integer()) :: String.t()
   def format_message(message, tags, timestamp) do
     tag_parts = Enum.map(tags, &"[#{&1}]")
     Enum.join(["[#{format_timestamp(timestamp)}]"] ++ tag_parts ++ [message], " ")

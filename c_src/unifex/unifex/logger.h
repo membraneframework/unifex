@@ -23,14 +23,19 @@ extern "C" {
 #define UNIFEX_LOGGER_BACKEND_CTOR_PRIORITY 1000
 #define UNIFEX_LOGGER_QUEUE_CTOR_PRIORITY 2000
 
-// Log level constants
-#define UNIFEX_LOG_LEVEL_DEBUG "debug"
-#define UNIFEX_LOG_LEVEL_INFO "info"
-#define UNIFEX_LOG_LEVEL_WARN "warning"
-#define UNIFEX_LOG_LEVEL_ERROR "error"
+// Log level enum for compile-time type safety
+typedef enum {
+  UNIFEX_LOG_LEVEL_DEBUG,
+  UNIFEX_LOG_LEVEL_INFO,
+  UNIFEX_LOG_LEVEL_WARN,
+  UNIFEX_LOG_LEVEL_ERROR,
+} UnifexLogLevel;
+
+// Convert log level enum to string representation (for internal use by backends)
+const char *unifex_log_level_to_string(UnifexLogLevel level);
 
 typedef struct {
-  char *level;
+  UnifexLogLevel level;
   char *message;
   uint64_t timestamp;
   char **tags;
@@ -49,7 +54,7 @@ typedef struct {
   pthread_t worker_thread;
 } UnifexLoggerQueue;
 
-typedef int (*UnifexLoggerSendFunc)(void *env, const char *level,
+typedef int (*UnifexLoggerSendFunc)(void *env, UnifexLogLevel level,
                                     const char *message, uint64_t timestamp,
                                     char **tags, unsigned int tags_length);
 
@@ -57,7 +62,7 @@ void unifex_logger_init();
 
 void unifex_logger_cleanup();
 
-bool unifex_log(const char *level, const char *message, const char **tags,
+bool unifex_log(UnifexLogLevel level, const char *message, const char **tags,
                 unsigned int tags_length);
 
 void unifex_logger_register_send_func(UnifexLoggerSendFunc func);

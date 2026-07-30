@@ -6,15 +6,17 @@
  * Include the appropriate backend implementation in your project.
  */
 
+#include "logger.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int unifex_logger_nif_send(void *env, const char *level, const char *message,
+int unifex_logger_nif_send(void *env, UnifexLogLevel level, const char *message,
                            uint64_t timestamp, char **tags,
                            unsigned int tags_length);
 
-int unifex_logger_cnode_send(void *env, const char *level, const char *message,
+int unifex_logger_cnode_send(void *env, UnifexLogLevel level, const char *message,
                              uint64_t timestamp, char **tags,
                              unsigned int tags_length);
 

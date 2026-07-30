@@ -10,7 +10,7 @@
 #include "logger.h"
 #include "logger_backend.h"
 
-int unifex_logger_cnode_send(void *env_ptr, const char *level,
+int unifex_logger_cnode_send(void *env_ptr, UnifexLogLevel level,
                              const char *message, uint64_t timestamp,
                              char **tags, unsigned int tags_length) {
   UnifexEnv *env = (UnifexEnv *)env_ptr;
@@ -25,7 +25,7 @@ int unifex_logger_cnode_send(void *env_ptr, const char *level,
 
   ei_x_encode_atom(&out_buff, "unifex_logger");
 
-  ei_x_encode_atom(&out_buff, level);
+  ei_x_encode_atom(&out_buff, unifex_log_level_to_string(level));
 
   ei_x_encode_binary(&out_buff, message, strlen(message));
 

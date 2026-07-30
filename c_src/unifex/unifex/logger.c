@@ -54,11 +54,20 @@ static void free_tags_copy(char **tags, unsigned int tags_length) {
   free(tags);
 }
 
-static void free_pending_message(char *level, char *message, char **tags,
+static void free_pending_message(char *message, char **tags,
                                  unsigned int tags_length) {
-  free((void *)level);
   free((void *)message);
   free_tags_copy(tags, tags_length);
+}
+
+const char *unifex_log_level_to_string(UnifexLogLevel level) {
+  switch (level) {
+    case UNIFEX_LOG_LEVEL_DEBUG: return "debug";
+    case UNIFEX_LOG_LEVEL_INFO:  return "info";
+    case UNIFEX_LOG_LEVEL_WARN:  return "warning";
+    case UNIFEX_LOG_LEVEL_ERROR: return "error";
+    default: return "unknown";
+  }
 }
 
 const char *unifex_logger_get_target() { return target_pid_name; }
@@ -113,7 +122,7 @@ void unifex_logger_cleanup() {
   pthread_cond_destroy(&queue.cond);
 }
 
-bool unifex_log(const char *level, const char *message, const char **tags,
+bool unifex_log(UnifexLogLevel level, const char *message, const char **tags,
                 unsigned int tags_length) {
   if (!message) {
     return false;
@@ -131,7 +140,6 @@ bool unifex_log(const char *level, const char *message, const char **tags,
 
   uint64_t timestamp = unifex_logger_get_timestamp();
 
-  char *level_copy = strdup(level);
   char *message_copy = strdup(message);
 
   char **tags_copy = NULL;
@@ -150,8 +158,8 @@ bool unifex_log(const char *level, const char *message, const char **tags,
     }
   }
 
-  if (!level_copy || !message_copy || tags_alloc_failed) {
-    free_pending_message(level_copy, message_copy, tags_copy, tags_length);
+  if (!message_copy || tags_alloc_failed) {
+    free_pending_message(message_copy, tags_copy, tags_length);
     return false;
   }
 
@@ -160,11 +168,11 @@ bool unifex_log(const char *level, const char *message, const char **tags,
   if (queue.count >= UNIFEX_LOGGER_MAX_QUEUE_SIZE) {
     queue.dropped_count++;
     pthread_mutex_unlock(&queue.mutex);
-    free_pending_message(level_copy, message_copy, tags_copy, tags_length);
+    free_pending_message(message_copy, tags_copy, tags_length);
     return false;
   }
 
-  queue.messages[queue.tail].level = level_copy;
+  queue.messages[queue.tail].level = level;
   queue.messages[queue.tail].message = message_copy;
   queue.messages[queue.tail].timestamp = timestamp;
   queue.messages[queue.tail].tags = tags_copy;
@@ -213,7 +221,7 @@ void *unifex_logger_worker(void *arg) {
         send_log_func(global_env, batch[i].level, batch[i].message,
                       batch[i].timestamp, batch[i].tags, batch[i].tags_length);
       }
-      free_pending_message(batch[i].level, batch[i].message, batch[i].tags,
+      free_pending_message(batch[i].message, batch[i].tags,
                            batch[i].tags_length);
     }
 

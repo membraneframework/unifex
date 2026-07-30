@@ -15,25 +15,6 @@ defmodule Unifex.LoggerTest do
       end
     end
 
-    test "normalizes valid log levels" do
-      assert Unifex.Logger.normalize_level(:debug) == :debug
-      assert Unifex.Logger.normalize_level(:info) == :info
-      assert Unifex.Logger.normalize_level(:warning) == :warning
-      assert Unifex.Logger.normalize_level(:error) == :error
-      assert Unifex.Logger.normalize_level(:critical) == :critical
-      assert Unifex.Logger.normalize_level(:alert) == :alert
-      assert Unifex.Logger.normalize_level(:emergency) == :emergency
-      assert Unifex.Logger.normalize_level(:notice) == :notice
-    end
-
-    test "normalizes invalid log levels to :info with warning" do
-      # This test verifies that unknown levels are normalized to :info
-      # The warning is a side effect that we can't easily capture here
-      assert Unifex.Logger.normalize_level(:unknown_level) == :info
-      assert Unifex.Logger.normalize_level("string_level") == :info
-      assert Unifex.Logger.normalize_level(123) == :info
-    end
-
     test "formats message without tags" do
       # microseconds since epoch
       timestamp = 1_700_000_000_000_000

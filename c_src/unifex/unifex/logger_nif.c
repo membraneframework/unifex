@@ -11,7 +11,7 @@
 
 static UnifexEnv *fallback_env = NULL;
 
-int unifex_logger_nif_send(void *env_ptr, const char *level,
+int unifex_logger_nif_send(void *env_ptr, UnifexLogLevel level,
                            const char *message, uint64_t timestamp, char **tags,
                            unsigned int tags_length) {
   UnifexEnv *env = (UnifexEnv *)env_ptr;
@@ -37,7 +37,7 @@ int unifex_logger_nif_send(void *env_ptr, const char *level,
     return 0;
   }
 
-  ERL_NIF_TERM level_atom = enif_make_atom(send_env, level);
+  ERL_NIF_TERM level_atom = enif_make_atom(send_env, unifex_log_level_to_string(level));
   ERL_NIF_TERM message_term = unifex_string_to_term(send_env, message);
   ERL_NIF_TERM timestamp_term = enif_make_uint64(send_env, timestamp);
 
