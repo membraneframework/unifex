@@ -23,7 +23,6 @@ extern "C" {
 #define UNIFEX_LOGGER_BACKEND_CTOR_PRIORITY 1000
 #define UNIFEX_LOGGER_QUEUE_CTOR_PRIORITY 2000
 
-// Log level enum for compile-time type safety
 typedef enum {
   UNIFEX_LOG_LEVEL_DEBUG,
   UNIFEX_LOG_LEVEL_INFO,
@@ -31,7 +30,6 @@ typedef enum {
   UNIFEX_LOG_LEVEL_ERROR,
 } UnifexLogLevel;
 
-// Convert log level enum to string representation (for internal use by backends)
 const char *unifex_log_level_to_string(UnifexLogLevel level);
 
 typedef struct {
