@@ -1,0 +1,11 @@
+/_build
+/deps
+/.expert
+.mix
+*.ez
+*.beam
+*.so
+*.dll
+*.dylib
+*.a
+*.o

@@ -49,6 +49,8 @@ end
 
 For detailed usage description see [Creating Unifex Natives](https://hexdocs.pm/unifex/creating_unifex_natives.html) guide.
 
+To send log messages from native code to Elixir's `Logger`, see the [Logging from native code](https://hexdocs.pm/unifex/logger.html) guide.
+
 ## Supported types
 
 For currently supported types see [Supported Types](https://hexdocs.pm/unifex/supported_types.html) section.

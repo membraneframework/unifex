@@ -5,6 +5,7 @@
 #endif
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "../../unifex/logger_cnode.h"
 
 #ifdef UNIFEX_CNODE_DEBUG
 #define DEBUG(X, ...) fprintf(stderr, X "\r\n", ##__VA_ARGS__)
@@ -21,9 +22,28 @@ void unifex_cnode_prepare_ei_x_buff(UnifexEnv *env, ei_x_buff *buff,
   ei_x_encode_atom(buff, msg_type);
 }
 
+// The socket fd is shared between the main receive loop and a background
+// logger thread (see logger_cnode.c), so every send on it must go through
+// one of these to stay serialized via socket_mutex.
+int unifex_cnode_locked_send(UnifexEnv *env, erlang_pid *pid, char *buff,
+                             int len) {
+  pthread_mutex_lock(&env->socket_mutex);
+  int result = ei_send(env->ei_socket_fd, pid, buff, len);
+  pthread_mutex_unlock(&env->socket_mutex);
+  return result;
+}
+
+int unifex_cnode_locked_reg_send(UnifexEnv *env, const char *name, char *buff,
+                                 int len) {
+  pthread_mutex_lock(&env->socket_mutex);
+  int result = ei_reg_send(&env->ec, env->ei_socket_fd, (char *)name, buff, len);
+  pthread_mutex_unlock(&env->socket_mutex);
+  return result;
+}
+
 void unifex_cnode_send_and_free(UnifexEnv *env, erlang_pid *pid,
                                 UNIFEX_TERM out_buff) {
-  ei_send(env->ei_socket_fd, pid, out_buff->buff, out_buff->index);
+  unifex_cnode_locked_send(env, pid, out_buff->buff, out_buff->index);
   ei_x_free(out_buff);
   free(out_buff);
 }
@@ -176,6 +196,7 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
                      .state = NULL,
                      .released_states = NULL,
                      .error = NULL};
+  pthread_mutex_init(&env->socket_mutex, NULL);
 
   if (validate_args(argc, argv)) {
     fprintf(stderr,
@@ -198,17 +219,16 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   }
   DEBUG("listening at %d", port);
 
-  ei_cnode ec;
   struct in_addr addr;
   addr.s_addr = inet_addr("127.0.0.1");
-  if (ei_connect_xinit(&ec, host_name, alive_name, env->node_name, &addr,
+  if (ei_connect_xinit(&env->ec, host_name, alive_name, env->node_name, &addr,
                        cookie, creation) < 0) {
     DEBUG("init error: %d", erl_errno);
     goto unifex_cnode_init_error;
   }
-  DEBUG("initialized %s (%s)", ei_thisnodename(&ec), inet_ntoa(addr));
+  DEBUG("initialized %s (%s)", ei_thisnodename(&env->ec), inet_ntoa(addr));
 
-  if (ei_publish(&ec, port) == -1) {
+  if (ei_publish(&env->ec, port) == -1) {
     DEBUG("publish error: %d", erl_errno);
     goto unifex_cnode_init_error;
   }
@@ -217,12 +237,17 @@ int unifex_cnode_init(int argc, char **argv, UnifexEnv *env) {
   fflush(stdout);
 
   ErlConnect conn;
-  env->ei_socket_fd = ei_accept_tmo(&ec, env->listen_fd, &conn, 5000);
+  env->ei_socket_fd = ei_accept_tmo(&env->ec, env->listen_fd, &conn, 5000);
   if (env->ei_socket_fd == ERL_ERROR) {
     DEBUG("accept error: %d", erl_errno);
     goto unifex_cnode_init_error;
   }
   DEBUG("accepted %s", conn.nodename);
+
+  // Wire up the logger now that env has a live socket/ec, so unifex_log()
+  // calls from generated code work without the project having to remember
+  // to call unifex_logger_cnode_init() itself.
+  unifex_logger_cnode_init(env);
 
   return 0;
 
@@ -232,6 +257,13 @@ unifex_cnode_init_error:
 }
 
 void unifex_cnode_destroy(UnifexEnv *env) {
+  // Stop and join the logger's worker thread before tearing down the socket
+  // and mutex it may still be using to send a queued message. This is a
+  // no-op if the logger was never started (e.g. init failed before
+  // unifex_logger_cnode_init() ran) and safe to call again from the
+  // process-exit destructor (unifex_logger_cleanup() is idempotent).
+  unifex_logger_cleanup();
+
   if (env->listen_fd != -1) {
     close(env->listen_fd);
   }
@@ -241,6 +273,7 @@ void unifex_cnode_destroy(UnifexEnv *env) {
   if (env->node_name) {
     free(env->node_name);
   }
+  pthread_mutex_destroy(&env->socket_mutex);
 }
 
 int unifex_cnode_main_function(int argc, char **argv) {

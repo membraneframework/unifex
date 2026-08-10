@@ -33,12 +33,16 @@ typedef struct UnifexLinkedList {
 
 typedef struct UnifexCNodeContext {
   char *node_name;
+  ei_cnode ec;
   int ei_socket_fd;
   int listen_fd;
   UnifexPid *reply_to;
   void *state;
   UnifexLinkedList *released_states;
   UNIFEX_TERM error;
+  // Guards every ei_send/ei_reg_send on ei_socket_fd, since the logger's
+  // worker thread can write to the socket concurrently with the main thread.
+  pthread_mutex_t socket_mutex;
 } UnifexEnv;
 
 static inline void *unifex_alloc(size_t size) { return malloc(size); }
